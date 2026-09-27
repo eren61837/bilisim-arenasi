@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🗺️ PaperMap.io - Bilişim Sınıfı Portalı</title>
+    <link rel="stylesheet" href="bgm.css">
+    <link rel="stylesheet" href="papermap.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🗺️</text></svg>">
+</head>
+<body>
+
+<header class="pm-top-bar">
+    <a href="/" class="btn-pm-back">◀ PORTALA DÖN</a>
+    <div class="pm-stats-badge">
+        <span>KAPLANAN ALAN:</span>
+        <strong id="pm-coverage">0%</strong>
+    </div>
+    <div class="pm-leaderboard">
+        <span class="pm-lb-title">🏆 KRALLIKLAR:</span>
+        <span id="pm-lb-list">Yükleniyor...</span>
+    </div>
+</header>
+
+<main class="pm-main">
+    <div class="pm-canvas-wrap">
+        <canvas id="pm-canvas" width="1200" height="800"></canvas>
+    </div>
+</main>
+
+<!-- SPAWN MODAL -->
+<div id="pm-modal" class="pm-modal-backdrop">
+    <div class="pm-modal-card">
+        <h1>PAPERMAP.IO</h1>
+        <h3>BİLİŞİM SINIFI HARİTA KAPMACA</h3>
+        <p style="color:#aaa; font-size:12px; margin-bottom:14px;">Kendi renginle alan çizerek krallığını büyüt, rakiplerin kuyruğunu kes ve tüm haritayı fethet!</p>
+
+        <div class="pm-controls-hint">
+            <span>⌨️ <strong>Yön Tuşları / WASD:</strong> Hareket Et</span>
+            <span>🛡️ <strong>Kendi Üssün:</strong> Güvendesin</span>
+            <span>⚡ <strong>Dışarı Çıkınca:</strong> İz bırakırsın, izine çarpan yanar!</span>
+        </div>
+
+        <button id="btn-play-pm" class="btn-play-pm">▶ HARİTAYA GİR</button>
+    </div>
+</div>
+
+<script src="papermap.js"></script>
+<script src="bgm.js"></script>
+</body>
+</html>

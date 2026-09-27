@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>🤪 MEME TROLL PARKUR (Trololo Edition) - Bilişim Arenası</title>
+    <link rel="stylesheet" href="trollparkur.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🤪</text></svg>">
+</head>
+<body>
+
+    <!-- TOP BAR -->
+    <header class="troll-topbar">
+        <div class="troll-brand">
+            <a href="/" class="btn-troll-back">🏠 PORTALE DÖN</a>
+            <div class="brand-title">
+                <span class="brand-icon">🤪</span>
+                <div>
+                    <h1>MEME TROLL PARKUR</h1>
+                    <span class="sub-meme">Her Şeyin Bir Tuzak Olduğu Dünyaya Hoş Geldin!</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="troll-stats">
+            <div class="stat-pill deaths-pill">
+                <span>💀 ÖLÜM (TROLLENDİN):</span>
+                <strong id="death-count">0</strong>
+            </div>
+            <div class="stat-pill rank-pill">
+                <span>RÜTBE:</span>
+                <strong id="troll-rank">Masum Çaylak 🍼</strong>
+            </div>
+            <div class="stat-pill stage-pill">
+                <span>BÖLÜM:</span>
+                <strong id="stage-num">1 / 5</strong>
+            </div>
+        </div>
+
+        <div class="troll-actions">
+            <button class="btn-action-troll" id="btn-toggle-trololo">
+                <span>🎵</span> <span id="bgm-label">Trololo Müziği: AÇIK</span>
+            </button>
+            <button class="btn-action-troll" id="btn-restart-stage">
+                <span>🔄</span> Bölümü Baştan Başlat
+            </button>
+            <button class="btn-action-troll" id="btn-fullscreen">
+                <span>⛶</span> Tam Ekran
+            </button>
+        </div>
+    </header>
+
+    <!-- MAIN GAME CANVAS VIEWPORT -->
+    <div id="game-container">
+        <canvas id="troll-canvas"></canvas>
+
+        <!-- FLOATING TROLL BANNER / MEME POPUP -->
+        <div id="meme-popup" class="meme-popup hidden">
+            <div class="meme-img" id="meme-face">🤪</div>
+            <h2 id="meme-text">U MAD BRO? 😈</h2>
+            <p id="meme-sub">Trololo sesi yankılanıyor...</p>
+        </div>
+
+        <!-- STAGE CLEARED BANNER -->
+        <div id="win-banner" class="win-banner hidden">
+            <div class="win-card">
+                <div class="win-troll">🎉 😈 🎉</div>
+                <h2>BÖLÜMÜ BİTİRDİN... Mİ ACABA?!</h2>
+                <p id="win-desc">Şimdilik kurtuldun ama sonraki bölüm seni ağlatacak!</p>
+                <button id="btn-next-stage" class="btn-next-stage">SONRAKİ TROLL BÖLÜME GEÇ ▶</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- CONTROLS FOOTER -->
+    <footer class="troll-footer">
+        <div class="key-hint"><span>A / D</span> veya <span>◀ ▶</span>: Yürü</div>
+        <div class="key-hint"><span>W</span> / <span>SPACE</span> / <span>▲</span>: Zıpla</div>
+        <div class="key-hint"><span>R</span>: Hızlı Yeniden Doğ</div>
+        <div class="troll-warning">⚠️ UYARI: Gördüğün hiçbir şeye güvenme! Zemin düşebilir, tavan çökebilir, para seni patlatabilir!</div>
+    </footer>
+
+    <script src="trollparkur.js"></script>
+    <script src="overlay-back.js"></script>
+</body>
+</html>

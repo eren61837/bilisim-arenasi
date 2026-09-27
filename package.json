@@ -1,0 +1,12 @@
+{
+  "name": "pixelplace-clone",
+  "version": "1.0.0",
+  "description": "Multiplayer Real-time Pixel Art Canvas Game with World Map, Bot Zones, Auth, and Cloudflare Captcha",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "ws": "^8.18.0"
+  }
+}

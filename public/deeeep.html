@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🌊 Deeeep.io - Okyanus Evrimi & Derinlik Savaşı</title>
+    <link rel="stylesheet" href="deeeep.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🐬</text></svg>">
+    <link rel="stylesheet" href="bgm.css">
+</head>
+<body>
+
+<canvas id="deeeep-canvas"></canvas>
+
+<!-- TOP HUD (Vitals & Status) -->
+<div class="deeeep-hud">
+    <div style="display:flex; align-items:center; gap:12px;">
+        <a href="/" class="btn-deeeep-back">◀ PORTALA DÖN</a>
+        <div class="current-animal-badge">
+            <span id="hud-animal-emoji">🐟</span>
+            <div>
+                <strong id="hud-animal-name">Palyaço Balığı</strong>
+                <span id="hud-animal-tier">Tier 1</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- CENTER BARS: EXP, HEALTH, OXYGEN, PRESSURE -->
+    <div class="vitals-container">
+        <!-- HEALTH BAR -->
+        <div class="vital-bar-wrap">
+            <span class="vital-label">❤️ CAN</span>
+            <div class="vital-bar"><div id="bar-hp" class="bar-fill bar-hp" style="width:100%"></div></div>
+            <span id="val-hp" class="vital-val">100/100</span>
+        </div>
+
+        <!-- EXP BAR -->
+        <div class="vital-bar-wrap">
+            <span class="vital-label">⭐ EVRİM</span>
+            <div class="vital-bar"><div id="bar-exp" class="bar-fill bar-exp" style="width:0%"></div></div>
+            <span id="val-exp" class="vital-val">0/100</span>
+        </div>
+
+        <!-- OXYGEN & PRESSURE (Dynamic) -->
+        <div class="vital-sub-bars">
+            <div class="vital-mini" id="wrap-oxygen">
+                <span>🫁 Oksijen:</span>
+                <div class="mini-bar"><div id="bar-oxygen" class="bar-fill bar-oxygen" style="width:100%"></div></div>
+            </div>
+            <div class="vital-mini" id="wrap-pressure">
+                <span>⚠️ Basınç:</span>
+                <div class="mini-bar"><div id="bar-pressure" class="bar-fill bar-pressure" style="width:100%"></div></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- RIGHT: BOOST CHARGES & SCORE -->
+    <div style="display:flex; align-items:center; gap:14px;">
+        <div class="boost-pills" id="boost-pills">
+            <span class="boost-dot active">⚡</span>
+            <span class="boost-dot active">⚡</span>
+        </div>
+        <div class="deeeep-score-pill">🏆 <span id="hud-score">0</span></div>
+    </div>
+</div>
+
+<!-- DEPTH METER (Sağ Kenar Derinlik Göstergesi) -->
+<div class="depth-meter-wrap">
+    <div class="depth-labels">
+        <span>☁️ YÜZEY</span>
+        <span>🐠 SIĞ DENİZ</span>
+        <span>🕳️ KARANLIK ABYSS</span>
+    </div>
+    <div class="depth-track">
+        <div id="depth-indicator" class="depth-indicator">🐟</div>
+    </div>
+</div>
+
+<!-- KILL FEED -->
+<div id="deeeep-kill-feed" class="deeeep-kill-feed"></div>
+
+<!-- LEADERBOARD -->
+<div class="deeeep-lb">
+    <div class="deeeep-lb-title">🏆 OKYANUS SIRALAMASI</div>
+    <ol id="deeeep-lb-list"></ol>
+</div>
+
+<!-- EVOLUTION CELEBRATION BANNER -->
+<div id="evolution-banner" class="evolution-banner" style="display:none">
+    <div class="evo-card">
+        <div class="evo-sparkle">✨ EVRİM GEÇİRDİN! ✨</div>
+        <div id="evo-emoji" class="evo-emoji">🐬</div>
+        <h2 id="evo-name">YUNUS</h2>
+        <p id="evo-desc">Süper hızlı yüzücü! Yüzeyden hava almayı unutma.</p>
+    </div>
+</div>
+
+<!-- DEATH SCREEN -->
+<div id="deeeep-death" class="deeeep-death hidden">
+    <div class="deeeep-death-card">
+        <div style="font-size:64px">💀</div>
+        <h2>AVLANDIN!</h2>
+        <p id="death-killer-text">Bir yırtıcı tarafından yutuldun</p>
+        <div class="death-score-info">Toplam Skor: <strong id="death-score-val">0</strong></div>
+        <button id="btn-respawn-deeeep" class="btn-respawn-deeeep">▶ YENİDEN DOĞ</button>
+        <a href="/" class="btn-exit-deeeep">🏠 Ana Portale Dön</a>
+    </div>
+</div>
+
+<!-- START MODAL -->
+<div id="deeeep-modal" class="deeeep-modal">
+    <div class="deeeep-modal-card">
+        <div class="deeeep-logo">🌊🐬🦈</div>
+        <h1>DEEEEP.IO</h1>
+        <p class="deeeep-tagline">Okyanusun derinliklerinde beslen, evrimleş ve Apex Predator ol!</p>
+
+        <!-- EVOLUTION PREVIEW -->
+        <div class="evo-tree-preview">
+            <div class="et-step"><span>🐟</span><small>Palyaço</small></div>
+            <span class="et-arrow">➜</span>
+            <div class="et-step"><span>🦀</span><small>Yengeç</small></div>
+            <span class="et-arrow">➜</span>
+            <div class="et-step"><span>🦑</span><small>Kalamar</small></div>
+            <span class="et-arrow">➜</span>
+            <div class="et-step"><span>💡</span><small>Fener</small></div>
+            <span class="et-arrow">➜</span>
+            <div class="et-step"><span>🐬</span><small>Yunus</small></div>
+            <span class="et-arrow">➜</span>
+            <div class="et-step"><span>🦈</span><small>Köpekbalığı</small></div>
+            <span class="et-arrow">➜</span>
+            <div class="et-step"><span>🐙</span><small>Kraken</small></div>
+        </div>
+
+        <button id="btn-play-deeeep" class="btn-play-deeeep">▶ OKYANUSA DAL!</button>
+
+        <div class="deeeep-controls-grid">
+            <div><span class="key">MOUSE</span> Yönel ve Yüz</div>
+            <div><span class="key">SOL TIK / SPACE</span> Boost Atılma</div>
+            <div><span class="key">PLANKTON</span> Beslen & Evrimleş</div>
+            <div><span class="key">OKSİJEN</span> Memeliler Havaya Çıkar</div>
+        </div>
+    </div>
+</div>
+
+<script src="deeeep.js"></script>
+<script src="bgm.js"></script>
+<script src="overlay-back.js"></script>
+</body>
+</html>

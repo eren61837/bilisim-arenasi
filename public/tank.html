@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>💥 Tank Savaşı 2D (Seken Mermiler) - Bilişim Sınıfı Portalı</title>
+    <link rel="stylesheet" href="tank.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💥</text></svg>">
+    <link rel="stylesheet" href="bgm.css">
+</head>
+<body>
+
+<div id="tank-container">
+    <canvas id="tank-canvas" width="1200" height="800"></canvas>
+</div>
+
+<!-- HUD -->
+<div class="tank-hud">
+    <a href="/" class="btn-tank-back">◀ PORTALA DÖN</a>
+    <div class="tank-hud-stats">
+        <span>🏆 SKOR: <strong id="hud-score">0</strong></span>
+        <span>💀 KILL: <strong id="hud-kills">0</strong></span>
+    </div>
+    <div class="tank-powerup-badge" id="hud-powerup" style="display:none">
+        <span id="hud-powerup-icon">⚡</span> <span id="hud-powerup-text">LAZER</span>
+    </div>
+</div>
+
+<!-- KILL FEED -->
+<div id="tank-kill-feed" class="tank-kill-feed"></div>
+
+<!-- LEADERBOARD -->
+<div class="tank-lb">
+    <div class="tank-lb-title">🏆 TANK SIRALAMASI</div>
+    <ol id="tank-lb-list"></ol>
+</div>
+
+<!-- CONTROLS HINT -->
+<div class="tank-controls-hint">
+    <span><kbd>W A S D</kbd> veya <kbd>YÖN TUŞLARI</kbd> Sür</span>
+    <span><kbd>MOUSE</kbd> Nişan Al</span>
+    <span><kbd>SOL TIK / SPACE</kbd> Ateş Et (Mermiler Duvardan Seker!)</span>
+</div>
+
+<!-- DEATH SCREEN -->
+<div id="tank-death" class="tank-death hidden">
+    <div class="tank-death-card">
+        <div style="font-size:56px">💥</div>
+        <h2>TANKIN VURULDU!</h2>
+        <p id="tank-death-msg">Bir mermi seni havaya uçurdu</p>
+        <div style="color:#00e676; font-size:18px; margin:12px 0;">3 saniye içinde yeniden doğuyorsun...</div>
+        <div class="tank-death-bar"></div>
+    </div>
+</div>
+
+<!-- JOIN MODAL -->
+<div id="tank-modal" class="tank-modal">
+    <div class="tank-modal-card">
+        <div style="font-size:64px; margin-bottom:8px;">🚜💥</div>
+        <h1>TANK SAVAŞI 2D</h1>
+        <p class="tank-tagline">Bilişim sınıfının efsane oyunu! Mermiler duvardan seker, rakipleri tuzağa düşür!</p>
+
+        <div style="margin:20px 0;">
+            <div style="color:#aaa; font-size:12px; margin-bottom:10px;">Tank Rengini Seç:</div>
+            <div id="tank-color-options" class="tank-color-options"></div>
+        </div>
+
+        <button id="btn-play-tank" class="btn-play-tank">▶ SAVAŞA BAŞLA!</button>
+
+        <div class="tank-features-info">
+            <div>⚡ <strong>Seken Mermiler</strong>: Duvardan 5 kez seker!</div>
+            <div>📦 <strong>Kutular</strong>: Güçlendirici topla (Lazer, Kalkan, Pompalı)</div>
+            <div>🤖 <strong>Akıllı Botlar</strong>: Tek başına kalsan bile heyecan bitmez!</div>
+        </div>
+    </div>
+</div>
+
+<script src="tank.js"></script>
+<script src="bgm.js"></script>
+<script src="overlay-back.js"></script>
+<script>
+const nameInput = document.getElementById('name-input');
+const savedName = localStorage.getItem('portal_username');
+if (savedName && nameInput) nameInput.value = savedName;
+</script>
+</body>
+</html>
