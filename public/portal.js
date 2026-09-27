@@ -5,33 +5,50 @@
   // ====================================================================
   // GLOBAL FIRST-VISIT USERNAME PICKER (runs before everything else)
   // ====================================================================
-  (function() {
-    const BANNED_WORDS = [
-      'sik', 'orospu', 'oç', 'oc', 'göt', 'got', 'am', 'yarrak', 'yarak', 'piç', 'pic', 'fuck', 'shit', 'ass', 'bitch',
-      'sikerim', 'sikeyim', 'amk', 'amina', 'amına', 'aq', 'bok', 'salak', 'aptal', 'kahpe', 'gerizekalı', 'gerizekali',
-      'mal', 'ibne', 'pezevenk', 'tasak', 'taşak', 'sex', 'porn', 'pussy', 'dick', 'cock', 'nigga', 'nigger', 'admin',
-      'administrator', 'moderator', 'yönetici', 'yonetici', 'system', 'null', 'undefined', 'script'
-    ];
+  // ====================================================================
+  // GLOBAL FIRST-VISIT USERNAME PICKER (runs before everything else)
+  // ====================================================================
+  function isNameProfane(name) {
+    if (!name) return false;
+    const lower = name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    // Exact short bad words checked with boundaries so common words like Ahmet, Hamza, Gamer are NOT blocked!
+    const shortBadRegex = /(?:^|[^a-z0-9])(am|sik|oc|got|pic|bok|aq|amk|ass|sex|mal|ibne)(?:$|[^a-z0-9])/i;
+    if (shortBadRegex.test(lower)) return true;
 
+    // Unambiguous longer swear words
+    const longBad = [
+      'orospu', 'sikerim', 'sikeyim', 'yarrak', 'yarak', 'kahpe', 'pezevenk', 'tasak', 'gerizekali',
+      'amina', 'fuck', 'shit', 'bitch', 'porn', 'pussy', 'nigger', 'nigga', 'dick', 'cock', 'piç'
+    ];
+    for (const bad of longBad) {
+      if (lower.includes(bad)) return true;
+    }
+    return false;
+  }
+
+  (function() {
     const existing = localStorage.getItem('portal_username');
     const modal = document.getElementById('modal-welcome');
     if (!modal) return;
 
-    const isBanned = existing && BANNED_WORDS.some(w => existing.toLowerCase().includes(w));
+    const isBanned = existing && isNameProfane(existing);
     const isDefaultAuto = existing && (existing.startsWith('Kral_') || existing.startsWith('Misafir_'));
 
     if (existing && existing.length >= 2 && !isBanned && !isDefaultAuto) {
+      modal.classList.add('hidden');
       modal.style.display = 'none';
       if (!localStorage.getItem('pixelplace_user')) {
         localStorage.setItem('pixelplace_user', JSON.stringify({ username: existing }));
       }
       return;
     }
+
+    modal.classList.remove('hidden');
     modal.style.display = 'flex';
     const input = document.getElementById('welcome-name-input');
     const btn = document.getElementById('welcome-start-btn');
     const err = document.getElementById('welcome-name-error');
-    if (input) setTimeout(() => input.focus(), 100);
+    if (input) setTimeout(() => input.focus(), 150);
 
     function saveWelcomeUsername() {
       const val = (input ? input.value : '').trim().replace(/[<>"'&]/g, '');
@@ -43,8 +60,7 @@
         if (err) { err.style.display = 'block'; err.textContent = 'En fazla 20 karakter!'; }
         return;
       }
-      const lowerVal = val.toLowerCase();
-      if (BANNED_WORDS.some(w => lowerVal.includes(w))) {
+      if (isNameProfane(val)) {
         if (err) { err.style.display = 'block'; err.textContent = 'Uygunsuz / absürt kelime içeremez! Düzgün bir isim gir. 🚫'; }
         return;
       }
@@ -52,11 +68,22 @@
       localStorage.setItem('portal_username', val);
       localStorage.setItem('portal_game_username', val);
       localStorage.setItem('pixelplace_user', JSON.stringify({ username: val }));
+      
+      modal.classList.add('hidden');
       modal.style.display = 'none';
+      modal.setAttribute('style', 'display: none !important;');
+
       const elUser = document.getElementById('portal-username');
       if (elUser) elUser.textContent = val;
+      if (typeof state !== 'undefined' && state) {
+        state.username = val;
+        if (state.ws && state.ws.readyState === WebSocket.OPEN) {
+          state.ws.send(JSON.stringify({ type: 'set_username', username: val }));
+        }
+      }
     }
 
+    window.submitPortalWelcome = saveWelcomeUsername;
     if (btn) btn.addEventListener('click', saveWelcomeUsername);
     if (input) input.addEventListener('keydown', (e) => { if (e.key === 'Enter') saveWelcomeUsername(); });
   })();
