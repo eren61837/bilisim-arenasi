@@ -601,7 +601,8 @@ exit
         let user = db.prepare('SELECT id, username, email, pixels_placed, role FROM users WHERE username = ?').get(username);
 
         if (!user) {
-          const fakeEmail = `${username.toLowerCase().replace(/[^a-z0-9]/g, '')}@pixelplace.local`;
+          const safeId = Buffer.from(username).toString('hex').slice(0, 12);
+          const fakeEmail = `u_${safeId}_${Date.now()}_${Math.random().toString(36).slice(2, 6)}@pixelplace.local`;
           const result = db.prepare(`
             INSERT INTO users (username, email, password_hash, password_salt, pixels_placed, role, created_at)
             VALUES (?, ?, '', '', 0, 'user', ?)
@@ -637,24 +638,23 @@ exit
           return sendJson(res, 400, { error: 'Lütfen Cloudflare doğrulamasını tamamlayın.' });
         }
 
-        if (!username || username.trim().length < 3 || username.trim().length > 20) {
-          return sendJson(res, 400, { error: 'Kullanıcı adı 3 ile 20 karakter arasında olmalıdır.' });
+        if (!username || username.trim().length < 2 || username.trim().length > 20) {
+          return sendJson(res, 400, { error: 'Kullanıcı adı 2 ile 20 karakter arasında olmalıdır.' });
         }
-        if (!email || !email.includes('@') || email.length < 5) {
-          return sendJson(res, 400, { error: 'Geçerli bir e-posta adresi girin.' });
-        }
-        if (!password || password.length < 6) {
-          return sendJson(res, 400, { error: 'Şifre en az 6 karakter olmalıdır.' });
+        if (!password || password.length < 4) {
+          return sendJson(res, 400, { error: 'Şifre en az 4 karakter olmalıdır.' });
         }
 
         const cleanUsername = username.trim();
-        const cleanEmail = email.trim().toLowerCase();
+        const cleanEmail = (email && email.includes('@')) 
+          ? email.trim().toLowerCase() 
+          : `${cleanUsername.toLowerCase()}@arena.local`;
 
         // Check if username or email already exists
         const checkStmt = db.prepare('SELECT id FROM users WHERE username = ? OR email = ?');
         const existing = checkStmt.get(cleanUsername, cleanEmail);
         if (existing) {
-          return sendJson(res, 409, { error: 'Bu kullanıcı adı veya e-posta zaten kullanımda.' });
+          return sendJson(res, 409, { error: 'Bu kullanıcı adı zaten kullanımda. Giriş yapmayı dene!' });
         }
 
         const salt = crypto.randomBytes(16).toString('hex');
@@ -789,7 +789,7 @@ exit
   else if (pathname === '/agario') safePath = '/agario.html';
   else if (pathname === '/papermap' || pathname === '/slither') safePath = '/slither.html';
   else if (pathname === '/tank') safePath = '/tank.html';
-  else if (pathname === '/deeeep') safePath = '/deeeep.html';
+  else if (pathname === '/diep' || pathname === '/deeeep') safePath = '/diep.html';
   else if (pathname === '/minecraft') safePath = '/minecraft.html';
   else if (pathname === '/survivor') safePath = '/survivor.html';
   else if (pathname === '/trollparkur') safePath = '/trollparkur.html';
@@ -797,6 +797,8 @@ exit
   else if (pathname === '/miner') safePath = '/miner.html';
   else if (pathname === '/sos') safePath = '/sos.html';
   else if (pathname === '/kafatopu') safePath = '/kafatopu.html';
+  else if (pathname === '/zombs') safePath = '/zombs.html';
+  else if (pathname === '/redmatch') safePath = '/redmatch.html';
   else if (safePath === '/' || safePath === '\\') safePath = '/index.html';
 
   const filePath = path.join(PUBLIC_DIR, safePath);
@@ -1342,10 +1344,9 @@ setTimeout(() => {
 
 function broadcastOnlineCount() {
   const counts = { total: connectedClients.size, rooms: {} };
-  for (const r of Object.keys(ROOMS)) counts.rooms[r] = 0;
   for (const client of connectedClients) {
-    if (client.room && counts.rooms[client.room] !== undefined) {
-      counts.rooms[client.room]++;
+    if (client.room) {
+      counts.rooms[client.room] = (counts.rooms[client.room] || 0) + 1;
     }
   }
   const payload = JSON.stringify({ type: 'online', counts });
@@ -1476,7 +1477,8 @@ wss.on('connection', (ws, req) => {
         const u = String(data.username).trim();
         user = db.prepare('SELECT id, username, email, pixels_placed, role FROM users WHERE username = ?').get(u);
         if (!user) {
-          const fakeEmail = `${u.toLowerCase().replace(/[^a-z0-9]/g, '')}@pixelplace.local`;
+          const safeId = Buffer.from(u).toString('hex').slice(0, 12);
+          const fakeEmail = `u_${safeId}_${Date.now()}_${Math.random().toString(36).slice(2, 6)}@pixelplace.local`;
           const res = db.prepare("INSERT INTO users (username, email, password_hash, password_salt, pixels_placed, role, created_at) VALUES (?, ?, '', '', 0, 'user', ?)").run(u, fakeEmail, Date.now());
           user = { id: Number(res.lastInsertRowid), username: u, email: fakeEmail, pixels_placed: 0, role: 'user' };
         }
@@ -1867,6 +1869,7 @@ function sosDoAIMove(roomId) {
 }
 
 function handleSosMessage(ws, data) {
+  ws.room = 'sos';
   if (data.type === 'sos_create') {
     const size = parseInt(data.gridSize) || 10;
     const roomId = generateSosId();

@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🐍 Slither.io - Bilişim Sınıfı Portalı</title>
+    <link rel="stylesheet" href="bgm.css">
+    <link rel="stylesheet" href="slither.css">
+</head>
+<body>
+<canvas id="slither-canvas"></canvas>
+<div class="slither-hud">
+    <a href="/" class="btn-back">◀ PORTAL</a>
+    <div class="hud-score">🐍 <span id="hud-score">0</span></div>
+    <div class="hud-rank">Sıra: <span id="hud-rank">-</span></div>
+</div>
+<div id="slither-kill-feed" class="slither-kill-feed"></div>
+<div class="slither-lb"><div class="slither-lb-title">🏆 SIRALAMA</div><ol id="slither-lb-list"></ol></div>
+<canvas id="slither-minimap" width="140" height="140"></canvas>
+<div class="slither-boost-hint">🖱️ Sol Tık / W = BOOST</div>
+<div id="slither-death" class="slither-death hidden">
+    <div class="death-card">
+        <div style="font-size:64px">💀</div>
+        <h2>YENİLDİN!</h2>
+        <p id="death-msg">Bir yılan tarafından yenildin</p>
+        <div class="death-score">Uzunluk: <span id="death-score">0</span></div>
+        <button id="btn-respawn" class="btn-respawn">▶ TEKRAR OYNA</button>
+        <a href="/" style="color:#666;text-decoration:none;font-size:13px">🏠 Portala Dön</a>
+    </div>
+</div>
+<div id="slither-modal" class="slither-modal">
+    <div class="slither-modal-card">
+        <div style="font-size:72px;animation:logoPulse 2s ease-in-out infinite">🐍</div>
+        <h1>SLITHER.IO</h1>
+        <p style="color:#888;margin-bottom:20px">Rakipleri SAR, çarptır ve büyü!</p>
+        <div id="color-options" class="color-options"></div>
+        <button id="btn-play-slither" class="btn-play-slither">▶ OYNA!</button>
+        <div class="slither-controls">
+            <div><span class="key">MOUSE</span> Yön</div>
+            <div><span class="key">SOL TIK/W</span> Boost</div>
+            <div><span class="key">ESC</span> Menü</div>
+        </div>
+    </div>
+</div>
+<script src="slither.js"></script>
+<script src="bgm.js"></script>
+<script src="overlay-back.js"></script>
+</body>
+</html>

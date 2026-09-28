@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Maden Ustası (Deep Earth Miner & Forge RPG) - Bilişim Arenası</title>
+    <link rel="stylesheet" href="miner.css">
+</head>
+<body>
+
+    <!-- CANVAS -->
+    <canvas id="miner-canvas"></canvas>
+
+    <!-- TOP HUD -->
+    <header class="miner-hud">
+        <div class="hud-group">
+            <div class="hud-card hud-money">
+                <span>💰</span>
+                <span id="hud-cash">0 TL</span>
+            </div>
+            <div class="hud-card hud-fuel">
+                <span>⛽</span>
+                <div class="fuel-gauge">
+                    <div class="fuel-fill" id="hud-fuel-fill"></div>
+                </div>
+                <span id="hud-fuel-text">100%</span>
+            </div>
+            <div class="hud-card hud-hull">
+                <span>🛡️</span>
+                <div class="hull-gauge">
+                    <div class="hull-fill" id="hud-hull-fill"></div>
+                </div>
+                <span id="hud-hull-text">100%</span>
+            </div>
+        </div>
+
+        <div class="hud-group">
+            <div class="hud-card hud-depth">
+                <span>📏</span>
+                <span id="hud-depth-text">0m</span>
+            </div>
+            <div class="hud-card hud-cargo">
+                <span>🎒</span>
+                <span id="hud-cargo-text">0 / 25 kg</span>
+            </div>
+        </div>
+
+        <div class="hud-group">
+            <button class="btn-hud-action" id="btn-open-market" style="border-color:rgba(255,213,79,0.5); color:var(--gold);">
+                <span>🏪</span> Market
+            </button>
+            <button class="btn-hud-action" id="btn-open-forge" style="border-color:rgba(0,219,255,0.5); color:var(--cyan);">
+                <span>🔨</span> Atölye
+            </button>
+            <button class="btn-hud-action" id="btn-surface-teleport" style="border-color:rgba(191,90,242,0.5); color:#bf5af2;" title="Acil Yüzey Işınlayıcısı">
+                <span>🚀</span> Yüzeye Dön
+            </button>
+            <button class="btn-hud-action" id="btn-toggle-bgm" style="border-color:rgba(0,229,255,0.5); color:var(--cyan);" title="Müzik Aç/Kapat">
+                <span>🎵</span> <span id="bgm-status-text">Müzik</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- SURFACE PROMPT BADGE -->
+    <div class="surface-prompt" id="surface-prompt">
+        🏪 YÜZEYDESİN: [M] Cevher Pazarı • [B] Demirci & Atölye • [R] Depoyu Doldur
+    </div>
+
+    <!-- DRONE STATUS DOCK -->
+    <div class="drone-status-dock" id="drone-status-dock">
+        <span>🤖 Madenci Dronelar: <strong id="drone-count-text" style="color:var(--cyan);">0 Aktif</strong></span>
+        <span style="opacity:0.4">•</span>
+        <span style="color:var(--gold);">Gelir: <strong id="drone-income-text">+0 TL / 5s</strong></span>
+    </div>
+
+    <!-- MODAL: ORE MARKET (CEVHER PAZARI) -->
+    <div class="modal-overlay" id="modal-market">
+        <div class="miner-modal-box">
+            <div class="miner-modal-header">
+                <h2><span>🏪</span> Yüzey Cevher Pazarı</h2>
+                <div class="hud-card hud-money">
+                    <span>💰</span> <span id="market-cash-display">0 TL</span>
+                </div>
+            </div>
+
+            <div class="miner-modal-content">
+                <div class="market-ores-grid" id="market-ores-grid">
+                    <!-- Dynamic ore items -->
+                </div>
+
+                <div class="market-summary-bar">
+                    <div>
+                        <div style="font-size:12px; color:var(--text-muted);">TOPLAM KAZANÇ DEĞERİ</div>
+                        <div style="font-size:24px; font-weight:900; color:var(--gold);" id="market-total-value">0 TL</div>
+                    </div>
+                    <button class="btn-sell-all-ores" id="btn-sell-all-ores">TÜM CEVHERLERİ SAT 💰</button>
+                </div>
+            </div>
+
+            <div class="miner-modal-footer">
+                <button class="btn-close-miner-modal" id="btn-close-market">MADENE DÖN</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: FORGE & TECH WORKSHOP (DEMİRCİ & ATÖLYE) -->
+    <div class="modal-overlay" id="modal-forge">
+        <div class="miner-modal-box">
+            <div class="miner-modal-header">
+                <h2><span>🔨</span> Demirci & Madencilik Teknolojileri</h2>
+                <div class="hud-card hud-money">
+                    <span>💰</span> <span id="forge-cash-display">0 TL</span>
+                </div>
+            </div>
+
+            <div class="miner-modal-content">
+                <div class="upgrades-grid" id="miner-upgrades-grid">
+                    <!-- Dynamic upgrade cards -->
+                </div>
+            </div>
+
+            <div class="miner-modal-footer">
+                <button class="btn-close-miner-modal" id="btn-close-forge">KAPAT</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: EMERGENCY RESCUE (KURTARMA) -->
+    <div class="modal-overlay" id="modal-rescue">
+        <div class="miner-modal-box" style="max-width:500px; text-align:center;">
+            <div class="miner-modal-header" style="justify-content:center;">
+                <h2 style="color:var(--red);">⚠️ ACİL DURUM: KAPSÜL HASAR ALDI!</h2>
+            </div>
+            <div class="miner-modal-content" style="text-align:center;">
+                <p id="rescue-cause-text" style="color:var(--text-muted); font-size:14px; margin-bottom:18px;">
+                    Yakıtın bitti veya kapsülün aşırı hasar aldı.
+                </p>
+                <div style="background:rgba(255,23,68,0.1); border:1px solid rgba(255,23,68,0.3); padding:16px; border-radius:14px; margin-bottom:20px;">
+                    <div style="font-size:13px; color:var(--text-muted);">Kurtarma & Tamir Ücreti</div>
+                    <div style="font-size:22px; font-weight:800; color:var(--gold);" id="rescue-cost-text">50 TL</div>
+                </div>
+                <button class="btn-sell-all-ores" id="btn-confirm-rescue" style="width:100%;">
+                    YÜZEYE ÇEK VE TAMİR ET 🚁
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SCRIPT INCLUDES -->
+    <script src="overlay-back.js"></script>
+    <script src="miner.js"></script>
+</body>
+</html>

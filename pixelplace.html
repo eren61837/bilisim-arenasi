@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>PixelPlace - Online Collaborative Canvas & World Map</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=0">
+    <link rel="stylesheet" href="bgm.css">
+    <link rel="stylesheet" href="style.css">
+    <!-- Cloudflare Turnstile Script -->
+    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+</head>
+<body>
+
+<!-- TOP HEADER NAVBAR (Pixelplace 1:1 Layout) -->
+<header id="header">
+    <div class="header-left">
+        <a class="btn-portal-back" href="/" style="background:#20242f;color:#00dbff;border:1px solid #00dbff;padding:4px 8px;border-radius:4px;font-size:11px;font-weight:bold;text-decoration:none;margin-right:8px;display:inline-flex;align-items:center;gap:4px;">◀ OYUN PORTALI</a>
+        <a class="header-logo" href="#">
+            <span class="logo-pixel">PIXEL</span><span class="logo-place">PLACE</span>
+        </a>
+
+        <!-- Canvas Selector Badge -->
+        <div class="canvas-selector-badge" id="canvas-dropdown-btn">
+            <span id="canvas-name-text">🌍 Pixels World</span>
+            <span class="dropdown-caret">▼</span>
+        </div>
+
+        <div id="canvas-dropdown-menu" class="canvas-dropdown-menu hidden">
+            <div class="cd-item active" data-room="world">
+                <div class="cd-title">🌍 Pixels World (World Map)</div>
+                <div class="cd-sub">2048×1024 • ⚡ Anında Boyama (Fırça Limitli) • 🌊 Denizler Korunmalı</div>
+            </div>
+            <div class="cd-item" data-room="turkey">
+                <div class="cd-title">🇹🇷 Türkiye Haritası (TR Canvas)</div>
+                <div class="cd-sub">1600×900 • ⚡ Anında Boyama (Fırça Limitli) • 🌊 Denizler Korunmalı</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Center Timer Cooldown -->
+    <div class="header-center">
+        <div id="timer" class="timer-badge ready" style="border-color: #00e676; color: #00e676;">
+            <span class="timer-icon">⚡</span>
+            <span id="timer-text">0s</span>
+        </div>
+        <div class="online-badge">
+            <span class="online-dot"></span>
+            <span id="online-users-count">1 online</span>
+        </div>
+    </div>
+
+    <!-- Right User Controls -->
+    <div class="header-right">
+        <div id="coordinates" class="header-coords">(0, 0)</div>
+        <div class="header-zoom" id="header-zoom-val">100%</div>
+        <button id="btn-toggle-tags" class="btn-header-tag-toggle" title="Çizen İsimlerini / Canlı Etiketleri Aç/Kapat">🏷️ Çizen İsimleri: KAPALI</button>
+
+        <div id="auth-buttons-header">
+            <button class="btn-header btn-highlight trigger-modal-auth" id="hdr-btn-login">👤 İsim Belirle (Giriş)</button>
+        </div>
+
+        <div id="user-profile-header" class="user-profile-header hidden">
+            <span class="u-avatar">👤</span>
+            <span id="u-username" class="u-name">Kral</span>
+            <span id="u-pixels" class="u-px" title="Total placed pixels">0 px</span>
+            <button id="btn-logout" class="btn-header-logout" title="Çıkış Yap">✕</button>
+        </div>
+
+        <button id="btn-toggle-tchat" class="btn-header-icon" title="Toggle Chat">💬</button>
+        <button id="btn-toggle-bot-info" class="btn-header-bot-menu" title="Resim Çizdirici Bot ve Alan Koruma">🤖 BOT & KORU</button>
+    </div>
+</header>
+
+<!-- MAIN CANVAS VIEWPORT (Wrapper -> Container -> Zoom -> Move -> Canvas) -->
+<div class="wrapper">
+
+    <!-- SIDEBAR CONTAINER (Authentic Pixelplace Left Drawer) -->
+    <div class="sidebar-container" id="sidebar-container">
+        <a class="sidebar-trigger" id="sidebar-trigger" href="#" title="Toggle Sidebar">
+            <span id="sidebar-trigger-icon">◀</span>
+        </a>
+
+        <div class="links-container">
+            <div class="centered-label auth-block" id="sidebar-auth-block">
+                <a class="button trigger-modal-auth btn-signup-side" id="sidebar-btn-auth" href="#">👤 İsim Seç / Oyna</a>
+            </div>
+
+            <div class="canvas-actions">
+                <div class="separation"></div>
+                <div class="centered-label nohover">Color Palette</div>
+                
+                <!-- Sidebar Palette -->
+                <div class="palette" id="sidebar-palette"></div>
+
+                <div class="separation"></div>
+                
+                <div class="checkbox-input">
+                    <input type="checkbox" id="lock-canvas" class="checkbox">
+                    <label for="lock-canvas" class="noselect">Lock canvas position</label>
+                </div>
+
+                <div class="checkbox-input" style="margin-top:8px;">
+                    <input type="checkbox" id="toggle-drawing-tags" class="checkbox">
+                    <label for="toggle-drawing-tags" class="noselect">🏷️ Çizen İsimlerini Göster</label>
+                </div>
+
+                <div class="checkbox-input" style="margin-top:8px;">
+                    <input type="checkbox" id="toggle-shield-markers" class="checkbox">
+                    <label for="toggle-shield-markers" class="noselect">🛡️ Koruma Alanı Çerçeveleri</label>
+                </div>
+
+                <div class="checkbox-input" style="margin-top:8px;">
+                    <input type="checkbox" id="toggle-cursor-preview" class="checkbox" checked>
+                    <label for="toggle-cursor-preview" class="noselect">🎯 Çizim İmleci & Önizleme</label>
+                </div>
+
+                <div class="separation"></div>
+                <a href="#" class="setting-link" id="btn-reset-view">Center Canvas (Reset)</a>
+                <a href="#" class="setting-link" id="btn-download-canvas">Download canvas (.png)</a>
+                <a href="#" class="setting-link hidden" id="btn-sidebar-admin-bot" style="color:#00e5ff;font-weight:bold;">👑 Resmi Bot Yönetimi (Admin)</a>
+            </div>
+
+            <div class="separation"></div>
+            <a href="#" class="centered-label cvlist" id="side-canvas-list">Canvas list</a>
+            <div class="separation"></div>
+            <a href="#" class="centered-label" id="side-about">About / Rules</a>
+        </div>
+    </div>
+
+    <!-- CANVAS VIEWPORT -->
+    <div class="canvas-container" id="canvas-container">
+        <div class="canvas-zoom" id="canvas-zoom">
+            <div class="canvas-move" id="canvas-move">
+                <canvas id="canvas" width="2048" height="1024"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- UI OVERLAYS (Pixelplace exact classes) -->
+    <div class="ui" id="ui-overlay">
+        <!-- Reticule cursor highlighting the hovered pixel with selected color -->
+        <div class="cursor" id="pixel-cursor"></div>
+        <div class="placeholder" id="pixel-placeholder"></div>
+
+        <!-- Zoom Buttons on Top Right -->
+        <div class="zoom-buttons">
+            <a href="#" class="zoom-in" id="btn-zoom-in">+</a>
+            <a href="#" class="zoom-out" id="btn-zoom-out">-</a>
+        </div>
+    </div>
+
+    <!-- RESPONSIVE FLOATING PALETTE DOCK (Bottom center #palette & #palette-buttons) -->
+    <div id="palette" class="palette-bottom-dock">
+        <div id="palette-buttons">
+            <!-- 34 Authentic Pixelplace Buttons rendered via JS: <a data-id="..." title="#HEX"></a> -->
+        </div>
+    </div>
+
+    <!-- CHAT COMPONENT (#tchat - Bottom Left Collapsible) -->
+    <div id="tchat" class="tchat-box">
+        <div class="splitter" title="Resize Chat"></div>
+        <div class="close-chat" id="tchat-close" title="Close Chat">✕</div>
+        
+        <div class="chatChannelsButtons">
+            <button class="chatFocus" data-channel="global">Global & Canvas<span class="unread"></span></button>
+            <button data-channel="turkey">🇹🇷 TR Sohbet<span class="unread"></span></button>
+        </div>
+
+        <div class="chatChannel active" id="chat-channel-content"></div>
+
+        <div id="tchatInput">
+            <form id="tchat-form" autocomplete="off">
+                <input type="text" id="tchat-input-field" placeholder="Send a message... (Press Enter)" maxlength="150" autocomplete="off">
+            </form>
+        </div>
+    </div>
+
+</div>
+
+<!-- MODAL: PIXELPLACE AUTH (CHOOSE USERNAME) -->
+<div id="modal-login" class="pixelplace-modal-backdrop hidden">
+    <div class="pixelplace-modal">
+        <div class="pm-header">
+            <div class="header-logo">
+                <span class="logo-pixel">PIXEL</span><span class="logo-place">PLACE</span>
+            </div>
+            <button class="pm-close" id="btn-close-auth-modal">✕</button>
+        </div>
+
+        <form id="form-quick-auth" class="pm-body" autocomplete="off">
+            <div class="pm-welcome-box">
+                <div class="pm-headline">KULLANICI ADINI SEÇ</div>
+                <div class="pm-subline">Piksel basmaya başlamak için sadece bir isim belirle:</div>
+            </div>
+
+            <div class="pm-field">
+                <label>Kullanıcı Adı (İsim / Nickname)</label>
+                <div class="pm-input-wrapper">
+                    <span class="pm-input-icon">👤</span>
+                    <input type="text" id="in-quick-username" placeholder="Örn: ProOyuncu, Ahmet, Kral..." minlength="2" maxlength="20" required autofocus autocomplete="nickname">
+                </div>
+            </div>
+
+            <!-- CLOUDFLARE TURNSTILE WIDGET -->
+            <div class="turnstile-box">
+                <div class="turnstile-header">
+                    <span class="cf-logo-icon">☁️</span>
+                    <span>Cloudflare Turnstile Verification</span>
+                </div>
+                <div class="cf-widget-simulate" id="cf-login-sim" onclick="window.verifyTurnstile('login')">
+                    <span class="cf-checkbox"></span>
+                    <span class="cf-check-label">Verify you are human</span>
+                    <span class="cf-brand">Cloudflare</span>
+                </div>
+            </div>
+
+            <div id="auth-err" class="pm-error hidden"></div>
+
+            <button type="submit" class="pm-submit-btn" id="btn-submit-quick-auth">OYNA VE PİKSEL BAS</button>
+
+            <div class="pm-features-list">
+                <span>✓ Şifre gerekmez</span>
+                <span>✓ Anında başla</span>
+                <span>✓ Piksellerin kaydolur</span>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- MODAL: RESMİ PIXELPLACE BOT & ALAN KORUMA PANELİ (SADECE ADMİN) -->
+<div id="modal-bot" class="pixelplace-modal-backdrop hidden">
+    <div class="pixelplace-modal bot-studio-modal" style="max-width:560px;">
+        <div class="pm-header">
+            <div class="pm-title">👑 Resmi PixelPlace Bot & Alan Koruma</div>
+            <button class="pm-close" id="btn-close-bot-info">✕</button>
+        </div>
+        
+        <!-- MODAL TABS -->
+        <div class="bot-nav-tabs">
+            <button type="button" class="bot-tab-btn active" data-tab="tab-official-bot">🤖 Resmi Sunucu Botu</button>
+            <button type="button" class="bot-tab-btn" data-tab="tab-protect">🛡️ Alan Koruma (Protect)</button>
+        </div>
+
+        <div class="pm-body bot-modal-body">
+            <!-- TAB 1: OFFICIAL PIXELPLACE BOT (ADMIN) -->
+            <div id="tab-official-bot" class="bot-tab-content">
+                <div style="background:rgba(0,229,255,0.08);border:1px solid #00e5ff;border-radius:8px;padding:12px;margin-bottom:14px;">
+                    <div style="display:flex;align-items:center;gap:8px;">
+                        <span style="font-size:20px;">🤖</span>
+                        <strong style="color:#00e5ff;font-size:14px;">Resmi PixelPlace Meme Botu Yöneticisi</strong>
+                    </div>
+                    <p style="font-size:12px;color:#bbb;margin-top:6px;line-height:1.5;">
+                        Dışarıdan kimse bot çalıştıramaz. Sadece sunucudaki 20 ülkeye özel bölgesel meme botları (GigaChad_TR, Walter_White_TR vb.) ve rastgele kalp/amogus çizen doodle sanatçıları vardır. Oyuncuların rahatça çizim yapabilmesi için botlar <strong>Çok Yavaş (4 saniyede 1 piksel)</strong> hızda çalışır.
+                    </p>
+                </div>
+
+                <div style="display:flex; flex-direction:column; gap:12px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.04); padding:12px 16px; border-radius:6px; border:1px solid rgba(255,255,255,0.1);">
+                        <div>
+                            <strong style="color:#fff;font-size:13px;">🤖 Bot Genel Durumu:</strong>
+                            <div style="font-size:11px;color:#888;">Tüm bölgesel meme ve doodle botlarını açıp kapatır</div>
+                        </div>
+                        <button id="admin-bot-toggle-btn" style="background:#00e676;color:#000;font-weight:900;border:none;padding:8px 16px;border-radius:6px;cursor:pointer;font-size:12px;">🟢 AKTİF</button>
+                    </div>
+
+                    <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.04); padding:12px 16px; border-radius:6px; border:1px solid rgba(255,255,255,0.1);">
+                        <div>
+                            <strong style="color:#fff;font-size:13px;">🛡️ Bölge Koruma Hızı:</strong>
+                            <div style="font-size:11px;color:#888;">Bozulan ülkelerin ne sıklıkla onarılacağını belirler</div>
+                        </div>
+                        <select id="admin-bot-speed-sel" style="background:#1e293b;color:#00e5ff;font-weight:bold;border:1px solid #00e5ff;padding:6px 12px;border-radius:6px;font-size:12px;">
+                            <option value="4000" selected>🐢 Çok Yavaş (4s / px) - Önerilen</option>
+                            <option value="8000">🦥 Aşırı Yavaş (8s / px)</option>
+                            <option value="2000">⚡ Orta Hız (2s / px)</option>
+                            <option value="999999">🚫 Koruma Kapalı (0 Onarım)</option>
+                        </select>
+                    </div>
+
+                    <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.04); padding:12px 16px; border-radius:6px; border:1px solid rgba(255,255,255,0.1);">
+                        <div>
+                            <strong style="color:#fff;font-size:13px;">🎨 Rastgele Şekil / Doodle Çizici:</strong>
+                            <div style="font-size:11px;color:#888;">Boş karalara minik kalp, gülen yüz, amogus, yıldız çizer</div>
+                        </div>
+                        <button id="admin-bot-doodle-btn" style="background:#00e5ff;color:#000;font-weight:900;border:none;padding:8px 16px;border-radius:6px;cursor:pointer;font-size:12px;">🎨 AÇIK</button>
+                    </div>
+
+                    <div style="margin-top:6px; display:grid; grid-template-columns:1fr; gap:8px;">
+                        <button id="admin-bot-repaint-btn" style="background:linear-gradient(135deg,#ff9800,#ff5722);color:#fff;font-weight:900;border:none;padding:12px;border-radius:6px;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;gap:8px;">
+                            <span>🔄</span> Tüm 20 Ülke Bayrağını Sıfırla & Yeniden Çiz
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 2: AREA PROTECTION (PROTECT & DEFENDER) -->
+            <div id="tab-protect" class="bot-tab-content hidden">
+                <div class="protect-info-banner">
+                    🛡️ <strong>Gelişmiş Alan Koruması:</strong> Belirlediğin bölge sadece senin hesabın/ismin tarafından boyanabilir. Diğer oyuncuların saldırıları veya griefing girişimleri engellenir!
+                </div>
+
+                <div class="bot-section-title">Yeni Alan Koru:</div>
+                <div class="protect-form-grid">
+                    <div class="protect-input-full">
+                        <label>Koruma Alanı Adı:</label>
+                        <input type="text" id="prot-zone-name" placeholder="Örn: Benim Sanatım / Bayrak" maxlength="32">
+                    </div>
+                    <div class="protect-input-quad">
+                        <div>
+                            <label>X:</label>
+                            <input type="number" id="prot-x" value="1000" min="0" max="2047">
+                        </div>
+                        <div>
+                            <label>Y:</label>
+                            <input type="number" id="prot-y" value="500" min="0" max="1023">
+                        </div>
+                        <div>
+                            <label>Genişlik (W):</label>
+                            <input type="number" id="prot-w" value="32" min="1" max="256">
+                        </div>
+                        <div>
+                            <label>Yükseklik (H):</label>
+                            <input type="number" id="prot-h" value="32" min="1" max="256">
+                        </div>
+                    </div>
+                    <div class="protect-btn-row">
+                        <button type="button" id="btn-pick-protect-area" class="btn-pick-coord" style="flex:1;">📍 Haritadan Seç</button>
+                        <button type="button" id="btn-submit-protect-zone" class="btn-protect-quick" style="flex:1;">🛡️ Bu Alanı Koru</button>
+                    </div>
+                </div>
+
+                <div class="bot-section-title" style="margin-top:14px;">Aktif Korumalı Alanlar:</div>
+                <div id="protect-zones-list" class="protect-zones-list">
+                    <div class="protect-empty-msg">Yükleniyor...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- TOASTS -->
+<div id="toast-wrapper"></div>
+
+<script src="app.js"></script>
+<script src="bgm.js"></script>
+<script src="overlay-back.js"></script>
+</body>
+</html>

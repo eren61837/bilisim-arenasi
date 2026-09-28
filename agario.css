@@ -1,0 +1,174 @@
+/* agario.css - Agar.io Web Styling */
+* {
+  margin: 0; padding: 0; box-sizing: border-box;
+  user-select: none;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+body, html {
+  width: 100%; height: 100%;
+  overflow: hidden;
+  background: #11141c;
+}
+
+#agar-canvas {
+  width: 100%; height: 100%;
+  display: block;
+}
+
+/* TOP BAR */
+.agar-top-bar {
+  position: absolute;
+  top: 14px; left: 16px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  z-index: 50;
+  pointer-events: none;
+}
+
+.btn-agar-back {
+  background: rgba(18, 24, 38, 0.85);
+  border: 1px solid #00e5ff;
+  color: #00e5ff;
+  text-decoration: none;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 6px 12px;
+  border-radius: 4px;
+  pointer-events: auto;
+  transition: all 0.15s;
+}
+.btn-agar-back:hover { background: #00e5ff; color: #000; }
+
+.agar-stats-badge {
+  background: rgba(18, 24, 38, 0.85);
+  border: 1px solid #334155;
+  color: #fff;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: bold;
+}
+.agar-stats-badge strong { color: #00e676; margin-left: 4px; }
+
+.agar-admin-controls { pointer-events: auto; }
+.agar-admin-controls.hidden { display: none; }
+.btn-admin-agar {
+  background: #d50000;
+  border: 1px solid #ffd54f;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+/* LEADERBOARD */
+.agar-leaderboard {
+  position: absolute;
+  top: 14px; right: 16px;
+  background: rgba(15, 20, 30, 0.85);
+  border: 1px solid #2d3748;
+  padding: 12px 16px;
+  border-radius: 8px;
+  width: 190px;
+  color: #fff;
+  z-index: 50;
+  pointer-events: none;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+}
+
+.lb-title {
+  font-size: 12px;
+  font-weight: 800;
+  color: #ffd54f;
+  border-bottom: 1px solid #334155;
+  padding-bottom: 4px;
+  margin-bottom: 6px;
+}
+
+.agar-leaderboard ol {
+  padding-left: 20px;
+  font-size: 11px;
+  line-height: 1.5;
+  color: #cbd5e1;
+}
+
+/* MODAL */
+.agar-modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+.agar-modal-backdrop.hidden { display: none; }
+
+.agar-modal-card {
+  background: #151a24;
+  border: 2px solid #00e5ff;
+  box-shadow: 0 0 25px rgba(0, 229, 255, 0.4);
+  padding: 30px;
+  border-radius: 12px;
+  width: 90%; max-width: 380px;
+  text-align: center;
+  color: #fff;
+}
+
+.agar-modal-card h1 { font-size: 26px; color: #00e5ff; margin-bottom: 2px; }
+.agar-modal-card h3 { font-size: 11px; color: #888; letter-spacing: 1px; margin-bottom: 12px; }
+
+.agar-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  text-align: left;
+  margin-bottom: 14px;
+}
+.agar-form-group label { font-size: 11px; color: #aaa; font-weight: bold; }
+.agar-form-group input {
+  background: #0d121c;
+  border: 1px solid #334155;
+  color: #00e676;
+  font-size: 14px;
+  font-weight: bold;
+  padding: 8px 10px;
+  border-radius: 6px;
+  outline: none;
+}
+
+.agar-controls-hint {
+  background: #0d121c;
+  border: 1px solid #222e40;
+  border-radius: 6px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 11px;
+  color: #94a3b8;
+  margin-bottom: 18px;
+}
+.agar-controls-hint strong { color: #fff; }
+
+.btn-play-agar {
+  width: 100%;
+  background: linear-gradient(135deg, #00e5ff 0%, #00e676 100%);
+  color: #000;
+  border: none;
+  font-size: 14px;
+  font-weight: 900;
+  padding: 11px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+.btn-play-agar:hover {
+  transform: scale(1.02);
+  box-shadow: 0 0 15px rgba(0, 230, 118, 0.6);
+}

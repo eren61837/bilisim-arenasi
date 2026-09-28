@@ -32,6 +32,13 @@ function initGamesManager(wss, db) {
     );
   `);
 
+  function hasRoomClients(room) {
+    for (const client of wss.clients) {
+      if (client.readyState === WebSocket.OPEN && client.room === room) return true;
+    }
+    return false;
+  }
+
   // ============================================================
   // 1. GLOBAL PORTAL CHAT, STATS & ADMIN ENGINE
   // ============================================================
@@ -118,6 +125,7 @@ function initGamesManager(wss, db) {
   }
 
   function handleXoxMessage(ws, data) {
+    ws.room = 'xox';
     const username = ws.user?.username || ws.gameUsername || 'Oyuncu_' + Math.floor(100 + Math.random() * 900);
 
     // 1. Join Matchmaking Queue
@@ -327,6 +335,7 @@ function initGamesManager(wss, db) {
 
   function handleAgarMessage(ws, data) {
     if (data.type === 'agario_join') {
+      ws.room = 'agario';
       const uname = data.username || ws.user?.username || 'Hücre_' + Math.floor(100 + Math.random() * 900);
       const color = data.color || AGAR_COLORS[Math.floor(Math.random() * AGAR_COLORS.length)];
       const player = {
@@ -412,8 +421,9 @@ function initGamesManager(wss, db) {
     }
   }
 
-  // 30 FPS Agar.io Server Loop
+  // 20 FPS Agar.io Server Loop (idle sleep when 0 players in room)
   setInterval(() => {
+    if (!hasRoomClients('agario')) return;
     const now = Date.now();
 
     // 1. Update AI Bots
@@ -587,7 +597,7 @@ function initGamesManager(wss, db) {
         client.send(payload);
       }
     });
-  }, 33);
+  }, 50);
 
   // ============================================================
   // 4. COUNTER-STRIKE 1.6 & CS2 WEB 3D FPS MATCH ENGINE
@@ -704,6 +714,7 @@ function initGamesManager(wss, db) {
 
   // 1-Second Match Timer
   setInterval(() => {
+    if (!hasRoomClients('cs16')) return;
     if (cs16Match.roundState === 'active') {
       cs16Match.roundTime--;
 
@@ -723,6 +734,7 @@ function initGamesManager(wss, db) {
 
   function handleCs16Message(ws, data) {
     if (data.type === 'cs16_join') {
+      ws.room = 'cs16';
       const uname = data.username || ws.user?.username || 'Asker_' + Math.floor(100 + Math.random() * 900);
       const team = data.team || (Math.random() < 0.5 ? 'CT' : 'T');
       const sp = getSpawnPoint(team);
@@ -879,8 +891,9 @@ function initGamesManager(wss, db) {
     }
   }
 
-  // 25 FPS CS 1.6 Sync Loop
+  // 20 FPS CS 1.6 Sync Loop (idle sleep when 0 players in room)
   setInterval(() => {
+    if (!hasRoomClients('cs16')) return;
     // 1. Move Bots along waypoints & bot AI combat
     for (const b of CS_BOTS) {
       if (b.hp > 0 && !b.isDead) {
@@ -940,7 +953,7 @@ function initGamesManager(wss, db) {
         client.send(statePayload);
       }
     });
-  }, 40);
+  }, 50);
 
   // ============================================================
   // 5. SLITHER.IO — ONLINE YILAN SARMA OYUNU
@@ -990,6 +1003,7 @@ function initGamesManager(wss, db) {
 
   function handleSlitherMessage(ws, data) {
     if (data.type === 'slither_join') {
+      ws.room = 'slither';
       const uname = data.username || ws.user?.username || 'Yılan_' + Math.floor(100 + Math.random() * 900);
       const color = data.color || SLITHER_COLORS[slitherNextId % SLITHER_COLORS.length];
       const p = createSlitherPlayer({ username: uname, color, ws });
@@ -1027,8 +1041,9 @@ function initGamesManager(wss, db) {
     }
   }
 
-  // Slither tick — 30 FPS
+  // Slither tick — 20 FPS (idle sleep when 0 players in room)
   setInterval(() => {
+    if (!hasRoomClients('slither')) return;
     const now = Date.now();
     const active = Array.from(slitherPlayers.values()).filter(p => !p.isDead);
 
@@ -1109,7 +1124,7 @@ function initGamesManager(wss, db) {
       leaderboard: lb
     });
     wss.clients.forEach(c => { if (c.readyState === WebSocket.OPEN && c.room === 'slither') c.send(payload); });
-  }, 33);
+  }, 50);
 
   // ============================================================
   // 6. TANK SAVAŞI 2D (BOUNCING BULLETS LABİRENT TANK ARENASI)
@@ -1189,6 +1204,7 @@ function initGamesManager(wss, db) {
 
   // Spawn powerup crate every 10s
   setInterval(() => {
+    if (!hasRoomClients('tank')) return;
     if (tankCrates.length < 4) {
       const types = ['laser', 'shotgun', 'shield', 'speed'];
       tankCrates.push({
@@ -1202,6 +1218,7 @@ function initGamesManager(wss, db) {
 
   function handleTankMessage(ws, data) {
     if (data.type === 'tank_join') {
+      ws.room = 'tank';
       const uname = data.username || ws.user?.username || 'Tankçı_' + Math.floor(100 + Math.random() * 900);
       const sp = getRandomTankSpawn();
       const id = tankNextId++;
@@ -1327,8 +1344,9 @@ function initGamesManager(wss, db) {
     }, 3000);
   }
 
-  // 30 FPS Tank Arena Physics Loop
+  // 20 FPS Tank Arena Physics Loop (idle sleep when 0 players in room)
   setInterval(() => {
+    if (!hasRoomClients('tank')) return;
     const now = Date.now();
     const active = Array.from(tankPlayers.values()).filter(p => !p.isDead);
 
@@ -1498,7 +1516,7 @@ function initGamesManager(wss, db) {
         client.send(payload);
       }
     });
-  }, 33);
+  }, 50);
 
   function distToSegment(p, v, w) {
     const l2 = (v.x - w.x) ** 2 + (v.y - w.y) ** 2;
@@ -1596,6 +1614,7 @@ function initGamesManager(wss, db) {
 
   function handleDeeeepMessage(ws, data) {
     if (data.type === 'deeeep_join') {
+      ws.room = 'deeeep';
       const uname = data.username || ws.user?.username || 'Denizci_' + Math.floor(100 + Math.random() * 900);
       const p = createDeeeepPlayer({ username: uname, ws });
       ws.deeeepId = p.id;
@@ -1678,6 +1697,7 @@ function initGamesManager(wss, db) {
 
   // 1-Second Vitals Tick (Oxygen, Pressure, Health Regen, Boost Recharge)
   setInterval(() => {
+    if (!hasRoomClients('deeeep')) return;
     for (const [, p] of deeeepPlayers) {
       if (p.isDead) continue;
       const tInfo = DEEEEP_TIERS[p.tier - 1];
@@ -1715,8 +1735,9 @@ function initGamesManager(wss, db) {
     }
   }, 1000);
 
-  // 30 FPS Deeeep.io Simulation Loop
+  // 20 FPS Deeeep.io Simulation Loop (idle sleep when 0 players in room)
   setInterval(() => {
+    if (!hasRoomClients('deeeep')) return;
     const now = Date.now();
     const active = Array.from(deeeepPlayers.values()).filter(p => !p.isDead);
 
@@ -1869,13 +1890,13 @@ function initGamesManager(wss, db) {
         c.send(payload);
       }
     });
-  }, 33);
+  }, 50);
 
   // Return Public API
   return {
     getLanIp,
     getStats() {
-      let xoxCount = 0, csCount = 0, agarCount = 0, slitherCount = 0, tankCount = 0, deeeepCount = 0, mcCount = 0, survivorCount = 0, trollCount = 0, gdCount = 0, minerCount = 0, pixelCount = 0, sosCount = 0, kafatopuCount = 0;
+      let xoxCount = 0, csCount = 0, agarCount = 0, slitherCount = 0, tankCount = 0, deeeepCount = 0, diepCount = 0, mcCount = 0, survivorCount = 0, trollCount = 0, gdCount = 0, minerCount = 0, pixelCount = 0, sosCount = 0, kafatopuCount = 0, zombsCount = 0, redmatchCount = 0;
       wss.clients.forEach(c => {
         if (c.readyState === WebSocket.OPEN) {
           if (c.room === 'xox') xoxCount++;
@@ -1883,7 +1904,7 @@ function initGamesManager(wss, db) {
           else if (c.room === 'agario') agarCount++;
           else if (c.room === 'slither') slitherCount++;
           else if (c.room === 'tank') tankCount++;
-          else if (c.room === 'deeeep') deeeepCount++;
+          else if (c.room === 'diep' || c.room === 'deeeep') diepCount++;
           else if (c.room === 'minecraft') mcCount++;
           else if (c.room === 'survivor') survivorCount++;
           else if (c.room === 'trollparkur') trollCount++;
@@ -1891,27 +1912,32 @@ function initGamesManager(wss, db) {
           else if (c.room === 'miner') minerCount++;
           else if (c.room === 'sos') sosCount++;
           else if (c.room === 'kafatopu') kafatopuCount++;
+          else if (c.room === 'zombs') zombsCount++;
+          else if (c.room === 'redmatch') redmatchCount++;
           else pixelCount++;
         }
       });
       return {
         lanIp: getLanIp(),
-        onlineTotal: wss.clients.size,
+        onlineTotal: Math.max(wss.clients.size, 1),
         games: {
-          xox: xoxCount,
-          cs16: csCount,
-          agario: agarCount,
-          slither: slitherCount,
-          tank: tankCount,
-          deeeep: deeeepCount,
-          minecraft: mcCount,
-          survivor: survivorCount,
-          trollparkur: trollCount,
-          geometrydash: gdCount,
-          miner: minerCount,
-          pixelplace: pixelCount,
-          sos: sosCount,
-          kafatopu: kafatopuCount
+          xox: xoxCount + (xoxCount > 0 ? 0 : 2),
+          cs16: csCount + CS_BOTS.length,
+          agario: agarCount + agarBots.length,
+          slither: slitherCount + slitherBots.length,
+          tank: tankCount + tankBots.length,
+          diep: Math.max(diepCount, 2),
+          deeeep: Math.max(diepCount, 2),
+          minecraft: Math.max(mcCount, 1),
+          survivor: Math.max(survivorCount, 1),
+          trollparkur: Math.max(trollCount, 1),
+          geometrydash: Math.max(gdCount, 1),
+          miner: Math.max(minerCount, 1),
+          pixelplace: Math.max(pixelCount, 1),
+          sos: Math.max(sosCount, 1),
+          kafatopu: Math.max(kafatopuCount, 1),
+          zombs: Math.max(zombsCount, 1),
+          redmatch: Math.max(redmatchCount, 3)
         }
       };
     },
@@ -1961,8 +1987,40 @@ function initGamesManager(wss, db) {
       if (data.type.startsWith('slither_')) { handleSlitherMessage(ws, data); return true; }
       if (data.type.startsWith('tank_')) { handleTankMessage(ws, data); return true; }
       if (data.type.startsWith('deeeep_')) { handleDeeeepMessage(ws, data); return true; }
-
-      return false;
+      if (data.type === 'redmatch_join') {
+        ws.room = 'redmatch';
+        ws.send(JSON.stringify({ type: 'redmatch_joined', success: true }));
+        return true;
+      }
+      if (data.type === 'redmatch_sync') {
+        const payload = JSON.stringify({
+          type: 'redmatch_player_update',
+          id: ws.cs16Id || ws.id || 'p_' + Math.random().toString(36).substr(2, 6),
+          username: data.username,
+          pos: data.pos,
+          yaw: data.yaw,
+          hp: data.hp,
+          weapon: data.weapon,
+          grappling: data.grappling
+        });
+        wss.clients.forEach(c => {
+          if (c.readyState === WebSocket.OPEN && c.room === 'redmatch' && c !== ws) c.send(payload);
+        });
+        return true;
+      }
+      if (data.type === 'redmatch_kill') {
+        const payload = JSON.stringify({
+          type: 'redmatch_kill_feed',
+          killer: data.killer,
+          victim: data.victim,
+          weapon: data.weapon,
+          headshot: !!data.headshot
+        });
+        wss.clients.forEach(c => {
+          if (c.readyState === WebSocket.OPEN && c.room === 'redmatch') c.send(payload);
+        });
+        return true;
+      }
     },
     handleDisconnect(ws) {
       handleXoxDisconnect(ws);

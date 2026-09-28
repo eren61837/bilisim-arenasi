@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>🛡️ DIEP.IO - Bilişim Arenası</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🛡️</text></svg>">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: #11141a;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            color: #fff;
+        }
+
+        /* TOP NAVIGATION BAR */
+        .diep-topbar {
+            height: 48px;
+            background: linear-gradient(180deg, #171d26 0%, #0d1219 100%);
+            border-bottom: 2px solid #00dbff;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 16px;
+            z-index: 1000;
+            box-shadow: 0 4px 20px rgba(0, 219, 255, 0.2);
+        }
+
+        .diep-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .btn-diep-nav {
+            background: rgba(0, 219, 255, 0.12);
+            color: #00dbff;
+            border: 1px solid #00dbff;
+            padding: 6px 14px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 800;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s ease;
+        }
+        .btn-diep-nav:hover {
+            background: #00dbff;
+            color: #000;
+            box-shadow: 0 0 15px rgba(0, 219, 255, 0.5);
+            transform: translateY(-1px);
+        }
+
+        .diep-title-text {
+            font-weight: 900;
+            font-size: 16px;
+            letter-spacing: 1px;
+            color: #00dbff;
+            text-shadow: 0 0 10px rgba(0, 219, 255, 0.4);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .diep-stats-badges {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .diep-tag {
+            font-size: 11px;
+            font-weight: 800;
+            padding: 4px 10px;
+            border-radius: 20px;
+            letter-spacing: 0.5px;
+        }
+        .diep-tag.tank {
+            background: rgba(0, 219, 255, 0.15);
+            color: #00dbff;
+            border: 1px solid rgba(0, 219, 255, 0.4);
+        }
+        .diep-tag.stat {
+            background: rgba(255, 179, 0, 0.15);
+            color: #ffb300;
+            border: 1px solid rgba(255, 179, 0, 0.4);
+        }
+
+        .diep-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* MAIN GAME CONTAINER */
+        #game-container {
+            position: absolute;
+            top: 48px;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: #cdcdcd;
+        }
+
+        #diep-frame {
+            width: 100%;
+            height: 100%;
+            border: none;
+            display: block;
+        }
+
+        /* HINT BANNER */
+        .diep-hint-banner {
+            position: absolute;
+            bottom: 12px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(13, 18, 25, 0.94);
+            border: 1px solid rgba(0, 219, 255, 0.4);
+            border-radius: 30px;
+            padding: 6px 20px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #e0f7fa;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            pointer-events: none;
+            z-index: 500;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.8);
+            transition: opacity 0.5s ease;
+        }
+        .diep-hint-banner b {
+            color: #00dbff;
+        }
+
+        /* LOADING SCREEN OVERLAY */
+        .loading-overlay {
+            position: fixed;
+            inset: 0;
+            background: radial-gradient(circle at center, #131c26 0%, #0a0e14 100%);
+            z-index: 999999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.6s ease, visibility 0.6s ease;
+        }
+        .loading-overlay.fade-out {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+        .loading-content {
+            background: linear-gradient(145deg, #16202c, #0d141d);
+            border: 2px solid #00dbff;
+            border-radius: 20px;
+            padding: 40px 36px;
+            max-width: 480px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 0 80px rgba(0, 219, 255, 0.3), inset 0 0 30px rgba(0, 219, 255, 0.08);
+            animation: diepPop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        @keyframes diepPop {
+            from { transform: scale(0.85); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+        .loading-logo {
+            font-size: 56px;
+            margin-bottom: 8px;
+            filter: drop-shadow(0 0 16px rgba(0, 219, 255, 0.6));
+            animation: pulse 1.8s infinite ease-in-out;
+        }
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.08); }
+        }
+        .loading-title {
+            font-size: 32px;
+            font-weight: 900;
+            color: #fff;
+            margin-bottom: 6px;
+            letter-spacing: 3px;
+            text-shadow: 0 0 20px rgba(0, 219, 255, 0.6);
+        }
+        .loading-subtitle {
+            font-size: 14px;
+            color: #8da2b5;
+            margin-bottom: 24px;
+            font-weight: 500;
+        }
+        .loading-info-box {
+            background: rgba(0, 0, 0, 0.45);
+            border: 1px solid rgba(0, 219, 255, 0.3);
+            border-radius: 14px;
+            padding: 14px 18px;
+            margin-bottom: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            font-size: 13px;
+            color: #ccc;
+            text-align: left;
+        }
+        .info-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .info-badge {
+            font-size: 11px;
+            font-weight: 800;
+            padding: 3px 8px;
+            border-radius: 6px;
+        }
+        .info-badge.blue { background: rgba(0, 219, 255, 0.15); color: #00dbff; }
+        .info-badge.yellow { background: rgba(255, 215, 0, 0.15); color: #ffd700; }
+        .info-badge.green { background: rgba(0, 230, 118, 0.15); color: #00e676; }
+
+        .loading-bar-wrap {
+            width: 100%;
+            height: 10px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 12px;
+            border: 1px solid rgba(0, 219, 255, 0.2);
+        }
+        .loading-bar-fill {
+            width: 0%;
+            height: 100%;
+            background: linear-gradient(90deg, #00dbff, #00e676);
+            border-radius: 10px;
+            box-shadow: 0 0 12px rgba(0, 219, 255, 0.8);
+            animation: diepFill 1.8s ease-in-out forwards;
+        }
+        @keyframes diepFill {
+            0% { width: 5%; }
+            40% { width: 50%; }
+            75% { width: 85%; }
+            100% { width: 100%; }
+        }
+        .loading-status {
+            font-size: 13px;
+            color: #00dbff;
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+
+        @media (max-width: 768px) {
+            .diep-stats-badges { display: none; }
+            .diep-hint-banner { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- DIEP.IO LOADING SCREEN OVERLAY -->
+    <div id="diep-loading-screen" class="loading-overlay">
+        <div class="loading-content">
+            <div class="loading-logo">🛡️ 🎯 💥</div>
+            <h1 class="loading-title">DIEP.IO</h1>
+            <p class="loading-subtitle">2D Tank Savaşları &amp; Sınıf Geliştirme Arenası</p>
+            
+            <div class="loading-info-box">
+                <div class="info-row">
+                    <span>🎮 <b>Oyun Motoru:</b> Orijinal WebAssembly</span>
+                    <span class="info-badge blue">1:1 RESMİ</span>
+                </div>
+                <div class="info-row">
+                    <span>🛡️ <b>Tank Sınıfları:</b> 45 Farklı Tank Evrimi</span>
+                    <span class="info-badge yellow">LVL 15/30/45</span>
+                </div>
+                <div class="info-row">
+                    <span>⚡ <b>Sunucu Yükü:</b> İstemci Odaklı Sıfır Lag</span>
+                    <span class="info-badge green">%0 CPU</span>
+                </div>
+            </div>
+
+            <div class="loading-bar-wrap">
+                <div class="loading-bar-fill"></div>
+            </div>
+            <div class="loading-status" id="loading-status-text">Tank motorları çalıştırılıyor...</div>
+        </div>
+    </div>
+
+    <!-- TOP NAVIGATION BAR -->
+    <header class="diep-topbar">
+        <div class="diep-brand">
+            <a href="/" class="btn-diep-nav">🏠 Portale Dön</a>
+            <div class="diep-title-text">
+                <span>🛡️</span>
+                <span>DIEP.IO ARENASI</span>
+            </div>
+        </div>
+
+        <div class="diep-stats-badges">
+            <span class="diep-tag tank" id="diep-player-tag">👤 Oyuncu</span>
+            <span class="diep-tag tank">🛡️ 45 Tank Sınıfı</span>
+            <span class="diep-tag stat">⭐ 8 Stat Yükseltme</span>
+        </div>
+
+        <div class="diep-actions">
+            <button class="btn-diep-nav" id="btn-fullscreen">⛶ Tam Ekran</button>
+            <button class="btn-diep-nav" id="btn-reload">🔄 Yeniden Başlat</button>
+        </div>
+    </header>
+
+    <!-- GAME IFRAME VIEWPORT -->
+    <main id="game-container">
+        <iframe id="diep-frame" src="https://diep.io/" allow="autoplay; fullscreen; pointer-lock; gamepad" sandbox="allow-forms allow-modals allow-orientation-lock allow-pointer-lock allow-popups allow-popups-to-escape-sandbox allow-presentation allow-same-origin allow-scripts"></iframe>
+
+        <!-- Quick Help Hint -->
+        <div class="diep-hint-banner" id="hint-banner">
+            <span>⌨️ <b>WASD:</b> Hareket</span>
+            <span>🎯 <b>Mouse / Sol Tık:</b> Nişan &amp; Ateş</span>
+            <span>⚡ <b>E:</b> Oto-Ateş</span>
+            <span>🌀 <b>C:</b> Oto-Dönüş</span>
+            <span>⭐ <b>1-8:</b> Stat Yükselt (Can, Hasar, Hız, Delicilik)</span>
+            <span>🔷 <b>Lvl 15/30/45:</b> Yeni Tanklar</span>
+        </div>
+    </main>
+
+    <script>
+        (function() {
+            'use strict';
+
+            const loadingScreen = document.getElementById('diep-loading-screen');
+            const statusText = document.getElementById('loading-status-text');
+            const btnFullscreen = document.getElementById('btn-fullscreen');
+            const btnReload = document.getElementById('btn-reload');
+            const frame = document.getElementById('diep-frame');
+            const hintBanner = document.getElementById('hint-banner');
+
+            // Dynamic loading status messages
+            setTimeout(() => {
+                if (statusText) statusText.textContent = "Poligonlar ve mermiler hazırlanıyor...";
+            }, 600);
+            setTimeout(() => {
+                if (statusText) statusText.textContent = "Global tank sunucularına bağlanılıyor...";
+            }, 1100);
+            setTimeout(() => {
+                if (statusText) statusText.textContent = "Arenaya giriliyor! Bol şans!";
+            }, 1600);
+
+            // Dismiss Loading Screen
+            setTimeout(() => {
+                if (loadingScreen) {
+                    loadingScreen.classList.add('fade-out');
+                    setTimeout(() => {
+                        loadingScreen.remove();
+                    }, 650);
+                }
+            }, 2000);
+
+            // Auto fade out hint banner after 12s to keep view clean
+            setTimeout(() => {
+                if (hintBanner) {
+                    hintBanner.style.opacity = '0';
+                    setTimeout(() => hintBanner.remove(), 600);
+                }
+            }, 12000);
+
+            // Fullscreen Toggle
+            btnFullscreen.addEventListener('click', () => {
+                const el = document.documentElement;
+                if (!document.fullscreenElement) {
+                    if (el.requestFullscreen) el.requestFullscreen();
+                    else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+                } else {
+                    if (document.exitFullscreen) document.exitFullscreen();
+                }
+            });
+
+            // Update Player Name
+            const savedName = localStorage.getItem('portal_username');
+            const pTag = document.getElementById('diep-player-tag');
+            if (savedName && pTag) pTag.textContent = '👤 ' + savedName;
+        })();
+    </script>
+
+    <!-- Universal Presence & In-Game Online Counter -->
+    <script src="overlay-back.js"></script>
+</body>
+</html>

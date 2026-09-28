@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>❌⭕ XOX Online 1v1 - Bilişim Sınıfı Portalı</title>
+    <link rel="stylesheet" href="bgm.css">
+    <link rel="stylesheet" href="xox.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>❌</text></svg>">
+</head>
+<body>
+
+<header class="xox-header">
+    <a href="/" class="btn-back">◀ PORTALA DÖN</a>
+    <div class="xox-title">❌⭕ XOX ONLINE (1v1)</div>
+    <div id="xox-user-display" class="xox-user">👤 Oyuncu</div>
+</header>
+
+<!-- ADMIN BAR (Only visible if admin) -->
+<div id="xox-admin-bar" class="xox-admin-bar hidden">
+    <span>👑 ADMİN:</span>
+    <button id="btn-admin-insta-win" class="btn-admin-act">🏆 Maçı Anında Kazan</button>
+    <button id="btn-admin-reset-board" class="btn-admin-act">🔄 Tahtayı Sıfırla</button>
+</div>
+
+<main class="xox-main">
+
+    <!-- LOBBY / MATCHMAKING CARD -->
+    <div id="xox-lobby-card" class="xox-card">
+        <h2>🎮 Oyun Modu Seç</h2>
+        <p style="color:#aaa; font-size:13px; margin-bottom:16px;">Sınıftaki arkadaşlarınla 1v1 canlı eşleş veya akıllı yapay zeka botuyla kapış!</p>
+
+        <div class="xox-modes-grid">
+            <button id="btn-start-queue" class="btn-mode btn-pvp">
+                <span class="mode-icon">⚔️</span>
+                <span class="mode-title">1v1 Sınıfta Rakip Ara</span>
+                <span class="mode-sub">Otomatik Canlı Matchmaking</span>
+            </button>
+
+            <button id="btn-start-bot" class="btn-mode btn-bot">
+                <span class="mode-icon">🤖</span>
+                <span class="mode-title">Akıllı Botla Oyna</span>
+                <span class="mode-sub">Tek Başına Pratik Yap</span>
+            </button>
+        </div>
+
+        <div id="xox-queue-status" class="queue-status hidden">
+            <div class="spinner"></div>
+            <span id="queue-status-text">Sınıfta rakip aranıyor...</span>
+            <button id="btn-cancel-queue" class="btn-cancel-queue">İptal Et</button>
+        </div>
+    </div>
+
+    <!-- GAME ARENA CARD -->
+    <div id="xox-arena-card" class="xox-card hidden">
+        <div class="scoreboard-row">
+            <div class="player-box player-x">
+                <span class="player-symbol">❌</span>
+                <span id="p-x-name" class="player-name">Sen</span>
+                <span id="p-x-score" class="player-score">0</span>
+            </div>
+            <div class="vs-badge">VS</div>
+            <div class="player-box player-o">
+                <span class="player-symbol">⭕</span>
+                <span id="p-o-name" class="player-name">Rakip</span>
+                <span id="p-o-score" class="player-score">0</span>
+            </div>
+        </div>
+
+        <div class="turn-banner" id="turn-banner">
+            <span id="turn-text">Sıra Sende!</span>
+            <span id="turn-timer" class="turn-timer">15s</span>
+        </div>
+
+        <!-- 3x3 GRID -->
+        <div class="xox-grid-wrap">
+            <div class="xox-grid" id="xox-grid">
+                <div class="cell" data-idx="0"></div>
+                <div class="cell" data-idx="1"></div>
+                <div class="cell" data-idx="2"></div>
+                <div class="cell" data-idx="3"></div>
+                <div class="cell" data-idx="4"></div>
+                <div class="cell" data-idx="5"></div>
+                <div class="cell" data-idx="6"></div>
+                <div class="cell" data-idx="7"></div>
+                <div class="cell" data-idx="8"></div>
+            </div>
+        </div>
+
+        <!-- REACTIONS & ACTIONS -->
+        <div class="xox-footer-actions">
+            <div class="reactions-row">
+                <button class="btn-react" data-emote="👍">👍</button>
+                <button class="btn-react" data-emote="🔥">🔥</button>
+                <button class="btn-react" data-emote="😂">😂</button>
+                <button class="btn-react" data-emote="😎">😎</button>
+                <button class="btn-react" data-emote="GG">GG</button>
+            </div>
+            <div class="arena-buttons">
+                <button id="btn-rematch" class="btn-action-rematch hidden">🔄 Rövanş İste</button>
+                <button id="btn-leave-match" class="btn-action-leave">🚪 Ayrıl</button>
+            </div>
+        </div>
+        <div id="reaction-bubble" class="reaction-bubble hidden"></div>
+    </div>
+
+</main>
+
+<script src="xox.js"></script>
+<script src="bgm.js"></script>
+<script src="overlay-back.js"></script>
+</body>
+</html>

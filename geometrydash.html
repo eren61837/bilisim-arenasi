@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>⚡ GEOMETRY NEON DASH - Bilişim Arenası</title>
+    <link rel="stylesheet" href="geometrydash.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚡</text></svg>">
+</head>
+<body>
+
+    <!-- TOPBAR -->
+    <header class="gd-topbar">
+        <div class="gd-brand">
+            <a href="/" class="btn-gd-back">🏠 PORTALE DÖN</a>
+            <div class="gd-title-wrap">
+                <span class="gd-icon">⚡</span>
+                <div>
+                    <h1>GEOMETRY NEON DASH</h1>
+                    <span class="gd-sub">Ritim, Refleks & Neon Zıplama Macerası</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- PROGRESS BAR -->
+        <div class="gd-progress-container">
+            <div class="gd-progress-track">
+                <div class="gd-progress-fill" id="gd-progress-fill" style="width: 0%;"></div>
+            </div>
+            <span class="gd-percent-text" id="gd-percent-text">0%</span>
+        </div>
+
+        <!-- STATS & ACTIONS -->
+        <div class="gd-actions">
+            <div class="gd-stat-pill">
+                <span>💥 DENEME:</span>
+                <strong id="attempt-count">1</strong>
+            </div>
+            <div class="gd-level-select-wrap">
+                <select id="level-select" class="gd-select">
+                    <option value="1">1. Seviye: Neon Overdrive</option>
+                    <option value="2">2. Seviye: Cyber Rave</option>
+                    <option value="3">3. Seviye: Electro Madness</option>
+                </select>
+            </div>
+            <button class="btn-gd-action" id="btn-toggle-music">
+                <span>🎵</span> <span id="music-label">Müzik: AÇIK</span>
+            </button>
+            <button class="btn-gd-action" id="btn-fullscreen">
+                <span>⛶</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- MAIN GAME VIEWPORT -->
+    <main id="gd-container">
+        <canvas id="gd-canvas"></canvas>
+
+        <!-- START / PAUSE OVERLAY -->
+        <div id="start-overlay" class="gd-overlay">
+            <div class="gd-menu-card">
+                <div class="gd-menu-logo">⚡ NEON DASH ⚡</div>
+                <p class="gd-menu-subtitle">Müzikle Senkronize Ritim Zıplaması</p>
+                <div class="skin-selector">
+                    <span class="skin-title">Küp Görünümü Seç:</span>
+                    <div class="skins-row" id="skins-row">
+                        <button class="btn-skin active" data-skin="neon_cube">🟩 Neon Küp</button>
+                        <button class="btn-skin" data-skin="cyber_demon">😈 Siber İblis</button>
+                        <button class="btn-skin" data-skin="golden_star">⭐ Altın Yıldız</button>
+                        <button class="btn-skin" data-skin="glitch_robot">🤖 Glitch Bot</button>
+                    </div>
+                </div>
+                <button id="btn-play-game" class="btn-play-pulse">BAŞLAMAK İÇİN TIKLA VEYA BOŞLUK'A BAS ▶</button>
+                <div class="gd-instructions">
+                    <span>Zıplamak için: <strong>BOŞLUK (SPACE)</strong>, <strong>▲ YUKARI</strong> veya <strong>SOL TIK</strong></span>
+                    <span>Sarı Halka: Havadayken tıkla ve çift zıpla!</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- VICTORY BANNER -->
+        <div id="gd-victory-overlay" class="gd-overlay hidden">
+            <div class="gd-menu-card victory-card">
+                <div class="victory-icon">🏆 ⚡ 🏆</div>
+                <h2>%100 SEVİYE TAMAMLANDI!</h2>
+                <p id="victory-stats">Harika refleksler! 0 denemede tamamladın.</p>
+                <button id="btn-next-level" class="btn-play-pulse">SONRAKİ SEVİYEYE GEÇ ▶</button>
+                <button id="btn-replay-level" class="btn-replay-pulse">Tekrar Oyna 🔄</button>
+            </div>
+        </div>
+    </main>
+
+    <!-- FOOTER CONTROLS -->
+    <footer class="gd-footer">
+        <div class="gd-hint"><span>SPACE</span> / <span>SOL TIK</span> / <span>W</span>: Zıpla</div>
+        <div class="gd-hint"><span>P</span>: Duraklat</div>
+        <div class="gd-hint"><span>R</span>: Anında Yeniden Başlat</div>
+        <div class="gd-creds">Bilişim Sınıfı Efsanesi • WebGL & Web Audio API Powered</div>
+    </footer>
+
+    <script src="geometrydash.js"></script>
+    <script src="overlay-back.js"></script>
+</body>
+</html>

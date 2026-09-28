@@ -1,0 +1,130 @@
+/* papermap.css - PaperMap.io Styling */
+* {
+  margin: 0; padding: 0; box-sizing: border-box;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  user-select: none;
+}
+
+body, html {
+  width: 100%; height: 100%;
+  overflow: hidden;
+  background: #0f131a;
+  display: flex;
+  flex-direction: column;
+}
+
+.pm-top-bar {
+  background: #141a24;
+  border-bottom: 1px solid #232d3d;
+  padding: 10px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.btn-pm-back {
+  background: #1e2636;
+  border: 1px solid #d500f9;
+  color: #d500f9;
+  text-decoration: none;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 6px 12px;
+  border-radius: 4px;
+}
+.btn-pm-back:hover { background: #d500f9; color: #fff; }
+
+.pm-stats-badge {
+  font-size: 13px;
+  font-weight: bold;
+  color: #fff;
+}
+.pm-stats-badge strong { color: #d500f9; margin-left: 4px; }
+
+.pm-leaderboard {
+  font-size: 12px;
+  color: #aaa;
+  display: flex;
+  gap: 8px;
+}
+.pm-lb-title { color: #ffd54f; font-weight: bold; }
+
+.pm-main {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px;
+}
+
+.pm-canvas-wrap {
+  background: #18202d;
+  border: 2px solid #2e3b50;
+  border-radius: 8px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+  overflow: hidden;
+  max-width: 100%;
+  max-height: 90vh;
+}
+
+#pm-canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 60 / 40;
+}
+
+/* MODAL */
+.pm-modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.8);
+  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+.pm-modal-backdrop.hidden { display: none; }
+
+.pm-modal-card {
+  background: #161c28;
+  border: 2px solid #d500f9;
+  box-shadow: 0 0 25px rgba(213, 0, 249, 0.4);
+  padding: 30px;
+  border-radius: 12px;
+  text-align: center;
+  width: 90%; max-width: 380px;
+  color: #fff;
+}
+
+.pm-modal-card h1 { font-size: 26px; color: #d500f9; margin-bottom: 2px; }
+.pm-modal-card h3 { font-size: 11px; color: #888; letter-spacing: 1px; margin-bottom: 12px; }
+
+.pm-controls-hint {
+  background: #0e131d;
+  border: 1px solid #232d3d;
+  border-radius: 6px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 11px;
+  color: #cbd5e1;
+  margin-bottom: 18px;
+  text-align: left;
+}
+.pm-controls-hint strong { color: #d500f9; }
+
+.btn-play-pm {
+  width: 100%;
+  background: linear-gradient(135deg, #d500f9 0%, #7c4dff 100%);
+  color: #fff;
+  border: none;
+  font-size: 14px;
+  font-weight: 900;
+  padding: 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  box-shadow: 0 0 15px rgba(213, 0, 249, 0.5);
+}
