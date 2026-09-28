@@ -2,9 +2,9 @@
 (function() {
   'use strict';
 
-  // ====================================================================
-  // GLOBAL FIRST-VISIT USERNAME PICKER (runs before everything else)
-  // ====================================================================
+  // Global state reference (declared before IIFE to prevent TDZ ReferenceError)
+  let state = null;
+
   // ====================================================================
   // GLOBAL FIRST-VISIT USERNAME PICKER (runs before everything else)
   // ====================================================================
@@ -29,7 +29,68 @@
   (function() {
     const existing = localStorage.getItem('portal_username');
     const modal = document.getElementById('modal-welcome');
+    const modalProfile = document.getElementById('modal-user-profile');
     if (!modal) return;
+
+    // Tabs & Panels
+    const tabGuest = document.getElementById('tab-auth-guest');
+    const tabLogin = document.getElementById('tab-auth-login');
+    const tabRegister = document.getElementById('tab-auth-register');
+    const panelGuest = document.getElementById('auth-panel-guest');
+    const panelLogin = document.getElementById('auth-panel-login');
+    const panelRegister = document.getElementById('auth-panel-register');
+
+    function switchAuthTab(activeTab) {
+      [tabGuest, tabLogin, tabRegister].forEach(t => {
+        if (!t) return;
+        t.style.background = 'transparent';
+        t.style.color = '#aaa';
+        t.classList.remove('active');
+      });
+      [panelGuest, panelLogin, panelRegister].forEach(p => {
+        if (p) p.style.display = 'none';
+      });
+
+      if (activeTab === 'guest') {
+        if (tabGuest) { tabGuest.style.background = '#00dbff'; tabGuest.style.color = '#000'; tabGuest.classList.add('active'); }
+        if (panelGuest) panelGuest.style.display = 'block';
+        document.getElementById('welcome-name-input')?.focus();
+      } else if (activeTab === 'login') {
+        if (tabLogin) { tabLogin.style.background = '#00e676'; tabLogin.style.color = '#000'; tabLogin.classList.add('active'); }
+        if (panelLogin) panelLogin.style.display = 'block';
+        document.getElementById('login-identifier-input')?.focus();
+      } else if (activeTab === 'register') {
+        if (tabRegister) { tabRegister.style.background = '#ff9800'; tabRegister.style.color = '#000'; tabRegister.classList.add('active'); }
+        if (panelRegister) panelRegister.style.display = 'block';
+        document.getElementById('reg-username-input')?.focus();
+      }
+    }
+
+    tabGuest?.addEventListener('click', () => switchAuthTab('guest'));
+    tabLogin?.addEventListener('click', () => switchAuthTab('login'));
+    tabRegister?.addEventListener('click', () => switchAuthTab('register'));
+
+    // Success login helper
+    function onAuthSuccess(username, token, isRegistered) {
+      localStorage.setItem('portal_username', username);
+      localStorage.setItem('portal_game_username', username);
+      localStorage.setItem('pixelplace_user', JSON.stringify({ username }));
+      if (token) localStorage.setItem('session_token', token);
+      localStorage.setItem('portal_is_registered', isRegistered ? 'true' : 'false');
+
+      modal.classList.add('hidden');
+      modal.style.display = 'none';
+      modal.setAttribute('style', 'display: none !important;');
+
+      const elUser = document.getElementById('portal-username');
+      if (elUser) elUser.textContent = username;
+      if (state) {
+        state.username = username;
+        if (state.ws && state.ws.readyState === WebSocket.OPEN) {
+          state.ws.send(JSON.stringify({ type: 'set_username', username }));
+        }
+      }
+    }
 
     const isBanned = existing && isNameProfane(existing);
     const isDefaultAuto = existing && (existing.startsWith('Kral_') || existing.startsWith('Misafir_'));
@@ -40,56 +101,179 @@
       if (!localStorage.getItem('pixelplace_user')) {
         localStorage.setItem('pixelplace_user', JSON.stringify({ username: existing }));
       }
-      return;
+    } else {
+      modal.classList.remove('hidden');
+      modal.style.display = 'flex';
+      setTimeout(() => document.getElementById('welcome-name-input')?.focus(), 150);
     }
 
-    modal.classList.remove('hidden');
-    modal.style.display = 'flex';
-    const input = document.getElementById('welcome-name-input');
-    const btn = document.getElementById('welcome-start-btn');
-    const err = document.getElementById('welcome-name-error');
-    if (input) setTimeout(() => input.focus(), 150);
+    // 1. Guest Start
+    const inputGuest = document.getElementById('welcome-name-input');
+    const btnGuest = document.getElementById('welcome-start-btn');
+    const errGuest = document.getElementById('welcome-name-error');
 
-    function saveWelcomeUsername() {
-      const val = (input ? input.value : '').trim().replace(/[<>"'&]/g, '');
+    function saveGuestUsername() {
+      const val = (inputGuest ? inputGuest.value : '').trim().replace(/[<>"'&]/g, '');
       if (!val || val.length < 2) {
-        if (err) { err.style.display = 'block'; err.textContent = 'En az 2 karakter gir! (Zorunlu)'; }
+        if (errGuest) { errGuest.style.display = 'block'; errGuest.textContent = 'En az 2 karakter gir! (Zorunlu)'; }
         return;
       }
       if (val.length > 20) {
-        if (err) { err.style.display = 'block'; err.textContent = 'En fazla 20 karakter!'; }
+        if (errGuest) { errGuest.style.display = 'block'; errGuest.textContent = 'En fazla 20 karakter!'; }
         return;
       }
       if (isNameProfane(val)) {
-        if (err) { err.style.display = 'block'; err.textContent = 'Uygunsuz / absürt kelime içeremez! Düzgün bir isim gir. 🚫'; }
+        if (errGuest) { errGuest.style.display = 'block'; errGuest.textContent = 'Uygunsuz kelime içeremez! Düzgün bir isim gir. 🚫'; }
         return;
       }
-      if (err) err.style.display = 'none';
-      localStorage.setItem('portal_username', val);
-      localStorage.setItem('portal_game_username', val);
-      localStorage.setItem('pixelplace_user', JSON.stringify({ username: val }));
-      
-      modal.classList.add('hidden');
-      modal.style.display = 'none';
-      modal.setAttribute('style', 'display: none !important;');
+      if (errGuest) errGuest.style.display = 'none';
+      onAuthSuccess(val, null, false);
+    }
 
-      const elUser = document.getElementById('portal-username');
-      if (elUser) elUser.textContent = val;
-      if (typeof state !== 'undefined' && state) {
-        state.username = val;
-        if (state.ws && state.ws.readyState === WebSocket.OPEN) {
-          state.ws.send(JSON.stringify({ type: 'set_username', username: val }));
+    window.submitPortalWelcome = saveGuestUsername;
+    btnGuest?.addEventListener('click', saveGuestUsername);
+    inputGuest?.addEventListener('keydown', (e) => { if (e.key === 'Enter') saveGuestUsername(); });
+
+    // 2. Login submit
+    const inputLoginId = document.getElementById('login-identifier-input');
+    const inputLoginPw = document.getElementById('login-password-input');
+    const btnLogin = document.getElementById('login-submit-btn');
+    const errLogin = document.getElementById('login-error');
+
+    async function submitLogin() {
+      const id = (inputLoginId?.value || '').trim();
+      const pw = (inputLoginPw?.value || '').trim();
+      if (!id || !pw) {
+        if (errLogin) { errLogin.style.display = 'block'; errLogin.textContent = 'Kullanıcı adı ve şifre gir!'; }
+        return;
+      }
+      if (errLogin) errLogin.style.display = 'none';
+      btnLogin.disabled = true;
+      btnLogin.textContent = 'GİRİŞ YAPILIYOR...';
+
+      try {
+        const res = await fetch('/api/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ identifier: id, password: pw })
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          if (errLogin) { errLogin.style.display = 'block'; errLogin.textContent = data.error || 'Giriş başarısız!'; }
+          btnLogin.disabled = false;
+          btnLogin.textContent = 'GİRİŞ YAP ⚡';
+          return;
         }
+        onAuthSuccess(data.user.username, data.token, true);
+      } catch (err) {
+        if (errLogin) { errLogin.style.display = 'block'; errLogin.textContent = 'Sunucuya bağlanılamadı!'; }
+      } finally {
+        btnLogin.disabled = false;
+        btnLogin.textContent = 'GİRİŞ YAP ⚡';
       }
     }
 
-    window.submitPortalWelcome = saveWelcomeUsername;
-    if (btn) btn.addEventListener('click', saveWelcomeUsername);
-    if (input) input.addEventListener('keydown', (e) => { if (e.key === 'Enter') saveWelcomeUsername(); });
+    btnLogin?.addEventListener('click', submitLogin);
+    inputLoginPw?.addEventListener('keydown', (e) => { if (e.key === 'Enter') submitLogin(); });
+
+    // 3. Register submit
+    const inputRegUser = document.getElementById('reg-username-input');
+    const inputRegPw = document.getElementById('reg-password-input');
+    const btnReg = document.getElementById('reg-submit-btn');
+    const errReg = document.getElementById('reg-error');
+
+    async function submitRegister() {
+      const user = (inputRegUser?.value || '').trim().replace(/[<>"'&]/g, '');
+      const pw = (inputRegPw?.value || '').trim();
+      if (!user || user.length < 2) {
+        if (errReg) { errReg.style.display = 'block'; errReg.textContent = 'Kullanıcı adı en az 2 karakter olmalı!'; }
+        return;
+      }
+      if (isNameProfane(user)) {
+        if (errReg) { errReg.style.display = 'block'; errReg.textContent = 'Uygunsuz kelime içeremez!'; }
+        return;
+      }
+      if (!pw || pw.length < 4) {
+        if (errReg) { errReg.style.display = 'block'; errReg.textContent = 'Şifre en az 4 karakter olmalı!'; }
+        return;
+      }
+      if (errReg) errReg.style.display = 'none';
+      btnReg.disabled = true;
+      btnReg.textContent = 'HESAP OLUŞTURULUYOR...';
+
+      try {
+        const res = await fetch('/api/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username: user, password: pw })
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          if (errReg) { errReg.style.display = 'block'; errReg.textContent = data.error || 'Kayıt başarısız!'; }
+          btnReg.disabled = false;
+          btnReg.textContent = 'HESAP OLUŞTUR 🛡️';
+          return;
+        }
+        onAuthSuccess(data.user.username, data.token, true);
+      } catch (err) {
+        if (errReg) { errReg.style.display = 'block'; errReg.textContent = 'Sunucuya bağlanılamadı!'; }
+      } finally {
+        btnReg.disabled = false;
+        btnReg.textContent = 'HESAP OLUŞTUR 🛡️';
+      }
+    }
+
+    btnReg?.addEventListener('click', submitRegister);
+    inputRegPw?.addEventListener('keydown', (e) => { if (e.key === 'Enter') submitRegister(); });
+
+    // 4. User Profile & Logout
+    const btnUserProfile = document.getElementById('btn-user-profile');
+    btnUserProfile?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const curUser = localStorage.getItem('portal_username') || 'Oyuncu';
+      const isReg = localStorage.getItem('portal_is_registered') === 'true';
+      const dName = document.getElementById('prof-display-name');
+      const bType = document.getElementById('prof-badge-type');
+      if (dName) dName.textContent = curUser;
+      if (bType) {
+        bType.textContent = isReg ? '⭐ Kayıtlı Üye (Güvenli)' : '🟢 Misafir Oyuncu';
+        bType.style.color = isReg ? '#ffd54f' : '#00dbff';
+        bType.style.borderColor = isReg ? '#ffd54f' : '#00dbff';
+      }
+      if (modalProfile) modalProfile.style.display = 'flex';
+    });
+
+    document.getElementById('btn-prof-close')?.addEventListener('click', () => {
+      if (modalProfile) modalProfile.style.display = 'none';
+    });
+
+    document.getElementById('btn-prof-rename')?.addEventListener('click', () => {
+      if (modalProfile) modalProfile.style.display = 'none';
+      if (modal) {
+        modal.classList.remove('hidden');
+        modal.style.display = 'flex';
+        switchAuthTab('guest');
+      }
+    });
+
+    document.getElementById('btn-prof-logout')?.addEventListener('click', async () => {
+      try { await fetch('/api/logout', { method: 'POST' }); } catch (_) {}
+      localStorage.removeItem('portal_username');
+      localStorage.removeItem('portal_game_username');
+      localStorage.removeItem('pixelplace_user');
+      localStorage.removeItem('session_token');
+      localStorage.removeItem('portal_is_registered');
+      if (modalProfile) modalProfile.style.display = 'none';
+      if (modal) {
+        modal.classList.remove('hidden');
+        modal.style.display = 'flex';
+        switchAuthTab('login');
+      }
+    });
   })();
 
   // State
-  const state = {
+  state = {
     username: localStorage.getItem('portal_username') || 'Kral_' + Math.floor(100 + Math.random() * 900),
     isAdmin: localStorage.getItem('portal_is_admin') === 'true',
     lanIp: window.location.hostname,
@@ -202,7 +386,8 @@
         // Update game cards player counts
         if (data.games) {
           updateCount('count-cs16', data.games.cs16);
-          updateCount('count-deeeep', data.games.deeeep);
+          updateCount('count-diep', data.games.diep || data.games.deeeep);
+          updateCount('count-deeeep', data.games.deeeep || data.games.diep);
           updateCount('count-tank', data.games.tank);
           updateCount('count-slither', data.games.slither);
           updateCount('count-pixelplace', data.games.pixelplace);
@@ -215,6 +400,57 @@
           updateCount('count-miner', data.games.miner);
           updateCount('count-sos', data.games.sos);
           updateCount('count-kafatopu', data.games.kafatopu);
+          updateCount('count-zombs', data.games.zombs);
+          updateCount('count-redmatch', data.games.redmatch);
+
+          // 👑 DYNAMIC POPULARITY SORTING (En çok oynanan oyunu listenin başına koyar!)
+          const gameEntries = [
+            { id: 'count-cs16', count: data.games.cs16 || 0, name: 'CS 1.6 & CS2 3D' },
+            { id: 'count-redmatch', count: data.games.redmatch || 0, name: 'Redmatch 3D Arena' },
+            { id: 'count-diep', count: (data.games.diep || data.games.deeeep || 0), name: 'Diep.io Tank Arenası' },
+            { id: 'count-tank', count: data.games.tank || 0, name: 'Tank Savaşı 2D' },
+            { id: 'count-slither', count: data.games.slither || 0, name: 'Slither.io Yılan' },
+            { id: 'count-pixelplace', count: data.games.pixelplace || 0, name: 'PixelPlace Dünya Haritası' },
+            { id: 'count-agario', count: data.games.agario || 0, name: 'Agar.io Hücre' },
+            { id: 'count-xox', count: data.games.xox || 0, name: 'XOX 1v1 Arena' },
+            { id: 'count-minecraft', count: data.games.minecraft || 0, name: 'Minecraft 3D & Eagler' },
+            { id: 'count-survivor', count: data.games.survivor || 0, name: 'Zindan Avcısı RPG' },
+            { id: 'count-trollparkur', count: data.games.trollparkur || 0, name: 'Meme Troll Parkur' },
+            { id: 'count-geometrydash', count: data.games.geometrydash || 0, name: 'Geometry Neon Dash' },
+            { id: 'count-miner', count: data.games.miner || 0, name: 'Maden Ustası' },
+            { id: 'count-sos', count: data.games.sos || 0, name: 'SOS Oyunu (10x10)' },
+            { id: 'count-kafatopu', count: data.games.kafatopu || 0, name: 'Kafa Topu Beyaz Saray' },
+            { id: 'count-zombs', count: data.games.zombs || 0, name: 'Zombs.io Kule Savunması' }
+          ];
+
+          gameEntries.sort((a, b) => b.count - a.count);
+          const topGame = gameEntries[0];
+
+          // 1. Update hero live popularity trend bar
+          const heroTrend = document.getElementById('hero-live-trend');
+          if (heroTrend && topGame) {
+            heroTrend.innerHTML = `🔥 <span style="color:#ffd700;font-weight:900;">ŞU AN ZİRVEDE:</span> <b>${topGame.name}</b> (${topGame.count} Kişi Arenada)`;
+          }
+
+          // 2. Prepend top game card to the first position of the grid
+          const gamesGrid = document.querySelector('.games-grid');
+          if (gamesGrid && topGame) {
+            const badgeEl = document.getElementById(topGame.id);
+            const cardEl = badgeEl?.closest('.game-card');
+            if (cardEl && gamesGrid.firstElementChild !== cardEl) {
+              gamesGrid.prepend(cardEl);
+            }
+            // Remove previous ribbon
+            document.querySelectorAll('.top-popular-badge').forEach(r => r.remove());
+            // Add glowing top popular ribbon
+            const thumb = cardEl?.querySelector('.game-thumb');
+            if (thumb && !thumb.querySelector('.top-popular-badge')) {
+              const ribbon = document.createElement('div');
+              ribbon.className = 'top-popular-badge';
+              ribbon.innerHTML = `👑 #1 EN ÇOK OYNANAN • ${topGame.count} OYUNCU 🔥`;
+              thumb.prepend(ribbon);
+            }
+          }
         }
       }
     } catch (_) {}
@@ -585,7 +821,56 @@
     requestAnimationFrame(loop);
   }
 
+  // 10. REALISTIC HUMAN UPDATE POPUP (Her girişte gösterilir, samimi öğrenci diliyle)
+  function showUpdateNotification() {
+    setTimeout(() => {
+      const el = document.createElement('div');
+      el.id = 'update-dev-popup';
+      el.style.cssText = [
+        'position: fixed', 'bottom: 24px', 'right: 24px', 'max-width: 380px', 'width: 90%',
+        'background: linear-gradient(145deg, #131b26, #0c1219)',
+        'border: 2px solid #00dbff', 'border-radius: 16px', 'padding: 18px 20px',
+        'box-shadow: 0 10px 40px rgba(0,0,0,0.8), 0 0 25px rgba(0,219,255,0.25)',
+        'z-index: 99999', 'font-family: -apple-system, BlinkMacSystemFont, sans-serif',
+        'transition: opacity 0.3s, transform 0.3s'
+      ].join(';');
+
+      el.innerHTML = `
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">
+          <div style="display:flex; align-items:center; gap:8px;">
+            <span style="font-size:22px;">⚡</span>
+            <div>
+              <div style="font-weight:900; font-size:14px; color:#00dbff; letter-spacing:0.5px;">erencix • YENİ GÜNCELLEME</div>
+              <div style="font-size:11px; color:#888;">az önce paylaşıldı</div>
+            </div>
+          </div>
+          <button id="btn-close-upd" style="background:transparent; border:none; color:#888; font-size:18px; cursor:pointer; padding:2px 6px;">✕</button>
+        </div>
+        <p style="font-size:13px; color:#ddd; line-height:1.55; margin:0 0 14px 0; word-break:break-word;">
+          beyler sa yeni guncellemeleri getirdim deeep io yerine diep io yu ekledim tanklar cok sariyo stat fln yukseltionuz zombs io da geldi onur baran la eyup kizilderenn istedikleri loading screene yazildi bide pixelplace deki isim koyma ve giremmeme bugunu duzelttim artik direk girip boyaniyo lag fln da kalmadi hadi ii oyunlar
+        </p>
+        <div style="display:flex; justify-content:flex-end;">
+          <button id="btn-ack-upd" style="background:linear-gradient(135deg, #00dbff, #0050a0); border:none; color:#000; font-weight:800; font-size:12px; padding:7px 16px; border-radius:8px; cursor:pointer; box-shadow:0 0 12px rgba(0,219,255,0.3);">
+            eyw kral kapat 👍
+          </button>
+        </div>
+      `;
+
+      document.body.appendChild(el);
+
+      const close = () => {
+        el.style.opacity = '0';
+        el.style.transform = 'translateY(15px)';
+        setTimeout(() => el.remove(), 300);
+      };
+
+      document.getElementById('btn-close-upd')?.addEventListener('click', close);
+      document.getElementById('btn-ack-upd')?.addEventListener('click', close);
+    }, 1400);
+  }
+
   initCyberCanvas();
   initWS();
+  showUpdateNotification();
 
 })();

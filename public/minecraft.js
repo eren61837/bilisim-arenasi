@@ -455,7 +455,15 @@
 
   const keys = {};
   window.addEventListener('keydown', e => {
+    if (document.activeElement?.tagName === 'INPUT') return;
     keys[e.code] = true;
+
+    // Chat Trigger: T, Slash (/), or Enter
+    if (e.code === 'KeyT' || e.code === 'Slash' || e.code === 'Enter') {
+      e.preventDefault();
+      openChat(e.code === 'Slash' ? '/' : '');
+      return;
+    }
 
     // Number keys 1-9 for hotbar
     if (e.code.startsWith('Digit')) {
@@ -618,11 +626,13 @@
 
   // TABS & MODALS
   // TABS & VIEW SWITCHER
+  const tabSingle = document.getElementById('tab-btn-single');
   const tabEagle = document.getElementById('tab-btn-eagle');
   const tabClassic = document.getElementById('tab-btn-classic');
   const tabVoxel = document.getElementById('tab-btn-web');
   const tabLauncher = document.getElementById('tab-btn-launcher');
 
+  const frameSingle = document.getElementById('mc-single-frame');
   const frameEagle = document.getElementById('mc-eagle-frame');
   const frameClassic = document.getElementById('mc-classic-frame');
   const wrapVoxel = document.getElementById('mc-voxel-wrap');
@@ -636,9 +646,10 @@
   function setView(viewName) {
     if (document.exitPointerLock) document.exitPointerLock();
 
-    [tabEagle, tabClassic, tabVoxel, tabLauncher].forEach(b => b?.classList.remove('active'));
+    [tabSingle, tabEagle, tabClassic, tabVoxel, tabLauncher].forEach(b => b?.classList.remove('active'));
 
     // Hide all viewports
+    if (frameSingle) frameSingle.style.display = 'none';
     if (frameEagle) frameEagle.style.display = 'none';
     if (frameClassic) frameClassic.style.display = 'none';
     if (wrapVoxel) wrapVoxel.style.display = 'none';
@@ -648,7 +659,10 @@
     if (btnTime) btnTime.style.display = 'none';
     if (btnBgm) btnBgm.style.display = 'none';
 
-    if (viewName === 'eagle') {
+    if (viewName === 'single') {
+      tabSingle?.classList.add('active');
+      if (frameSingle) frameSingle.style.display = 'block';
+    } else if (viewName === 'eagle') {
       tabEagle?.classList.add('active');
       if (frameEagle) frameEagle.style.display = 'block';
     } else if (viewName === 'classic') {
@@ -667,11 +681,12 @@
       if (btnBgm) btnBgm.style.display = 'inline-flex';
     } else if (viewName === 'launcher') {
       tabLauncher?.classList.add('active');
-      if (frameEagle) frameEagle.style.display = 'block'; // keep background active
+      if (frameSingle) frameSingle.style.display = 'block'; // keep background active
       modalLauncher?.classList.remove('hidden');
     }
   }
 
+  tabSingle?.addEventListener('click', () => setView('single'));
   tabEagle?.addEventListener('click', () => setView('eagle'));
   tabClassic?.addEventListener('click', () => setView('classic'));
   tabVoxel?.addEventListener('click', () => setView('voxel'));
@@ -774,6 +789,117 @@
   }
 
   requestAnimationFrame(animate);
+
+  // --- MINECRAFT IN-GAME CHAT SYSTEM ---
+  const voxelWrap = document.getElementById('mc-voxel-wrap');
+  const chatBox = document.createElement('div');
+  chatBox.id = 'mc-chat-system';
+  chatBox.style.cssText = 'position:absolute; bottom:65px; left:16px; width:380px; max-width:90%; z-index:100; pointer-events:none; font-family:monospace;';
+  chatBox.innerHTML = `
+    <div id="mc-chat-log" style="display:flex; flex-direction:column; gap:4px; max-height:220px; overflow-y:auto; margin-bottom:8px;"></div>
+    <div id="mc-chat-bar" style="display:none; pointer-events:all; background:rgba(0,0,0,0.85); border:1.5px solid #55ff55; border-radius:4px; padding:4px 8px;">
+      <input type="text" id="mc-chat-input" placeholder="Sohbet veya komut (/help)..." maxlength="120" style="width:100%; background:transparent; border:none; color:#fff; font-family:monospace; font-size:13px; outline:none;">
+    </div>
+  `;
+  if (voxelWrap) voxelWrap.appendChild(chatBox);
+
+  const chatLog = document.getElementById('mc-chat-log');
+  const chatBar = document.getElementById('mc-chat-bar');
+  const chatInput = document.getElementById('mc-chat-input');
+
+  function addChatMessage(msg, color = '#ffffff') {
+    if (!chatLog) return;
+    const line = document.createElement('div');
+    line.style.cssText = `background:rgba(0,0,0,0.6); color:${color}; padding:3px 8px; border-radius:3px; font-size:12px; line-height:1.4; word-break:break-word; max-width:100%; text-shadow:1px 1px 0 #000;`;
+    line.innerHTML = msg;
+    chatLog.appendChild(line);
+    chatLog.scrollTop = chatLog.scrollHeight;
+    setTimeout(() => {
+      line.style.transition = 'opacity 1s';
+      line.style.opacity = '0.5';
+    }, 10000);
+  }
+
+  // Welcome message
+  addChatMessage('⛏️ <span style="color:#55ff55; font-weight:bold;">[BilişimCraft]</span> Dünyaya hoş geldin! Sohbet veya komutlar için <b>T</b> veya <b>/</b> tuşuna bas.');
+
+  function openChat(prefix = '') {
+    if (!chatBar || !chatInput) return;
+    if (document.pointerLockElement) document.exitPointerLock();
+    chatBar.style.display = 'block';
+    chatInput.value = prefix;
+    setTimeout(() => chatInput.focus(), 50);
+  }
+
+  function closeChat() {
+    if (!chatBar || !chatInput) return;
+    chatBar.style.display = 'none';
+    chatInput.blur();
+    if (blocker && blocker.classList.contains('hidden')) {
+      canvas.requestPointerLock?.();
+    }
+  }
+
+  if (chatInput) {
+    chatInput.addEventListener('keydown', (e) => {
+      e.stopPropagation();
+      if (e.key === 'Escape') {
+        closeChat();
+      } else if (e.key === 'Enter') {
+        const text = chatInput.value.trim();
+        if (text) {
+          handleChatCommandOrMessage(text);
+        }
+        chatInput.value = '';
+        closeChat();
+      }
+    });
+  }
+
+  function handleChatCommandOrMessage(text) {
+    const pName = localStorage.getItem('portal_username') || 'Oyuncu';
+    if (text.startsWith('/')) {
+      const parts = text.slice(1).trim().split(' ');
+      const cmd = parts[0].toLowerCase();
+      if (cmd === 'help') {
+        addChatMessage('📜 <span style="color:#ffff55;">Komutlar:</span> /gamemode c (Yaratıcı), /gamemode s (Hayatta Kalma), /time set day, /time set night, /clear, /spawn');
+      } else if (cmd === 'gamemode') {
+        const mode = parts[1]?.toLowerCase();
+        if (mode === 'c' || mode === 'creative' || mode === '1') {
+          player.creative = true;
+          updateGamemodeUI();
+          addChatMessage('⚙️ <span style="color:#55ff55;">Oyun modu Yaratıcı (Uçma) olarak değiştirildi.</span>');
+        } else {
+          player.creative = false;
+          player.vel.y = 0;
+          updateGamemodeUI();
+          addChatMessage('⚙️ <span style="color:#55ff55;">Oyun modu Hayatta Kalma olarak değiştirildi.</span>');
+        }
+      } else if (cmd === 'time') {
+        const t = parts[2]?.toLowerCase() || parts[1]?.toLowerCase();
+        if (t === 'night' || t === 'gece') {
+          scene.background.setHex(0x050814);
+          scene.fog.color.setHex(0x050814);
+          addChatMessage('🌙 <span style="color:#55ffff;">Zaman Gece olarak ayarlandı.</span>');
+        } else {
+          scene.background.setHex(0x78a7ff);
+          scene.fog.color.setHex(0x78a7ff);
+          addChatMessage('☀️ <span style="color:#ffff55;">Zaman Gündüz olarak ayarlandı.</span>');
+        }
+      } else if (cmd === 'spawn') {
+        player.pos.set(0, 15, 0);
+        player.vel.set(0, 0, 0);
+        addChatMessage('🚩 <span style="color:#55ff55;">Başlangıç noktasına ışınlandın!</span>');
+      } else if (cmd === 'clear') {
+        if (chatLog) chatLog.innerHTML = '';
+      } else {
+        addChatMessage(`❓ <span style="color:#ff5555;">Bilinmeyen komut: /${cmd}. Yardım için /help yazın.</span>`);
+      }
+    } else {
+      addChatMessage(`&lt;${pName}&gt; ${text}`);
+      MCAudio.pop();
+    }
+  }
 
   // Window Resize
   window.addEventListener('resize', () => {

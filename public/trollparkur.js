@@ -261,8 +261,8 @@
     // 🎮 GAME PHYSICS & TROLL ENGINE
     // ========================================================================
     const GRAVITY = 0.58;
-    const JUMP_FORCE = -12.2;
-    const MOVE_SPEED = 4.2;
+    const JUMP_FORCE = -12.8;
+    const MOVE_SPEED = 4.6;
 
     const player = {
         x: 60,
@@ -272,6 +272,8 @@
         vx: 0,
         vy: 0,
         isGrounded: false,
+        coyoteTimer: 0,
+        jumpBufferTimer: 0,
         facingRight: true,
         isDead: false,
         deathTimer: 0,
@@ -351,6 +353,8 @@
         player.y = 300;
         player.vx = 0;
         player.vy = 0;
+        player.coyoteTimer = 0;
+        player.jumpBufferTimer = 0;
         player.isDead = false;
         player.isInvertedControls = false;
         loadStage(currentStage, false); // Reload stage traps to initial state
@@ -449,22 +453,25 @@
             power: -16
         });
 
-        // High ledge
-        platforms.push({ x: 1060, y: 250, w: 220, h: 30, type: 'ground' });
+        // High ledge (extended so cookie and flag landing are safe)
+        platforms.push({ x: 1060, y: 250, w: 320, h: 30, type: 'ground' });
 
-        // TROLL FINISH FLAG: When player gets near, it runs away!
+        // TROLL FINISH FLAG: Runs away initially, stops at end wall so player can catch it!
         finishGoal = {
-            x: 1220, y: 170, w: 32, h: 80,
+            x: 1200, y: 170, w: 32, h: 80,
             hasLegs: false, legTimer: 0,
-            runaway: true, speed: 0
+            runaway: true, speed: 0,
+            onReach: () => {
+                stageCleared("Bölüm 1'i Bitirdin!", "Kaçan bayrağı yakaladın! Asıl trollükler şimdi başlıyor.");
+            }
         };
 
-        // Secret real button that triggers the win if you catch or jump over the running flag!
+        // Secret win cookie right at the ledge end
         collectibles.push({
-            x: 1380, y: 220, w: 30, h: 30, type: 'win_cookie',
+            x: 1330, y: 210, w: 30, h: 30, type: 'win_cookie',
             collected: false,
             onCollect: () => {
-                stageCleared("Bölüm 1'i Bitirdin!", "İlk bölümü geçtin ama henüz hiçbir şey görmedin! Asıl trol şimdi başlıyor.");
+                stageCleared("Bölüm 1'i Bitirdin!", "Gizli zafer kurabiyesini kaptın! İlk bölümü geçtin!");
             }
         });
     }
@@ -514,10 +521,16 @@
         platforms.push({ x: 560, y: 380, w: 90, h: 25, type: 'ground' });
         platforms.push({ x: 720, y: 350, w: 90, h: 25, type: 'ground' });
 
-        // TROLL: Fake checkpoint: "KAYDEDİLDİ 😈" -> floor collapses immediately!
+        // TROLL: Fake checkpoint: "KAYDEDİLDİ 😈" -> floor collapses!
         platforms.push({
             x: 880, y: 320, w: 140, h: 30, type: 'fake_checkpoint',
             triggered: false, text: 'GÜVENLİ BÖLGE 🚩'
+        });
+
+        // Bouncy cloud right under fake checkpoint gap to bridge to final island!
+        platforms.push({
+            x: 1010, y: 380, w: 60, h: 20, type: 'dodge_cloud',
+            baseX: 1010, targetX: 1030, dodged: false
         });
 
         // Distant island with flag
@@ -599,7 +612,9 @@
         // Tiny islands to bounce across
         platforms.push({ x: 300, y: 390, w: 50, h: 25, type: 'ground' });
         platforms.push({ x: 420, y: 370, w: 50, h: 25, type: 'ground' });
-        platforms.push({ x: 540, y: 350, w: 50, h: 25, type: 'ground' });
+        platforms.push({ x: 540, y: 350, w: 55, h: 25, type: 'ground' });
+        // Safe stepping stone right before laser gate to wait for opening
+        platforms.push({ x: 605, y: 370, w: 35, h: 20, type: 'ground' });
 
         // TROLL: Giant meme wall with laser beam warning
         hazards.push({
@@ -707,9 +722,12 @@
             if (isInv) keys.left = true; else keys.right = true;
         } else if (code === 'KeyW' || code === 'Space' || code === 'ArrowUp') {
             keys.jump = true;
-            if (player.isGrounded && !player.isDead) {
+            player.jumpBufferTimer = 8;
+            if (player.coyoteTimer > 0 && !player.isDead) {
                 player.vy = JUMP_FORCE;
                 player.isGrounded = false;
+                player.coyoteTimer = 0;
+                player.jumpBufferTimer = 0;
                 sfxJump();
             }
         } else if (code === 'KeyR') {
@@ -814,6 +832,24 @@
         player.y += player.vy;
         player.isGrounded = false;
         checkPlatformCollisions(false);
+
+        // Coyote Time & Jump Buffering (eliminates unfair edge-drop missed jumps)
+        if (player.isGrounded) {
+            player.coyoteTimer = 8;
+        } else if (player.coyoteTimer > 0) {
+            player.coyoteTimer--;
+        }
+
+        if (player.jumpBufferTimer > 0) {
+            player.jumpBufferTimer--;
+            if (player.coyoteTimer > 0 && !player.isDead) {
+                player.vy = JUMP_FORCE;
+                player.isGrounded = false;
+                player.coyoteTimer = 0;
+                player.jumpBufferTimer = 0;
+                sfxJump();
+            }
+        }
 
         // Fall into void check
         if (player.y > 600) {
@@ -966,6 +1002,13 @@
         for (let i = hazards.length - 1; i >= 0; i--) {
             const h = hazards[i];
 
+            // Laser gate blinking (Stage 4)
+            if (h.type === 'laser_gate') {
+                h.timer = (h.timer || 0) + 1;
+                // Active for 100 frames (~1.7s), Inactive for 80 frames (~1.3s)
+                h.active = (h.timer % 180) < 100;
+            }
+
             // Anvil falling
             if (h.type === 'anvil') {
                 h.y += h.vy;
@@ -1011,6 +1054,9 @@
                 if (h.y > 600) { hazards.splice(i, 1); continue; }
             }
 
+            // If laser gate is inactive, player safely passes!
+            if (h.type === 'laser_gate' && !h.active) continue;
+
             // Hazard Collision with Player
             if (
                 player.x + player.width > h.x &&
@@ -1024,6 +1070,8 @@
                     triggerDeath("MUCH PAIN, VERY DED! 🐕", "Doge seni biçti!");
                 } else if (h.type === 'lava') {
                     triggerDeath("LAVA ATLAYIŞI! 🌋", "Yüzme biliyor muydun?");
+                } else if (h.type === 'laser_gate') {
+                    triggerDeath("LAZERDE KIZARDIN! ⚡", "Lazerin sönmesini bekle!");
                 } else {
                     triggerDeath("DİKENLENDİN! 🌵", "Dikenleri sevemedin gitti!");
                 }
@@ -1071,7 +1119,11 @@
             const dist = (finishGoal.x) - (player.x + player.width);
             if (dist < 120 && dist > -50) {
                 finishGoal.hasLegs = true;
-                finishGoal.x += 4.5;
+                finishGoal.x += 3.8;
+                if (finishGoal.x >= 1280) {
+                    finishGoal.x = 1280;
+                    finishGoal.hasLegs = false;
+                }
                 if (!finishGoal.taunted) {
                     finishGoal.taunted = true;
                     sfxVineBoom();
@@ -1249,6 +1301,23 @@
                 ctx.fillStyle = '#fff';
                 ctx.font = '12px sans-serif';
                 ctx.fillText('💧', h.x + 3, h.y + 16);
+            } else if (h.type === 'laser_gate') {
+                if (h.active) {
+                    ctx.fillStyle = 'rgba(255, 23, 68, 0.85)';
+                    ctx.fillRect(h.x, h.y, h.w, h.h);
+                    ctx.fillStyle = '#fff';
+                    ctx.font = 'bold 11px sans-serif';
+                    ctx.fillText('⚡ LETHAL', h.x - 10, h.y + 24);
+                } else {
+                    ctx.strokeStyle = 'rgba(0, 230, 118, 0.5)';
+                    ctx.lineWidth = 2;
+                    ctx.setLineDash([4, 4]);
+                    ctx.strokeRect(h.x, h.y, h.w, h.h);
+                    ctx.setLineDash([]);
+                    ctx.fillStyle = '#00e676';
+                    ctx.font = 'bold 10px sans-serif';
+                    ctx.fillText('🟢 GEÇİŞ', h.x - 4, h.y + 24);
+                }
             } else {
                 // Spikes
                 ctx.fillStyle = '#d32f2f';

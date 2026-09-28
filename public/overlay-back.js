@@ -75,6 +75,21 @@
           { k: 'ESC', d: 'Menü' }
         ]
       },
+      'diep': {
+        name: 'Diep.io Tank Arenası',
+        icon: '🛡️',
+        bottom: '16px',
+        right: '16px',
+        keys: [
+          { k: 'W A S D', d: 'Tankı Sür & Kaç' },
+          { k: 'MOUSE / SOL TIK', d: 'Nişan Al & Ateş Et' },
+          { k: 'E', d: 'Otomatik Ateş Aç/Kapat' },
+          { k: 'C', d: 'Otomatik Dönüş (Spin)' },
+          { k: '1 - 8', d: 'Stat Puanlarını Dağıt' },
+          { k: 'ŞEKİLLER', d: 'Kare(+10) Üçgen(+25) Beşgen(+130)' },
+          { k: 'EVRİM', d: 'Seviye 15/30/45 Yeni Tanklar' }
+        ]
+      },
       'tank': {
         name: 'Tank Savaşı 2D',
         icon: '🛡️',
@@ -206,6 +221,22 @@
           { k: 'HARİTA', d: '10x10 veya 25x24 Seç' },
           { k: 'MOD', d: 'Yapay Zeka veya 1v1' },
           { k: 'GELİŞTİRİCİ', d: 'Halil Eren' }
+        ]
+      },
+      'zombs': {
+        name: 'Zombs.io Kule Savunması',
+        icon: '🧟',
+        bottom: '16px',
+        right: '16px',
+        keys: [
+          { k: 'W A S D', d: 'Karakteri Yürüt' },
+          { k: 'SOL TIK / SPACE', d: 'Saldır & Odun/Taş Topla' },
+          { k: 'ALTIN KASASI', d: 'Önce Kasayı Koyup Üs Başlat' },
+          { k: 'B', d: 'Mağaza & Savunma Kuleleri' },
+          { k: 'E', d: 'Tüm Kuleleri Yükselt' },
+          { k: 'P', d: 'Parti & Takım Menüsü' },
+          { k: 'İSTEYEN', d: 'Onur Baran' },
+          { k: 'GELİŞTİRİCİ', d: 'erencix' }
         ]
       }
     };
@@ -466,5 +497,90 @@
       if (blocker && !blocker.classList.contains('hidden')) return;
     }
   });
+
+  /* ── 4. IN-GAME LIVE PLAYER COUNT BADGE & UNIVERSAL PRESENCE ── */
+  (function initPresenceAndBadge() {
+    const pName = window.location.pathname.toLowerCase();
+    const GAME_KEYS = ['cs16', 'minecraft', 'survivor', 'trollparkur', 'geometrydash', 'kafatopu', 'miner', 'sos', 'zombs', 'diep', 'xox', 'tank', 'deeeep', 'slither', 'agario', 'pixelplace'];
+    let currentKey = GAME_KEYS.find(k => pName.includes(k)) || 'game';
+
+    // Top floating live player count badge
+    const badge = document.createElement('div');
+    badge.id = '_universal_player_badge';
+    
+    // Position intelligently so it never overlaps existing top bars
+    let topOffset = '10px';
+    if (document.querySelector('.top-hud') || document.querySelector('.cs-top-bar') || document.querySelector('header')) {
+      topOffset = '58px';
+    }
+
+    badge.style.cssText = [
+      'position:fixed', `top:${topOffset}`, 'right:16px', 'z-index:999990',
+      'background:rgba(13,17,23,0.88)', 'color:#00e5ff',
+      'border:1px solid rgba(0,229,255,0.45)', 'border-radius:20px',
+      'padding:5px 12px', 'font-size:12px', 'font-weight:800',
+      'font-family:monospace', 'display:flex', 'align-items:center', 'gap:6px',
+      'box-shadow:0 4px 15px rgba(0,0,0,0.6)', 'backdrop-filter:blur(6px)',
+      'user-select:none', 'pointer-events:none', 'transition:opacity 0.3s'
+    ].join(';');
+    badge.innerHTML = '🟢 <span id="_upb_count">1</span> Oyuncu Arenada';
+    document.body.appendChild(badge);
+
+    function updateBadge(c) {
+      const el = document.getElementById('_upb_count');
+      if (el) el.textContent = Math.max(1, c || 1);
+    }
+    window._updateInGamePlayerCount = updateBadge;
+
+    // Connect presence WebSocket for games without dedicated multiplayer server loop
+    let presenceWS = null;
+    function connectPresenceWS() {
+      try {
+        const proto = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        presenceWS = new WebSocket(`${proto}//${window.location.host}`);
+        window._presenceWS = presenceWS;
+        presenceWS.onopen = () => {
+          presenceWS.send(JSON.stringify({ type: 'join', room: currentKey }));
+        };
+        presenceWS.onmessage = (ev) => {
+          try {
+            const d = JSON.parse(ev.data);
+            if (d.type === 'online' && d.counts && d.counts.rooms) {
+              const c = d.counts.rooms[currentKey] || 1;
+              updateBadge(c);
+            }
+            if (d.type === 'admin_announcement') {
+              window._showPortalAnnouncement(d.text || d.message);
+            }
+          } catch (_) {}
+        };
+      } catch (_) {}
+    }
+
+    // Delay to let any game native WS initialize first
+    setTimeout(() => {
+      const existing = window.state?.ws || window._activeWS || window.ws;
+      if (!existing || existing.readyState > 1) {
+        connectPresenceWS();
+      }
+    }, 700);
+
+    // Periodic stats fetch for live synchronization
+    async function syncStats() {
+      try {
+        const res = await fetch('/api/portal-stats');
+        if (res.ok) {
+          const stats = await res.json();
+          if (stats.games && stats.games[currentKey] !== undefined) {
+            updateBadge(stats.games[currentKey]);
+          } else if (stats.onlineTotal !== undefined) {
+            updateBadge(Math.max(1, stats.onlineTotal));
+          }
+        }
+      } catch (_) {}
+    }
+    syncStats();
+    setInterval(syncStats, 3000);
+  })();
 
 })();

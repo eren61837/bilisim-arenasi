@@ -2,333 +2,430 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🔫 Counter-Strike 1.6 & CS2 Web 3D - Bilişim Sınıfı Portalı</title>
-    <link rel="stylesheet" href="cs16.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>🔫 Counter-Strike 1.6 Web (Bilişim Arenası Yerel Motor) - MEB Uyumlu</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🔫</text></svg>">
+    <link rel="stylesheet" href="cs16.css">
     <link rel="stylesheet" href="bgm.css">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        html, body {
+            width: 100%; height: 100%;
+            overflow: hidden;
+            background: #000;
+            font-family: 'Courier New', Courier, monospace;
+            color: #fff;
+            user-select: none;
+        }
+
+        /* TOP NAVIGATION & ENGINE BAR */
+        .cs-top-bar {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            height: 48px;
+            background: rgba(13, 17, 23, 0.95);
+            border-bottom: 2px solid #ff9800;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 14px;
+            z-index: 2000;
+            pointer-events: auto;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.8);
+            gap: 10px;
+        }
+
+        .cs-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-shrink: 0;
+        }
+
+        .btn-cs-nav {
+            background: rgba(255, 152, 0, 0.15);
+            color: #ff9800;
+            border: 1px solid #ff9800;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 800;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            transition: all 0.2s ease;
+            font-family: inherit;
+        }
+        .btn-cs-nav:hover {
+            background: #ff9800;
+            color: #000;
+            transform: translateY(-1px);
+        }
+
+        .cs-engine-tabs {
+            display: flex;
+            gap: 6px;
+            background: rgba(0, 0, 0, 0.6);
+            padding: 3px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            flex-shrink: 0;
+        }
+
+        .cs-tab-btn {
+            background: transparent;
+            color: #aaa;
+            border: none;
+            padding: 6px 14px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: inherit;
+        }
+        .cs-tab-btn.active {
+            background: #00e5ff;
+            color: #000;
+            font-weight: 900;
+            box-shadow: 0 0 12px rgba(0, 229, 255, 0.4);
+        }
+
+        .cs-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+
+        .dev-badge {
+            background: rgba(0, 229, 255, 0.12);
+            color: #00e5ff;
+            border: 1px solid #00e5ff;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 10px;
+            font-weight: 800;
+        }
+
+        /* CANVAS VIEWPORT */
+        #cs-canvas {
+            position: fixed;
+            top: 48px;
+            left: 0;
+            width: 100vw;
+            height: calc(100vh - 48px);
+            display: block;
+            z-index: 1;
+            outline: none;
+        }
+
+        /* FALLBACK EXTERNAL WASM FRAME */
+        #cs-wasm-frame {
+            position: fixed;
+            top: 48px;
+            left: 0;
+            width: 100vw;
+            height: calc(100vh - 48px);
+            border: none;
+            display: none;
+            z-index: 2;
+        }
+
+        /* Adjust overlays for top bar offset */
+        .cs-kill-feed { top: 60px !important; }
+        .cs-admin-panel { top: 60px !important; }
+    </style>
 </head>
 <body>
 
-<!-- 3D VIEWPORT CANVAS & REAL 1:1 CS 1.6 ENGINE -->
-<div id="game-viewport">
-    <!-- 1. YEREL 3D DE_DUST2 CANLI SUNUCU & BOT ARENASI (THREE.JS) -->
-    <canvas id="cs-canvas" style="display:block; width:100%; height:100%;"></canvas>
-
-    <!-- 2. ALTERNATİF CSJS WEBASSEMBLY CLIENT -->
-    <iframe id="cs-wasm-frame" src="https://csjs.live/" allow="autoplay; fullscreen; pointer-lock" style="width:100%; height:100%; border:none; display:none;"></iframe>
-</div>
-
-<!-- TOP NAV / MATCH BAR -->
-<div class="cs-top-bar">
-    <div style="display:flex; align-items:center; gap:8px;">
-        <button id="btn-cs-menu-open" class="btn-cs-back">☰ MENÜ / ÇIKIŞ</button>
-        
-        <!-- ENGINE TABS -->
-        <div class="cs-engine-tabs" style="display:flex; gap:4px; background:rgba(0,0,0,0.7); padding:3px; border-radius:6px; border:1px solid rgba(255,255,255,0.2);">
-            <button id="tab-cs-local" class="cs-tab-btn active" style="background:#00e5ff; color:#000; font-weight:900; border:none; border-radius:4px; padding:5px 12px; font-size:11px; cursor:pointer;">⚡ de_dust2 (Canlı Sunucu & Botlar)</button>
-            <button id="tab-cs-wasm" class="cs-tab-btn" style="background:transparent; color:#bbb; font-weight:bold; border:none; border-radius:4px; padding:5px 12px; font-size:11px; cursor:pointer;">🌐 CSJS Web Sürümü</button>
+    <!-- TOP NAVIGATION & ENGINE CONTROL BAR -->
+    <header class="cs-top-bar">
+        <div class="cs-brand">
+            <a href="/" class="btn-cs-nav">🏠 Portale Dön</a>
+            <span style="font-weight:900; font-size:14px; color:#ff9800; letter-spacing:0.5px;">🔫 CS 1.6</span>
+            <span class="dev-badge">👑 Sistem: Halil Eren</span>
         </div>
 
-        <a href="https://play-cs.com" target="_blank" rel="noopener" style="background:rgba(255,255,255,0.1); color:#fff; border:1px solid rgba(255,255,255,0.25); border-radius:6px; padding:5px 12px; font-size:11px; font-weight:bold; text-decoration:none; display:flex; align-items:center; gap:6px;">
-            🚀 Play-CS (Yeni Sekmede) ↗️
-        </a>
-    </div>
-
-    <!-- AUTHENTIC CS MATCH SCOREBOARD (Shown in 3D local mode) -->
-    <div class="cs-match-header" id="cs-local-header" style="display:none;">
-        <div class="team-score-badge badge-t">🔴 T: <span id="cs-score-t">0</span></div>
-        <div class="cs-round-timer-box">
-            <span class="cs-round-timer" id="cs-timer">01:55</span>
-            <span class="cs-round-label" id="cs-round-num">Round 1</span>
+        <!-- ENGINE SWITCH TABS -->
+        <div class="cs-engine-tabs">
+            <button class="cs-tab-btn active" id="tab-cs-local">🟢 Bilişim Arenası Yerel Motor (MEB Uyumlu - de_dust2)</button>
+            <button class="cs-tab-btn" id="tab-cs-wasm">🌐 CSJS Port (Dış Sunucu)</button>
         </div>
-        <div class="team-score-badge badge-ct"><span id="cs-score-ct">0</span> :CT 🔵</div>
-    </div>
 
-    <div style="display:flex; align-items:center; gap:10px;">
-        <button id="btn-cs-fullscreen" class="btn-cs-back" style="padding:5px 10px; font-size:11px;">⛶ Tam Ekran</button>
-        <button id="btn-cs-reload" class="btn-cs-back" style="padding:5px 10px; font-size:11px;">🔄 Yenile</button>
-        <div class="cs-money-pill" id="cs-local-money" style="display:none;">💰 <span id="cs-money-val">$1,600</span></div>
-        <div id="cs-admin-badge" class="cs-admin-badge hidden">👑 ADMİN</div>
-    </div>
-</div>
-
-<!-- CLICK TO PLAY HINT BANNER -->
-<div id="cs-click-hint" style="position:fixed; top:45%; left:50%; transform:translate(-50%,-50%); background:rgba(0,0,0,0.88); border:2px solid #00e5ff; border-radius:12px; padding:20px 36px; text-align:center; pointer-events:none; z-index:4000; box-shadow:0 0 30px rgba(0,229,255,0.4);">
-    <div style="font-size:32px; margin-bottom:8px;">🎯</div>
-    <h2 style="color:#00e5ff; font-size:20px; font-weight:900; margin-bottom:6px;">OTOMATİK SUNUCUYA BAĞLANDI!</h2>
-    <p style="color:#fff; font-size:14px; font-weight:bold;">Savaşa Başlamak İçin Ekrana Tıkla</p>
-    <span style="color:#aaa; font-size:11px; display:block; margin-top:4px;">Mouse kilitlenir • Ateş: Sol Tık • Dürbün: Sağ Tık • Silah: 1-5 • Menü: ESC</span>
-</div>
-
-<!-- KILL FEED (Top Right) -->
-<div id="cs-kill-feed" class="cs-kill-feed"></div>
-
-<!-- CS 1.6 AUTHENTIC CROSSHAIR (Dynamic gap via CSS var) -->
-<div id="cs-crosshair" class="cs-crosshair">
-    <div class="ch-top"></div>
-    <div class="ch-bottom"></div>
-    <div class="ch-left"></div>
-    <div class="ch-right"></div>
-</div>
-
-<!-- SCOPE OVERLAY (AWP) -->
-<div id="cs-scope-overlay" class="cs-scope-overlay" style="display:none">
-    <div class="scope-circle"></div>
-    <div class="scope-line scope-h"></div>
-    <div class="scope-line scope-v"></div>
-    <div class="scope-vignette"></div>
-</div>
-
-<!-- ROUND END VICTORY BANNER -->
-<div id="round-end-banner" class="round-end-banner" style="display:none">
-    <div class="reb-content">
-        <h1 id="reb-title">🏆 COUNTER-TERRÖRİSTLER KAZANDI</h1>
-        <p id="reb-desc">Tüm Teröristler Etkisiz Hale Getirildi!</p>
-        <div class="reb-timer">Yeni round başlıyor...</div>
-    </div>
-</div>
-
-<!-- CS 1.6 HUD (Bottom) -->
-<div class="cs-hud">
-    <!-- HP & Armor (Bottom Left) -->
-    <div class="hud-left">
-        <div class="hud-item">
-            <span class="hud-icon hud-hp-icon">+</span>
-            <span id="hud-hp-val" class="hud-hp-val">100</span>
-        </div>
-        <div class="hud-item hud-armor">
-            <span class="hud-icon">🛡</span>
-            <span id="hud-ap-val" class="hud-ap-val">100</span>
-        </div>
-    </div>
-
-    <!-- Center: Weapon Name + Reload Bar -->
-    <div class="hud-center">
-        <div id="hud-weapon-name" class="hud-weapon-name">CV-47 (AK-47)</div>
-        <div id="reload-bar-wrap" class="reload-bar-wrap" style="display:none">
-            <div id="reload-bar" class="reload-bar"></div>
-        </div>
-    </div>
-
-    <!-- Ammo (Bottom Right) -->
-    <div class="hud-right">
-        <div class="hud-ammo-display">
-            <span id="hud-ammo-clip" class="hud-ammo-clip">30</span>
-            <span class="hud-slash"> / </span>
-            <span id="hud-ammo-res" class="hud-ammo-res">90</span>
-        </div>
-        <div class="hud-weapon-slots">
-            <span class="slot active" id="slot-ak47">AK</span>
-            <span class="slot" id="slot-m4a1">M4</span>
-            <span class="slot" id="slot-awp">AWP</span>
-            <span class="slot" id="slot-deagle">DEG</span>
-            <span class="slot" id="slot-knife">🔪</span>
-        </div>
-    </div>
-</div>
-
-<!-- DAMAGE FLASH OVERLAY -->
-<div id="damage-flash" class="damage-flash"></div>
-
-<!-- DEATH OVERLAY -->
-<div id="death-overlay" class="death-overlay" style="display:none">
-    <div class="death-inner">
-        <div class="death-skull">💀</div>
-        <h2>ÖLDÜNÜZ</h2>
-        <p>Round sonu bekleniyor veya yeniden doğulacak...</p>
-        <div class="death-timer-bar"></div>
-    </div>
-</div>
-
-<!-- TEAM SELECTION MODAL (Takım Seçme - İsteğe bağlı) -->
-<div id="modal-team-select" class="cs-modal-backdrop" style="display:none">
-    <div class="team-select-card">
-        <div class="ts-header">
-            <h2>👥 BİR TAKIM SEÇİN</h2>
-            <p>de_dust2 Haritasında Savaşa Katıl</p>
-        </div>
-        <div class="team-cards-grid">
-            <!-- TERRORIST -->
-            <div class="team-box team-box-t" id="btn-select-t">
-                <div class="tb-badge">TERRÖRİST</div>
-                <div class="tb-icon">💣</div>
-                <h3>TERRÖRİSTLER (T)</h3>
-                <p>Phoenix Connexion & Elite Crew</p>
-                <div class="tb-weapon">Varsayılan: AK-47, Glock</div>
-                <button class="btn-join-team btn-t">TERRÖRİST OL [1]</button>
+        <!-- MATCH LIVE STATUS -->
+        <div id="cs-local-header" class="cs-match-header">
+            <span id="cs-score-t" class="team-score-badge badge-t" title="Terrörist Skoru">0</span>
+            <div class="cs-round-timer-box">
+                <span id="cs-timer" class="cs-round-timer">01:55</span>
+                <span class="cs-round-label" id="cs-round-num">RAUNT 1</span>
             </div>
+            <span id="cs-score-ct" class="team-score-badge badge-ct" title="Anti-Terrörist Skoru">0</span>
+        </div>
 
-            <!-- COUNTER-TERRORIST -->
-            <div class="team-box team-box-ct" id="btn-select-ct">
-                <div class="tb-badge">COUNTER-TERRÖRİST</div>
-                <div class="tb-icon">🛡️</div>
-                <h3>KARŞI-TERRÖRİSTLER (CT)</h3>
-                <p>SEAL Team 6 & SAS Özel Birlik</p>
-                <div class="tb-weapon">Varsayılan: M4A1, USP</div>
-                <button class="btn-join-team btn-ct">CT OL [2]</button>
+        <div id="cs-local-money" class="cs-money-pill">
+            <span id="cs-money-val">$800</span>
+        </div>
+
+        <div id="cs-admin-badge" class="cs-admin-badge hidden">⚡ ADMIN</div>
+
+        <!-- ACTIONS -->
+        <div class="cs-actions">
+            <button class="btn-cs-nav" id="btn-cs-menu-open">⚙️ Menü (ESC)</button>
+            <button class="btn-cs-nav" id="btn-cs-fullscreen">⛶ Tam Ekran</button>
+            <button class="btn-cs-nav" id="btn-cs-reload">🔄 Yenile</button>
+        </div>
+    </header>
+
+    <!-- 1. LOCAL 3D CANVAS (Bilişim Arenası Three.js Dust2 Engine) -->
+    <canvas id="cs-canvas"></canvas>
+
+    <!-- 2. WASM / EXTERNAL FRAME (Secondary Alternative) -->
+    <iframe id="cs-wasm-frame" src="https://csjs.live/" allow="autoplay; fullscreen; pointer-lock"></iframe>
+
+    <!-- CROSSHAIR -->
+    <div id="cs-crosshair">
+        <div class="ch-top"></div>
+        <div class="ch-bottom"></div>
+        <div class="ch-left"></div>
+        <div class="ch-right"></div>
+    </div>
+
+    <!-- SCOPE OVERLAY (AWP) -->
+    <div id="cs-scope-overlay" class="cs-scope-overlay" style="display:none;">
+        <div class="scope-vignette"></div>
+        <div class="scope-circle"></div>
+        <div class="scope-line scope-h"></div>
+        <div class="scope-line scope-v"></div>
+    </div>
+
+    <!-- DAMAGE HIT FLASH -->
+    <div id="damage-flash" class="damage-flash"></div>
+
+    <!-- CS 1.6 HUD (BOTTOM) -->
+    <div class="cs-hud">
+        <div class="hud-left">
+            <div class="hud-item">
+                <span class="hud-hp-icon">+</span>
+                <span id="hud-hp-val" class="hud-hp-val">100</span>
+            </div>
+            <div class="hud-item hud-armor">
+                <span class="hud-icon">🛡️</span>
+                <span id="hud-ap-val" class="hud-ap-val">100</span>
             </div>
         </div>
-        <div class="ts-footer">
-            <button id="btn-select-auto" class="btn-team-auto">🎲 OTOMATİK DENGELİ SEÇİM [3]</button>
-        </div>
-    </div>
-</div>
-
-<!-- BUY MENU MODAL (B Tuşu ile açılan Silah Alma Mağazası) -->
-<div id="modal-buy-menu" class="cs-modal-backdrop" style="display:none">
-    <div class="buy-menu-card">
-        <div class="bm-header">
-            <div style="display:flex; align-items:center; gap:10px;">
-                <span style="font-size:24px">🛒</span>
-                <h2>SİLAH VE EKİPMAN SATIN AL</h2>
+        <div class="hud-center">
+            <div id="hud-weapon-name" class="hud-weapon-name">CV-47 (AK-47)</div>
+            <div id="reload-bar-wrap" class="reload-bar-wrap" style="display:none;">
+                <div id="reload-bar" class="reload-bar"></div>
             </div>
-            <div class="bm-money-display">Bakiye: <strong id="bm-money-text">$1,600</strong></div>
-            <button id="btn-close-buy" class="bm-close">✕ [ESC]</button>
-        </div>
-
-        <div class="bm-grid">
-            <!-- 1. TÜFEKLER -->
-            <div class="bm-category">
-                <h3>🔫 SALDIRI TÜFEKLERİ</h3>
-                <div class="bm-item" data-weapon="ak47" data-price="2700">
-                    <div class="bm-item-info">
-                        <strong>AK-47 (CV-47)</strong>
-                        <span>Yüksek Hasar • Tek vuruş Kafa</span>
-                    </div>
-                    <button class="btn-buy-action" data-weapon="ak47">$2,700</button>
-                </div>
-                <div class="bm-item" data-weapon="m4a1" data-price="3100">
-                    <div class="bm-item-info">
-                        <strong>M4A1 Susturuculu</strong>
-                        <span>Yüksek İsabet • Sessiz Atış</span>
-                    </div>
-                    <button class="btn-buy-action" data-weapon="m4a1">$3,100</button>
-                </div>
-                <div class="bm-item" data-weapon="awp" data-price="4750">
-                    <div class="bm-item-info">
-                        <strong>AWP Sniper Rifle</strong>
-                        <span>Sağ Tık Dürbün • Tek Vuruş 115 Hasar</span>
-                    </div>
-                    <button class="btn-buy-action" data-weapon="awp">$4,750</button>
-                </div>
+            <div class="hud-weapon-slots">
+                <span class="slot active" data-slot="1">1: AK47</span>
+                <span class="slot" data-slot="2">2: M4A1</span>
+                <span class="slot" data-slot="3">3: AWP</span>
+                <span class="slot" data-slot="4">4: DEAGLE</span>
+                <span class="slot" data-slot="5">5: BIÇAK</span>
             </div>
-
-            <!-- 2. TABANCALAR & DİĞER -->
-            <div class="bm-category">
-                <h3>🎯 TABANCALAR & BIÇAK</h3>
-                <div class="bm-item" data-weapon="deagle" data-price="650">
-                    <div class="bm-item-info">
-                        <strong>Desert Eagle .50 AE</strong>
-                        <span>Ağır Tabanca • 52 Hasar</span>
-                    </div>
-                    <button class="btn-buy-action" data-weapon="deagle">$650</button>
-                </div>
-                <div class="bm-item" data-weapon="knife" data-price="0">
-                    <div class="bm-item-info">
-                        <strong>Taktik Bıçak</strong>
-                        <span>Sessiz • Hızlı Koşma</span>
-                    </div>
-                    <button class="btn-buy-action" data-weapon="knife">ÜCRETSİZ</button>
-                </div>
-
-                <div style="margin-top:16px; padding:12px; background:rgba(255,204,68,0.08); border:1px solid rgba(255,204,68,0.25); border-radius:6px;">
-                    <div style="color:#ffcc44; font-size:12px; font-weight:bold; margin-bottom:4px">💡 İPUCU</div>
-                    <div style="color:#aaa; font-size:11px">Her öldürmede <strong>+$300</strong>, kazandığın her round için <strong>+$3250</strong> bakiye kazanırsın! [B] tuşuna basarak istediğin zaman mağazayı açabilirsin.</div>
-                </div>
+        </div>
+        <div class="hud-right">
+            <div class="hud-ammo-display">
+                <span id="hud-ammo-clip" class="hud-ammo-clip">30</span>
+                <span class="hud-slash">/</span>
+                <span id="hud-ammo-res" class="hud-ammo-res">90</span>
             </div>
         </div>
     </div>
-</div>
 
-<!-- ESC / PAUSE MENU (Mouse serbest!) -->
-<div id="cs-pause-menu" class="cs-modal-backdrop" style="display:none">
-    <div class="pause-menu-card">
-        <div class="pm-logo">COUNTER-STRIKE 1.6</div>
-        <h2>OYUN DURAKLATILDI</h2>
-        <div class="pm-buttons">
-            <button id="pm-btn-resume" class="btn-pm-primary">▶ MAÇA DEVAM ET [ESC]</button>
-            <button id="pm-btn-team" class="btn-pm-secondary">👥 TAKIM SEÇİMİ (M)</button>
-            <button id="pm-btn-buy" class="btn-pm-secondary">🛒 SİLAH SATIN AL (B)</button>
-            <button id="pm-btn-admin" class="btn-pm-secondary" style="display:none">👑 ADMİN PANELİ</button>
-            <a href="/" class="btn-pm-exit">🏠 ANA PORTALE DÖN</a>
-        </div>
-        <p style="color:#666; font-size:11px; margin-top:14px">Mouse serbesttir. İstediğin butona tıklayabilirsin.</p>
-    </div>
-</div>
+    <!-- KILL FEED (TOP RIGHT) -->
+    <div id="cs-kill-feed" class="cs-kill-feed"></div>
 
-<!-- SCOREBOARD (TAB) -->
-<div id="cs-scoreboard" class="cs-scoreboard hidden">
-    <div class="sb-header">
-        <h2>de_dust2 &bull; SKOR TABLOSU</h2>
-        <div class="sb-team-labels">
-            <span class="sb-ct-label">◆ Karşı-Terörist (CT)</span>
-            <span class="sb-t-label">◆ Terörist (T)</span>
+    <!-- VICTORY / ROUND END BANNER -->
+    <div id="round-end-banner" class="round-end-banner hidden">
+        <div class="reb-content">
+            <h1 id="reb-title">🏆 KAZANAN!</h1>
+            <p id="reb-desc">Tüm düşmanlar etkisiz hale getirildi.</p>
+            <span class="reb-timer">Yeni raunt başlıyor...</span>
         </div>
     </div>
-    <table class="sb-table">
-        <thead>
-            <tr>
-                <th>TAKIM</th>
-                <th>OYUNCU</th>
-                <th>ÖLDÜRME</th>
-                <th>ÖLÜM</th>
-                <th>PING</th>
-            </tr>
-        </thead>
-        <tbody id="sb-tbody"></tbody>
-    </table>
-    <p class="sb-hint">TAB tuşunu bırak kapatmak için</p>
-</div>
 
-<!-- ADMIN PANEL -->
-<div id="cs-admin-panel" class="cs-admin-panel" style="display:none">
-    <div class="cs-ap-header">
-        <span>👑 CS 1.6 ADMİN PANELİ</span>
-        <button id="cs-btn-close-panel" class="cs-ap-close">✕</button>
-    </div>
-    <div class="cs-ap-section">
-        <div class="cs-ap-section-title">🎮 OYUNCU</div>
-        <button id="cs-btn-godmode">🛡️ Godmode: ❌ KAPALI</button>
-        <button id="cs-btn-inf-ammo">⚡ Sınırsız Mermi: ❌ KAPALI</button>
-        <button id="cs-btn-speed">🚀 Süper Hız: ❌ KAPALI</button>
-        <button id="cs-btn-noclip">🪂 Uç (Noclip)</button>
-    </div>
-    <div class="cs-ap-section">
-        <div class="cs-ap-section-title">⚡ SUNUCU</div>
-        <button id="cs-btn-kill-bots">💀 Tüm Botları Öldür</button>
-        <button id="cs-btn-kill-all">🔥 Tüm Oyuncuları Öldür</button>
-        <button id="cs-btn-respawn-all">♻️ Herkesi Yeniden Doğur</button>
-        <button id="cs-btn-announce">📢 Duyuru Gönder</button>
-    </div>
-    <p class="cs-ap-hint">ESC Menüsü ile her zaman erişebilirsin</p>
-</div>
-
-<!-- RESMI WEB CS 1.6 MODAL (Xash3D & Play-CS WASM) -->
-<div id="modal-xash-cs" class="cs-modal-backdrop" style="display:none">
-    <div class="pause-menu-card" style="max-width:650px; width:90vw;">
-        <div class="pm-logo" style="color:#00e5ff">COUNTER-STRIKE 1.6 & CS2</div>
-        <h2>RESMİ WEB CS 1.6 (XASH3D & PLAY-CS)</h2>
-        <p style="color:#bbb; font-size:13px; line-height:1.6; margin:14px 0;">
-            Orijinal Valve 1999 GoldSrc motorunun WebAssembly & WebGL sürümüdür! Gerçek dünya sunucularında diğer insanlarla orijinal CS 1.6 fizik ve modelleriyle oynayabilirsiniz.
-        </p>
-        <div style="display:flex; flex-direction:column; gap:10px; margin:20px 0;">
-            <a href="https://play-cs.com" target="_blank" class="btn-pm-primary" style="text-decoration:none; text-align:center; padding:14px; font-size:15px; background:linear-gradient(135deg,#00e5ff,#0077ff); color:#000;">
-                🌐 PLAY-CS İLE RESMİ SUNUCULARA KATIL
-            </a>
-            <button id="btn-close-xash" class="btn-pm-secondary" style="padding:12px;">
-                ✕ BİLİŞİM 3D ARENASINA DEVAM ET
-            </button>
+    <!-- DEATH SCREEN OVERLAY -->
+    <div id="death-overlay" class="death-overlay">
+        <div class="death-inner">
+            <div class="death-skull">💀</div>
+            <h2>ELENDİN!</h2>
+            <p>5 saniye içinde yeniden doğuyorsun...</p>
+            <div class="death-timer-bar"></div>
         </div>
-        <p style="color:#888; font-size:11px;">
-            ⚡ Bilişim 3D Arenası okullardaki zayıf bilgisayarlarda 0ms gecikme ve 120 FPS ile akıcı çalışır.
-        </p>
     </div>
-</div>
 
-<script src="three.min.js"></script>
-<script src="cs16.js"></script>
-<script src="bgm.js"></script>
-<script src="overlay-back.js"></script>
+    <!-- SCOREBOARD (TAB) -->
+    <div id="cs-scoreboard" class="cs-scoreboard hidden">
+        <div class="sb-header">
+            <h2>SKOR TABLOSU (TAB)</h2>
+            <div class="sb-team-labels">
+                <span class="sb-t-label">TERRÖRİST: <b id="sb-score-t">0</b></span>
+                <span class="sb-ct-label">ANTİ-TERRÖRİST: <b id="sb-score-ct">0</b></span>
+            </div>
+        </div>
+        <table class="sb-table">
+            <thead>
+                <tr>
+                    <th>OYUNCU</th>
+                    <th>TAKIM</th>
+                    <th>SKOR</th>
+                    <th>ÖLÜM</th>
+                    <th>PING</th>
+                </tr>
+            </thead>
+            <tbody id="sb-tbody">
+                <!-- Canlı oyuncu ve bot listesi -->
+            </tbody>
+        </table>
+        <div class="sb-hint">Kapatmak için TAB tuşunu bırak</div>
+    </div>
+
+    <!-- BLOCKER / START OVERLAY -->
+    <div id="cs-blocker" class="cs-blocker">
+        <div class="cs-instructions-card">
+            <div class="cs-logo">
+                <div class="cs-logo-text">COUNTER-STRIKE</div>
+                <div class="cs-logo-version">1.6 WEB</div>
+            </div>
+            <h3>BİLİŞİM ARENASI • 3D ÇEVRİMİÇİ FPS</h3>
+            <p class="cs-desc">MEB Engelini Aşan Doğrudan Tarayıcı İçi Motor. İndirme yok, kurulum yok, 0ms giriş.</p>
+            <div class="cs-controls-guide">
+                <div><span class="key">W,A,S,D</span> Hareket</div>
+                <div><span class="key">MOUSE</span> Bakış Açısı</div>
+                <div><span class="key">SOL TIK</span> Ateş Et</div>
+                <div><span class="key">SAĞ TIK</span> Dürbün (AWP)</div>
+                <div><span class="key">1-5</span> Silah Değiştir</div>
+                <div><span class="key">R</span> Şarjör Değiştir</div>
+                <div><span class="key">SPACE</span> Zıpla</div>
+                <div><span class="key">SHIFT</span> Yavaş Yürü</div>
+                <div><span class="key">B</span> Silah Satın Al</div>
+                <div><span class="key">TAB</span> Skor Tablosu</div>
+                <div><span class="key">ESC</span> Menü / Admin</div>
+            </div>
+            <button id="btn-play-cs" class="btn-play-cs">OYUNA BAŞLA 🎯</button>
+            <div id="cs-click-hint" class="cs-hint">Oyuna girmek ve fareyi kilitlemek için butona tıkla</div>
+        </div>
+    </div>
+
+    <!-- TEAM SELECTION MODAL -->
+    <div id="modal-team-select" class="cs-modal-backdrop hidden">
+        <div class="team-select-card">
+            <div class="ts-header">
+                <h2>TAKIM SEÇİMİ</h2>
+                <p>Hangi tarafta savaşmak istiyorsun?</p>
+            </div>
+            <div class="team-cards-grid">
+                <div id="btn-select-t" class="team-box team-box-t">
+                    <div class="tb-badge">TERRÖRİSTLER</div>
+                    <div class="tb-icon">💣</div>
+                    <h3>Phoenix Connexion</h3>
+                    <p>Hedef: Bomba kur ve koru</p>
+                    <div class="tb-weapon">Başlangıç: AK-47 & Deagle</div>
+                    <button class="btn-join-team btn-t">TERRÖRİST OL (T)</button>
+                </div>
+                <div id="btn-select-ct" class="team-box team-box-ct">
+                    <div class="tb-badge">ANTİ-TERRÖRİSTLER</div>
+                    <div class="tb-icon">🛡️</div>
+                    <h3>Seal Team 6</h3>
+                    <p>Hedef: Bölgeyi koru ve tehditleri etkisiz kıl</p>
+                    <div class="tb-weapon">Başlangıç: M4A1 & Deagle</div>
+                    <button class="btn-join-team btn-ct">ANTİ-TERRÖRİST OL (CT)</button>
+                </div>
+            </div>
+            <div class="ts-footer">
+                <button id="btn-select-auto" class="btn-team-auto">🎲 Otomatik Dengele</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- BUY MENU MODAL (B KEY) -->
+    <div id="modal-buy-menu" class="cs-modal-backdrop hidden">
+        <div class="buy-menu-card">
+            <div class="bm-header">
+                <h2>🛒 SİLAH & EKİPMAN MENÜSÜ (B)</h2>
+                <div class="bm-money-display"><span id="bm-money-text">$800</span></div>
+                <button id="btn-close-buy" class="bm-close">✕ Kapat (B / ESC)</button>
+            </div>
+            <div class="bm-grid">
+                <div class="bm-category">
+                    <h3>TÜFEKLER</h3>
+                    <div class="bm-item">
+                        <div class="bm-item-info"><strong>1. CV-47 (AK-47)</strong><span>Hasar: 34 • Seri Ateş</span></div>
+                        <button class="btn-buy-action" data-weapon="ak47" data-cost="2700">$2700 AL</button>
+                    </div>
+                    <div class="bm-item">
+                        <div class="bm-item-info"><strong>2. M4A1 Carbine</strong><span>Hasar: 28 • Yüksek İsabet</span></div>
+                        <button class="btn-buy-action" data-weapon="m4a1" data-cost="3100">$3100 AL</button>
+                    </div>
+                    <div class="bm-item">
+                        <div class="bm-item-info"><strong>3. AWP Magnum</strong><span>Hasar: 115 • Tek Vuruş</span></div>
+                        <button class="btn-buy-action" data-weapon="awp" data-cost="4750">$4750 AL</button>
+                    </div>
+                </div>
+                <div class="bm-category">
+                    <h3>TABANCALAR & EKİPMAN</h3>
+                    <div class="bm-item">
+                        <div class="bm-item-info"><strong>4. Desert Eagle (.50C)</strong><span>Hasar: 55 • Güçlü Tabanca</span></div>
+                        <button class="btn-buy-action" data-weapon="deagle" data-cost="650">$650 AL</button>
+                    </div>
+                    <div class="bm-item">
+                        <div class="bm-item-info"><strong>Kevlar Zırh + Kask</strong><span>Hasar Azaltma %50</span></div>
+                        <button class="btn-buy-action" data-item="armor" data-cost="1000">$1000 AL</button>
+                    </div>
+                    <div class="bm-item">
+                        <div class="bm-item-info"><strong>Tüm Cephaneyi Doldur</strong><span>Maksimum Şarjör</span></div>
+                        <button class="btn-buy-action" data-item="ammo" data-cost="200">$200 AL</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PAUSE / ESC MENU -->
+    <div id="cs-pause-menu" class="cs-modal-backdrop hidden">
+        <div class="pause-menu-card">
+            <div class="pm-logo">COUNTER-STRIKE 1.6</div>
+            <h2>OYUN DURAKLATILDI</h2>
+            <div class="pm-buttons">
+                <button id="pm-btn-resume" class="btn-pm-primary">▶ OYUNA DÖN (ESC)</button>
+                <button id="pm-btn-team" class="btn-pm-secondary">👥 Takım Değiştir</button>
+                <button id="pm-btn-buy" class="btn-pm-secondary">🛒 Silah Satın Al (B)</button>
+                <button id="pm-btn-admin" class="btn-pm-secondary" style="display:none;">⚡ Admin Paneli Aç</button>
+                <a href="/" class="btn-pm-exit">🚪 Portale Dön (Çıkış)</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- ADMIN PANEL -->
+    <div id="cs-admin-panel" class="cs-admin-panel hidden">
+        <div class="cs-ap-header">
+            <span>⚡ YÖNETİCİ PANELİ</span>
+            <button class="cs-ap-close" id="cs-ap-close">✕</button>
+        </div>
+        <div class="cs-ap-section">
+            <div class="cs-ap-section-title">HİLELER & GÜÇLER</div>
+            <button id="cs-btn-godmode">🛡️ Ölümsüzlük (Godmode): KAPALI</button>
+            <button id="cs-btn-infammo">♾️ Sınırsız Mermi: KAPALI</button>
+            <button id="cs-btn-superspeed">⚡ Süper Hız: KAPALI</button>
+        </div>
+        <div class="cs-ap-section">
+            <div class="cs-ap-section-title">MAÇ YÖNETİMİ</div>
+            <button id="cs-btn-restart">🔄 Rauntu Yeniden Başlat</button>
+            <button id="cs-btn-spawnbot">🤖 Bot Ekle (+1)</button>
+            <button id="cs-btn-clearbots">🧹 Tüm Botları Sil</button>
+        </div>
+        <div class="cs-ap-hint">Admin tuşu: F2 veya ESC Menüsü</div>
+    </div>
+
+    <!-- SCRIPTS -->
+    <script src="three.min.js"></script>
+    <script src="bgm.js"></script>
+    <script src="cs16.js"></script>
 </body>
 </html>

@@ -123,6 +123,29 @@
           }, idx * 60);
         });
       } catch (_) {}
+    },
+    victory() {
+      try {
+        this.init();
+        if (!this.ctx) return;
+        const notes = [523.25, 659.25, 783.99, 1046.50, 1318.51, 1567.98];
+        notes.forEach((freq, idx) => {
+          setTimeout(() => {
+            this.playTone(freq, 'triangle', 0.35, 0.2);
+          }, idx * 90);
+        });
+      } catch (_) {}
+    },
+    warning() {
+      try {
+        this.init();
+        if (!this.ctx) return;
+        for (let i = 0; i < 3; i++) {
+          setTimeout(() => {
+            this.bossAlarm();
+          }, i * 220);
+        }
+      } catch (_) {}
     }
   };
 
@@ -328,6 +351,64 @@
     }
   ];
 
+  // --- STAGES & CHAPTERS CONFIGURATION ---
+  const STAGES = [
+    {
+      id: 1,
+      name: 'Terk Edilmiş Mezarlık',
+      sub: 'Zombi ve İskelet Ordusu',
+      icon: '🪦',
+      bossTime: 75,
+      swarmTime: 50,
+      boss: { name: 'Kemik Lordu (Giant Skeleton King)', hp: 2200, radius: 34, color: '#22c55e', speed: 1.8, gold: 750, type: 'skeleton_king' },
+      theme: { bg: '#080e0a', tile: 'rgba(34, 197, 94, 0.05)', grid: 'rgba(34, 197, 94, 0.1)', particle: '#22c55e' },
+      mult: { hp: 1.0, speed: 1.0, dmg: 1.0 },
+      desc: 'Lanetli mezar taşları ve yürüyen iskeletler. Kemik Lordu intikam için bekliyor!'
+    },
+    {
+      id: 2,
+      name: 'Drakula Şatosu',
+      sub: 'Kan Emici Yarasalar & Vampirler',
+      icon: '🏰',
+      bossTime: 95,
+      swarmTime: 70,
+      boss: { name: 'Vampir Kont Drakula', hp: 5500, radius: 38, color: '#dc2626', speed: 2.2, gold: 1500, type: 'dracula' },
+      theme: { bg: '#120509', tile: 'rgba(220, 38, 38, 0.05)', grid: 'rgba(220, 38, 38, 0.12)', particle: '#dc2626' },
+      mult: { hp: 1.45, speed: 1.15, dmg: 1.25 },
+      desc: 'Gotik mermerler ve kırmızı şamdanlar. Kont Drakula kanına susadı!'
+    },
+    {
+      id: 3,
+      name: 'Cehennem Çukuru',
+      sub: 'Ateş Zebanileri ve Lav Devleri',
+      icon: '🌋',
+      bossTime: 120,
+      swarmTime: 95,
+      boss: { name: 'Cehennem Zebanisi (Cerberus)', hp: 11000, radius: 42, color: '#ea580c', speed: 2.5, gold: 3000, type: 'cerberus' },
+      theme: { bg: '#140803', tile: 'rgba(234, 88, 12, 0.06)', grid: 'rgba(234, 88, 12, 0.14)', particle: '#f97316' },
+      mult: { hp: 2.1, speed: 1.3, dmg: 1.6 },
+      desc: 'Kavurucu lav nehirleri ve cehennem alevleri. Üç başlı canavar Cerberus uyanıyor!'
+    },
+    {
+      id: 4,
+      name: 'Kadim Boşluk (Void)',
+      sub: 'Kozmik Karanlık & Kadim Azrail',
+      icon: '🌌',
+      bossTime: 150,
+      swarmTime: 125,
+      boss: { name: 'Kadim Azrail (The Grim Reaper)', hp: 24000, radius: 48, color: '#7c3aed', speed: 2.8, gold: 8000, type: 'reaper' },
+      theme: { bg: '#070513', tile: 'rgba(124, 58, 237, 0.06)', grid: 'rgba(124, 58, 237, 0.15)', particle: '#a855f7' },
+      mult: { hp: 3.0, speed: 1.45, dmg: 2.0 },
+      desc: 'Uzayın derinliklerindeki kozmik karanlık. Ölümün efendisi Kadim Azrail seni bekliyor!'
+    }
+  ];
+
+  let unlockedStage = parseInt(localStorage.getItem('survivor_unlocked_stage') || '1', 10);
+
+  function getCurrentStage() {
+    return STAGES.find(s => s.id === state.currentStageId) || STAGES[0];
+  }
+
   // --- GAME STATE ---
   const canvas = document.getElementById('game-canvas');
   const ctx = canvas.getContext('2d');
@@ -349,11 +430,16 @@
     camera: { x: 0, y: 0 },
     keys: {},
     screenShake: 0,
-    activeBoss: null
+    activeBoss: null,
+    currentStageId: 1,
+    stageCleared: false,
+    swarmSpawned: false,
+    bossSpawned: false
   };
 
   // Player
   const player = {
+    username: localStorage.getItem('portal_username') || 'Savaşçı',
     x: 0,
     y: 0,
     radius: 18,
@@ -427,6 +513,61 @@
   const btnGoRestart = document.getElementById('btn-go-restart');
   const btnGoForge = document.getElementById('btn-go-forge');
 
+  // Stage & Dash DOM references
+  const hudStageName = document.getElementById('hud-stage-name');
+  const hudDashCd = document.getElementById('hud-dash-cd');
+  const btnOpenStages = document.getElementById('btn-open-stages');
+  const modalStages = document.getElementById('modal-stages');
+  const stagesGrid = document.getElementById('stages-grid');
+  const btnCloseStages = document.getElementById('btn-close-stages');
+  const modalStageClear = document.getElementById('modal-stage-clear');
+  const scDesc = document.getElementById('sc-desc');
+  const btnScNext = document.getElementById('btn-sc-next');
+  const btnScContinue = document.getElementById('btn-sc-continue');
+  const swarmWarning = document.getElementById('swarm-warning');
+
+  function renderStagesModal() {
+    if (!stagesGrid) return;
+    stagesGrid.innerHTML = '';
+    STAGES.forEach(s => {
+      const isUnlocked = s.id <= unlockedStage;
+      const isSelected = s.id === state.currentStageId;
+      const card = document.createElement('div');
+      card.className = `stage-card ${isSelected ? 'stage-active' : ''} ${!isUnlocked ? 'stage-locked' : ''}`;
+      card.innerHTML = `
+        <div class="stage-card-icon">${s.icon}</div>
+        <div class="stage-card-info">
+          <div class="stage-card-title">${s.name}</div>
+          <div class="stage-card-sub">${s.sub}</div>
+          <div class="stage-card-desc">${s.desc}</div>
+          <div class="stage-card-boss">👑 Boss: <strong>${s.boss.name}</strong> (${s.bossTime}sn)</div>
+        </div>
+        <div class="stage-card-badge">
+          ${isSelected ? 'SEÇİLİ' : (isUnlocked ? 'OYNA' : '🔒 KİLİTLİ')}
+        </div>
+      `;
+
+      if (isUnlocked) {
+        card.addEventListener('click', () => {
+          closeStagesModal();
+          startRun(s.id);
+        });
+      }
+      stagesGrid.appendChild(card);
+    });
+  }
+
+  function openStagesModal() {
+    renderStagesModal();
+    if (modalStages) modalStages.style.display = 'flex';
+    if (state.running) state.paused = true;
+  }
+
+  function closeStagesModal() {
+    if (modalStages) modalStages.style.display = 'none';
+    if (state.running) state.paused = false;
+  }
+
   // Input Listeners
   window.addEventListener('keydown', e => {
     state.keys[e.key.toLowerCase()] = true;
@@ -459,14 +600,27 @@
   }
 
   // --- INITIALIZE RUN ---
-  function startRun() {
+  function startRun(stageId) {
+    if (stageId && typeof stageId === 'number') {
+      state.currentStageId = stageId;
+    }
     state.running = true;
     state.paused = false;
     state.time = 0;
     state.kills = 0;
     state.goldEarned = 0;
     state.activeBoss = null;
+    state.stageCleared = false;
+    state.swarmSpawned = false;
+    state.bossSpawned = false;
     bossBarWrap.style.display = 'none';
+
+    if (modalStageClear) modalStageClear.style.display = 'none';
+    if (modalStages) modalStages.style.display = 'none';
+    if (swarmWarning) swarmWarning.style.display = 'none';
+
+    const curStage = getCurrentStage();
+    if (hudStageName) hudStageName.textContent = `Aşama ${curStage.id}: ${curStage.name}`;
 
     // Calculate stats from forge upgrades
     const hpBonus = forgeRanks.maxHp * FORGE_CONFIG.find(c => c.id === 'maxHp').valPerRank;
@@ -510,29 +664,69 @@
   function updateSpawning() {
     spawnTimer++;
     // Spawn rate increases over time
-    const interval = Math.max(15, Math.floor(60 - Math.min(45, state.time / 8)));
+    const interval = Math.max(12, Math.floor(55 - Math.min(42, state.time / 7)));
 
     if (spawnTimer >= interval) {
       spawnTimer = 0;
-      const count = 1 + Math.floor(state.time / 60);
+      const count = 1 + Math.floor(state.time / 50);
       for (let i = 0; i < count; i++) {
         spawnRegularEnemy();
       }
     }
 
-    // Boss spawns
-    if (Math.floor(state.time) === 60 && !state.boss1Spawned) {
-      state.boss1Spawned = true;
-      spawnBoss('Kemik Lordu (Giant Skeleton King)', 1800, 32, '#22c55e', 1.8, 600, 'skeleton_king');
-    } else if (Math.floor(state.time) === 150 && !state.boss2Spawned) {
-      state.boss2Spawned = true;
-      spawnBoss('Vampir Kont Drakula', 4200, 36, '#dc2626', 2.2, 1400, 'dracula');
-    } else if (Math.floor(state.time) === 270 && !state.boss3Spawned) {
-      state.boss3Spawned = true;
-      spawnBoss('Cehennem Zebanisi (Cerberus)', 8000, 42, '#f97316', 2.5, 2600, 'cerberus');
-    } else if (Math.floor(state.time) === 420 && !state.boss4Spawned) {
-      state.boss4Spawned = true;
-      spawnBoss('Kadim Azrail (The Grim Reaper)', 16000, 46, '#7c3aed', 2.8, 5000, 'reaper');
+    const curStage = getCurrentStage();
+
+    // Swarm alert & wave
+    if (state.time >= curStage.swarmTime && !state.swarmSpawned) {
+      state.swarmSpawned = true;
+      triggerSwarmWave();
+    }
+
+    // Boss spawn
+    if (state.time >= curStage.bossTime && !state.bossSpawned) {
+      state.bossSpawned = true;
+      spawnBoss(
+        curStage.boss.name,
+        curStage.boss.hp,
+        curStage.boss.radius,
+        curStage.boss.color,
+        curStage.boss.speed,
+        curStage.boss.gold,
+        curStage.boss.type
+      );
+    }
+  }
+
+  function triggerSwarmWave() {
+    Sfx.warning();
+    state.screenShake = 18;
+    if (swarmWarning) {
+      swarmWarning.innerHTML = '⚠️ KANLI AY DOĞUYOR! CANAVAR SÜRÜSÜ HÜCUM EDİYOR! ⚠️';
+      swarmWarning.style.display = 'block';
+      setTimeout(() => {
+        if (swarmWarning) swarmWarning.style.display = 'none';
+      }, 4500);
+    }
+
+    const curStage = getCurrentStage();
+    for (let i = 0; i < 28; i++) {
+      const angle = (i / 28) * Math.PI * 2;
+      const dist = Math.max(width, height) * 0.65 + (i % 3) * 50;
+      const x = player.x + Math.cos(angle) * dist;
+      const y = player.y + Math.sin(angle) * dist;
+      enemies.push({
+        x, y,
+        type: 'bat',
+        hp: Math.round(15 * curStage.mult.hp),
+        maxHp: Math.round(15 * curStage.mult.hp),
+        speed: 2.8 * curStage.mult.speed,
+        radius: 13,
+        color: '#f43f5e',
+        xpVal: 2,
+        goldChance: 0.35,
+        dmg: Math.round(6 * curStage.mult.dmg),
+        hitFlash: 0
+      });
     }
   }
 
@@ -599,6 +793,14 @@
       goldChance = 0.8;
       dmg = 32;
     }
+
+    const curStage = getCurrentStage();
+    const mult = curStage.mult;
+
+    // Apply stage multipliers
+    hp = Math.round(hp * mult.hp);
+    speed = Number((speed * mult.speed).toFixed(2));
+    dmg = Math.round(dmg * mult.dmg);
 
     enemies.push({
       x, y,
@@ -713,6 +915,7 @@
 
   function shootFireballs(dmgMult) {
     if (enemies.length === 0) return;
+    const isEvolved = player.skills.fireball >= 7;
     // Find closest enemies
     const sorted = [...enemies].sort((a, b) => {
       const d1 = (a.x - player.x)**2 + (a.y - player.y)**2;
@@ -720,7 +923,7 @@
       return d1 - d2;
     });
 
-    const count = 1 + Math.floor(player.skills.fireball / 2);
+    const count = isEvolved ? 4 : (1 + Math.floor(player.skills.fireball / 2));
     for (let i = 0; i < Math.min(count, sorted.length); i++) {
       const target = sorted[i];
       const angle = Math.atan2(target.y - player.y, target.x - player.x);
@@ -728,21 +931,23 @@
         type: 'fireball',
         x: player.x,
         y: player.y,
-        vx: Math.cos(angle) * 7,
-        vy: Math.sin(angle) * 7,
-        radius: 12 + player.skills.fireball * 2,
-        damage: Math.round((28 + player.skills.fireball * 14) * dmgMult),
-        splashRadius: 60 + player.skills.fireball * 15,
+        vx: Math.cos(angle) * (isEvolved ? 8.5 : 7),
+        vy: Math.sin(angle) * (isEvolved ? 8.5 : 7),
+        radius: isEvolved ? 22 : (12 + player.skills.fireball * 2),
+        damage: Math.round((isEvolved ? 180 : (28 + player.skills.fireball * 14)) * dmgMult),
+        splashRadius: isEvolved ? 150 : (60 + player.skills.fireball * 15),
         life: 120,
-        color: '#ff3d00'
+        color: isEvolved ? '#ff0055' : '#ff3d00'
       });
     }
+    if (isEvolved) state.screenShake = 6;
     Sfx.fireball();
   }
 
   function castLightning(dmgMult) {
     if (enemies.length === 0) return;
-    const strikes = 1 + player.skills.lightning;
+    const isEvolved = player.skills.lightning >= 7;
+    const strikes = isEvolved ? (4 + player.skills.lightning) : (1 + player.skills.lightning);
     const targets = [];
     for (let i = 0; i < strikes; i++) {
       const e = enemies[Math.floor(Math.random() * enemies.length)];
@@ -750,7 +955,7 @@
     }
 
     targets.forEach(t => {
-      const dmg = Math.round((45 + player.skills.lightning * 20) * dmgMult);
+      const dmg = Math.round((isEvolved ? 120 : (45 + player.skills.lightning * 20)) * dmgMult);
       damageEnemy(t, dmg, true);
       Sfx.lightning();
       // Lightning bolt visual effect
@@ -758,22 +963,28 @@
         type: 'lightning_strike',
         x: t.x,
         y: t.y,
-        life: 12
+        life: 14,
+        color: isEvolved ? '#e0e7ff' : '#00e5ff'
       });
     });
+    if (isEvolved) state.screenShake = 7;
   }
 
   function castFrostNova(dmgMult) {
-    const range = 140 + player.skills.frostnova * 25;
-    const dmg = Math.round((20 + player.skills.frostnova * 10) * dmgMult);
+    const isEvolved = player.skills.frostnova >= 5;
+    const range = isEvolved ? 550 : (140 + player.skills.frostnova * 25);
+    const dmg = Math.round((isEvolved ? 85 : (20 + player.skills.frostnova * 10)) * dmgMult);
     Sfx.playTone(600, 'sine', 0.2, 0.1);
 
     enemies.forEach(e => {
       const dist = Math.hypot(e.x - player.x, e.y - player.y);
       if (dist <= range) {
         damageEnemy(e, dmg, false);
-        e.speed *= 0.4;
-        setTimeout(() => { e.speed /= 0.4; }, 2000);
+        const originalSpeed = e.speed;
+        e.speed = isEvolved ? 0 : (e.speed * 0.4);
+        setTimeout(() => {
+          if (e) e.speed = originalSpeed;
+        }, isEvolved ? 2500 : 2000);
       }
     });
 
@@ -783,13 +994,20 @@
       y: player.y,
       radius: 10,
       maxRadius: range,
-      life: 20
+      life: isEvolved ? 30 : 20
     });
+    if (isEvolved) state.screenShake = 6;
   }
 
   function pulseHolyAura(dmgMult) {
-    const range = 80 + player.skills.holyaura * 18;
-    const dmg = Math.round((8 + player.skills.holyaura * 4) * dmgMult);
+    const isEvolved = player.skills.holyaura >= 6;
+    const range = isEvolved ? 180 : (80 + player.skills.holyaura * 18);
+    const dmg = Math.round((isEvolved ? 42 : (8 + player.skills.holyaura * 4)) * dmgMult);
+
+    if (isEvolved && player.hp < player.maxHp && Math.random() < 0.25) {
+      player.hp = Math.min(player.maxHp, player.hp + 2);
+      updateHUD();
+    }
 
     enemies.forEach(e => {
       const dist = Math.hypot(e.x - player.x, e.y - player.y);
@@ -838,15 +1056,67 @@
     // Gold drop
     const greedBonus = 1 + (forgeRanks.greed * FORGE_CONFIG.find(c => c.id === 'greed').valPerRank);
     if (e.isBoss) {
-      const g = Math.round(e.goldVal * greedBonus);
+      const curStage = getCurrentStage();
+      const g = Math.round((e.goldVal + curStage.boss.gold) * greedBonus);
       state.goldEarned += g;
       persistentGold += g;
       saveGold();
-      addFloatText(e.x, e.y - 30, `+${g} 🪙`, '#ffd54f', 24);
-      Sfx.chest();
-      state.screenShake = 15;
+      addFloatText(e.x, e.y - 30, `+${g} 🪙 BÖLÜM ZAFERİ!`, '#ffd54f', 28);
+      Sfx.victory();
+      state.screenShake = 28;
       bossBarWrap.style.display = 'none';
       state.activeBoss = null;
+      state.stageCleared = true;
+
+      // Transform all alive regular enemies into gems with burst effect
+      enemies.forEach(en => {
+        gems.push({
+          x: en.x,
+          y: en.y,
+          val: Math.round(en.xpVal * xpBonus),
+          color: '#00e676',
+          radius: 6
+        });
+        for (let i = 0; i < 4; i++) {
+          particles.push({
+            x: en.x,
+            y: en.y,
+            vx: (Math.random() - 0.5) * 5,
+            vy: (Math.random() - 0.5) * 5,
+            life: 15,
+            color: '#22c55e',
+            size: 3
+          });
+        }
+      });
+      enemies = [];
+
+      // Unlock next stage
+      if (state.currentStageId >= unlockedStage && unlockedStage < 4) {
+        unlockedStage = state.currentStageId + 1;
+        localStorage.setItem('survivor_unlocked_stage', unlockedStage.toString());
+      }
+
+      // Show stage clear modal
+      setTimeout(() => {
+        if (modalStageClear) {
+          const scDescEl = document.getElementById('sc-desc');
+          const scRewardEl = document.querySelector('.sc-reward');
+          if (scDescEl) scDescEl.textContent = `${curStage.boss.name} yerle bir edildi! ${curStage.name} temizlendi.`;
+          if (scRewardEl) scRewardEl.textContent = `🪙 +${g} Altın ve Ebedi Şan Kazanıldı!`;
+          if (btnScNext) {
+            if (state.currentStageId < 4) {
+              btnScNext.textContent = `AŞAMA ${state.currentStageId + 1}'E GEÇ ➡️`;
+              btnScNext.style.display = 'inline-block';
+            } else {
+              btnScNext.textContent = '👑 TÜM AŞAMALARI TAMAMLADIN!';
+              btnScNext.style.display = 'inline-block';
+            }
+          }
+          modalStageClear.style.display = 'flex';
+          state.paused = true;
+        }
+      }, 1200);
     } else if (Math.random() < e.goldChance) {
       const g = Math.round((2 + Math.floor(Math.random() * 5)) * greedBonus);
       state.goldEarned += g;
@@ -900,12 +1170,15 @@
     levelupCardsGrid.innerHTML = '';
     chosen.forEach(upgrade => {
       const curLvl = player.skills[upgrade.id] || 0;
+      const isEvolution = curLvl + 1 === upgrade.maxLvl;
       const card = document.createElement('div');
-      card.className = 'upgrade-card';
+      card.className = `upgrade-card ${isEvolution ? 'card-evolution' : ''}`;
       card.innerHTML = `
         <div class="card-icon">${upgrade.icon}</div>
         <div class="card-title">${upgrade.name}</div>
-        <div class="card-type type-${upgrade.type}">${upgrade.typeName}</div>
+        <div class="card-type ${isEvolution ? 'type-evolution' : 'type-' + upgrade.type}">
+          ${isEvolution ? '🔥 EVRİMLEŞME (MAX FORM)' : upgrade.typeName}
+        </div>
         <div class="card-desc">${upgrade.desc}</div>
         <div class="card-level-preview">${upgrade.getPreview(curLvl)}</div>
       `;
@@ -1040,6 +1313,19 @@
     hudHp.textContent = `${Math.max(0, player.hp)} / ${player.maxHp}`;
     hudGold.textContent = persistentGold;
     hudKills.textContent = `${state.kills} Av`;
+
+    const curStage = getCurrentStage();
+    if (hudStageName) hudStageName.textContent = `Aşama ${curStage.id}: ${curStage.name}`;
+
+    if (hudDashCd) {
+      if (player.dashCd <= 0) {
+        hudDashCd.textContent = 'HAZIR';
+        hudDashCd.style.color = '#00e5ff';
+      } else {
+        hudDashCd.textContent = (player.dashCd / 60).toFixed(1) + 's';
+        hudDashCd.style.color = '#ff9100';
+      }
+    }
 
     const m = Math.floor(state.time / 60);
     const s = Math.floor(state.time % 60);
@@ -1275,6 +1561,10 @@
 
     // Apply Camera
     ctx.translate(-state.camera.x, -state.camera.y);
+
+    const curStage = getCurrentStage();
+    ctx.fillStyle = curStage.theme.bg;
+    ctx.fillRect(state.camera.x, state.camera.y, width, height);
 
     // 1. Draw Dungeon Floor (Grid & Glowing Runes)
     drawDungeonFloor();
@@ -1696,8 +1986,17 @@
     ctx.strokeStyle = '#00e5ff'; ctx.lineWidth = 2;
     ctx.beginPath();
     ctx.moveTo(hx, hy);
-    ctx.lineTo(hx + Math.cos(player.facing) * 16, hy + Math.sin(player.facing) * 16);
     ctx.stroke();
+
+    // Player Name Tag
+    ctx.save();
+    ctx.font = 'bold 13px monospace';
+    ctx.textAlign = 'center';
+    ctx.fillStyle = '#00e5ff';
+    ctx.shadowColor = '#000000';
+    ctx.shadowBlur = 6;
+    ctx.fillText(player.username, 0, -player.radius - 8);
+    ctx.restore();
 
     ctx.restore();
 
@@ -1746,21 +2045,22 @@
   }
 
   function drawDungeonFloor() {
+    const curStage = getCurrentStage();
     const tileSize = 64;
     const startX = Math.floor(state.camera.x / tileSize) * tileSize - tileSize;
     const startY = Math.floor(state.camera.y / tileSize) * tileSize - tileSize;
     const endX = startX + width + tileSize * 2;
     const endY = startY + height + tileSize * 2;
 
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.04)';
+    ctx.strokeStyle = curStage.theme.grid;
     ctx.lineWidth = 1;
 
     for (let x = startX; x < endX; x += tileSize) {
       for (let y = startY; y < endY; y += tileSize) {
         ctx.strokeRect(x, y, tileSize, tileSize);
-        // Subtle dungeon stone dots
+        // Stage specific floor dots & accents
         if ((x + y) % (tileSize * 4) === 0) {
-          ctx.fillStyle = 'rgba(0, 219, 255, 0.03)';
+          ctx.fillStyle = curStage.theme.tile;
           ctx.fillRect(x + 2, y + 2, tileSize - 4, tileSize - 4);
         }
       }
@@ -1770,11 +2070,22 @@
   // --- BUTTON EVENT LISTENERS ---
   btnOpenForge?.addEventListener('click', openBlacksmith);
   btnCloseForge?.addEventListener('click', closeBlacksmith);
+  btnOpenStages?.addEventListener('click', openStagesModal);
+  btnCloseStages?.addEventListener('click', closeStagesModal);
+  btnScNext?.addEventListener('click', () => {
+    if (modalStageClear) modalStageClear.style.display = 'none';
+    const nextId = Math.min(4, state.currentStageId + 1);
+    startRun(nextId);
+  });
+  btnScContinue?.addEventListener('click', () => {
+    if (modalStageClear) modalStageClear.style.display = 'none';
+    state.paused = false;
+  });
   btnGoForge?.addEventListener('click', () => {
     modalGameover.classList.remove('active');
     openBlacksmith();
   });
-  btnGoRestart?.addEventListener('click', startRun);
+  btnGoRestart?.addEventListener('click', () => startRun());
 
   btnPauseGame?.addEventListener('click', () => {
     if (state.running) {

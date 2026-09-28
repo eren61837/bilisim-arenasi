@@ -621,6 +621,9 @@
   const muzzleFlash = new THREE.Mesh(new THREE.SphereGeometry(0.08, 6, 6), muzzleFlashMat);
   muzzleFlash.position.set(0, 0.01, -0.75);
   weaponGroup.add(muzzleFlash);
+  const csMuzzleLight = new THREE.PointLight(0xffdd55, 0, 15);
+  csMuzzleLight.position.set(0, 0.01, -0.75);
+  weaponGroup.add(csMuzzleLight);
   let muzzleFlashTimer = 0;
 
   function switchWeapon(key) {
@@ -728,6 +731,17 @@
 
   canvas?.addEventListener('click', () => {
     if (!state.isLocked) resumeGame();
+  });
+
+  document.getElementById('btn-play-cs')?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    resumeGame();
+  });
+
+  blocker?.addEventListener('click', (e) => {
+    if (e.target.id === 'cs-blocker' || e.target.id === 'btn-play-cs') {
+      resumeGame();
+    }
   });
 
   document.getElementById('btn-cs-menu-open')?.addEventListener('click', () => {
@@ -940,6 +954,10 @@
     if (state.currentWeaponKey !== 'knife') {
       muzzleFlashMat.opacity = 0.9;
       muzzleFlashTimer = 0.05;
+      if (typeof csMuzzleLight !== 'undefined' && csMuzzleLight) {
+        csMuzzleLight.intensity = 3.5;
+        setTimeout(() => { if (csMuzzleLight) csMuzzleLight.intensity = 0; }, 45);
+      }
     }
 
     // Recoil animation

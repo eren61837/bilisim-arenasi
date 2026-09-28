@@ -26,7 +26,13 @@
         </div>
 
         <div class="hud-center">
+            <button class="hud-btn btn-stage-select" id="btn-open-stages" title="Aşama Değiştir">
+                <span>🗺️</span> <span id="hud-stage-name">Aşama 1: Mezarlık</span>
+            </button>
             <div class="hud-stat-badge timer-badge" id="hud-timer">00:00</div>
+            <div class="hud-stat-badge dash-badge" id="hud-dash" title="Space tuşu ile atıl">
+                <span>⚡ DASH</span> <span id="hud-dash-cd">HAZIR</span>
+            </div>
         </div>
 
         <div class="hud-right">
@@ -128,6 +134,38 @@
             <div class="gameover-actions">
                 <button class="btn-gameover-forge" id="btn-go-forge">🔨 DEMİRCİDE GELİŞ</button>
                 <button class="btn-gameover-play" id="btn-go-restart">⚔️ YENİDEN SAVAŞ</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SWARM WARNING OVERLAY -->
+    <div id="swarm-warning-overlay" class="swarm-warning" style="display:none;">
+        <div class="swarm-title">⚠️ KAN AYI DOĞDU! ⚠️</div>
+        <div class="swarm-desc">DEVASA CANAVAR SÜRÜSÜ HÜCUM EDİYOR!</div>
+    </div>
+
+    <!-- MODAL: STAGE SELECTION -->
+    <div class="modal-overlay" id="modal-stages" style="display:none;">
+        <div class="stages-box">
+            <h2>🗺️ SAVAŞ AŞAMASI SEÇ</h2>
+            <p>Her aşama benzersiz canavarlar, tehlikeli zeminler ve kudretli bosslar barındırır!</p>
+            <div class="stages-grid" id="stages-grid">
+                <!-- Generated dynamically via JS -->
+            </div>
+            <button class="btn-close-modal" id="btn-close-stages">KAPAT & SAVAŞ</button>
+        </div>
+    </div>
+
+    <!-- MODAL: STAGE CLEAR VICTORY -->
+    <div class="modal-overlay" id="modal-stage-clear" style="display:none;">
+        <div class="stage-clear-box">
+            <div class="sc-trophy">🏆</div>
+            <h1 class="sc-title">AŞAMA TAMAMLANDI!</h1>
+            <p class="sc-desc" id="sc-desc">Bölüm Lordu alt edildi!</p>
+            <div class="sc-reward">🪙 +750 Bonus Altın Kazanıldı!</div>
+            <div class="sc-actions">
+                <button class="btn-next-stage" id="btn-sc-next">SONRAKİ AŞAMAYA GEÇ ➡️</button>
+                <button class="btn-continue-endless" id="btn-sc-continue">Sonsuz Modda Devam Et ⚔️</button>
             </div>
         </div>
     </div>

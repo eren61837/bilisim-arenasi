@@ -969,6 +969,8 @@
         state.user = data.user;
         localStorage.setItem('pixelplace_token', data.token);
         localStorage.setItem('pixelplace_user', JSON.stringify(data.user));
+        localStorage.setItem('portal_username', data.user.username);
+        localStorage.setItem('portal_game_username', data.user.username);
 
         modalLogin.classList.add('hidden');
         updateUserUI();
@@ -1054,7 +1056,29 @@
         updateUserUI();
       } catch (_) {}
     }
-    if (!state.token) return;
+    if (!state.token) {
+      if (state.user && state.user.username) {
+        try {
+          const res = await fetch('/api/quick-auth', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username: state.user.username, captchaToken: 'auto_pass' })
+          });
+          const d = await res.json();
+          if (d.success && d.token) {
+            state.token = d.token;
+            state.user = d.user;
+            localStorage.setItem('pixelplace_token', d.token);
+            localStorage.setItem('pixelplace_user', JSON.stringify(d.user));
+            updateUserUI();
+            if (ws && ws.readyState === WebSocket.OPEN) {
+              ws.send(JSON.stringify({ type: 'auth', token: d.token, username: d.user.username }));
+            }
+          }
+        } catch (_) {}
+      }
+      return;
+    }
     try {
       const res = await fetch('/api/me', {
         headers: { 'Authorization': `Bearer ${state.token}` }

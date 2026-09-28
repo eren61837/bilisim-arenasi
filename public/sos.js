@@ -42,8 +42,24 @@ function playSound(type) {
     }
 }
 
+// Dismiss Loading Screen
+window.addEventListener('DOMContentLoaded', () => {
+    const loadingScreen = document.getElementById('sos-loading-screen');
+    if (loadingScreen) {
+        setTimeout(() => {
+            loadingScreen.classList.add('fade-out');
+            setTimeout(() => {
+                loadingScreen.remove();
+            }, 600);
+        }, 1800);
+    }
+});
+
 ws.onopen = () => {
     console.log('WS Connected');
+    try {
+        ws.send(JSON.stringify({ type: 'join', room: 'sos' }));
+    } catch (_) {}
 };
 
 ws.onmessage = (e) => {

@@ -24,7 +24,8 @@
 
     <!-- TABS -->
     <div class="mc-tabs">
-        <button class="mc-tab-btn active" id="tab-btn-eagle">👑 Orijinal Minecraft 1.8.8 (Web)</button>
+        <button class="mc-tab-btn active" id="tab-btn-single">🎮 Tek Oyunculu (Orijinal Hayatta Kalma & Dünyalar)</button>
+        <button class="mc-tab-btn" id="tab-btn-eagle">🌐 Çok Oyunculu (Eagler Sunucuları)</button>
         <button class="mc-tab-btn" id="tab-btn-classic">🏛️ Resmi Mojang Classic</button>
         <button class="mc-tab-btn" id="tab-btn-web">⚡ BilişimCraft 3D Voxel</button>
         <button class="mc-tab-btn" id="tab-btn-launcher">☕ TLauncher PC İndir</button>
@@ -52,11 +53,20 @@
 <!-- MAIN VIEWPORT: HOSTS EAGLERCRAFT 1.8.8, CLASSIC & VOXEL ENGINE -->
 <div id="mc-viewport">
 
+    <!-- CHAT HELPER BANNER -->
+    <div id="mc-chat-help-banner" style="position:fixed; bottom:14px; left:16px; background:rgba(13,17,23,0.92); border:1px solid #4caf50; border-radius:8px; padding:6px 14px; color:#cfd8dc; font-size:12px; z-index:900; pointer-events:none; box-shadow:0 4px 15px rgba(0,0,0,0.7); display:flex; align-items:center; gap:8px;">
+        <span style="font-size:14px;">💬</span>
+        <span><b>Sohbet / Komut:</b> <b>T</b> veya <b>/</b> tuşuna bas! (Eaglercraft'ta açılmazsa: <i>ESC &gt; Seçenekler &gt; Sohbet Ayarları &gt; Sohbet: Görünür</i> yap)</span>
+    </div>
+
+    <!-- 0. EAGLERCRAFT SINGLEPLAYER (TEK OYUNCULU ORİJİNAL DÜNYA YARATMA VE KAYDETME) -->
+    <iframe id="mc-single-frame" src="https://eaglercraft.q13x.com/" tabindex="0" allow="autoplay; fullscreen; pointer-lock" style="width:100%; height:100%; border:none; display:block;"></iframe>
+
     <!-- 1. AUTHENTIC EAGLERCRAFT 1.8.8 (DIRECT WEB CLIENT - OFFLINE/ONLINE) -->
-    <iframe id="mc-eagle-frame" src="/eaglercraft.html" allow="autoplay; fullscreen; pointer-lock" style="width:100%; height:100%; border:none; display:block;"></iframe>
+    <iframe id="mc-eagle-frame" src="/eaglercraft.html" tabindex="0" allow="autoplay; fullscreen; pointer-lock" style="width:100%; height:100%; border:none; display:none;"></iframe>
 
     <!-- 2. OFFICIAL MOJANG MINECRAFT CLASSIC (HTML5) -->
-    <iframe id="mc-classic-frame" data-src="https://classic.minecraft.net/" allow="autoplay; fullscreen; pointer-lock" style="width:100%; height:100%; border:none; display:none;"></iframe>
+    <iframe id="mc-classic-frame" data-src="https://classic.minecraft.net/" tabindex="0" allow="autoplay; fullscreen; pointer-lock" style="width:100%; height:100%; border:none; display:none;"></iframe>
 
     <!-- 3. BUILT-IN LIGHTWEIGHT THREE.JS 3D VOXEL ENGINE -->
     <div id="mc-voxel-wrap" style="position:absolute; top:0; left:0; width:100%; height:100%; display:none;">

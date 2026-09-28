@@ -3,7 +3,23 @@
 (function() {
   'use strict';
 
-  const BGM_SRC = '/music/hymn_for_the_weekend.mp3';
+  const TRACKS = [
+    {
+      title: 'Run From Your Demons',
+      artist: 'That Handsome Devil',
+      src: '/music/run_from_your_demons.mp3'
+    },
+    {
+      title: 'Hymn For The Weekend',
+      artist: 'Coldplay ft. Beyoncé',
+      src: '/music/hymn_for_the_weekend.mp3'
+    }
+  ];
+
+  let currentTrackIdx = parseInt(localStorage.getItem('bgm_track_idx') || '0', 10);
+  if (isNaN(currentTrackIdx) || currentTrackIdx < 0 || currentTrackIdx >= TRACKS.length) {
+    currentTrackIdx = 0;
+  }
 
   // Read saved settings
   let isPlaying = localStorage.getItem('bgm_playing') !== 'false';
@@ -14,30 +30,62 @@
   if (!audio) {
     audio = document.createElement('audio');
     audio.id = 'bgm-audio';
-    audio.src = BGM_SRC;
-    audio.loop = true;
+    audio.src = TRACKS[currentTrackIdx].src;
+    audio.loop = false;
     audio.volume = volume;
     audio.preload = 'auto';
     document.body.appendChild(audio);
   }
 
+  // Auto next track on ended
+  audio.addEventListener('ended', () => {
+    nextTrack();
+  });
+
   // Create UI Widget
   const widget = document.createElement('div');
   widget.className = 'bgm-widget' + (isPlaying ? '' : ' paused');
   widget.innerHTML = `
-    <div class="bgm-icon-wrap" id="bgm-icon" title="Hymn For The Weekend">🎵</div>
+    <div class="bgm-icon-wrap" id="bgm-icon" title="Şarkıyı Değiştir">🎵</div>
     <div class="bgm-info">
-      <div class="bgm-title">Hymn For The Weekend</div>
-      <div class="bgm-artist">Coldplay ft. Beyoncé</div>
+      <div class="bgm-title" id="bgm-title">${TRACKS[currentTrackIdx].title}</div>
+      <div class="bgm-artist" id="bgm-artist">${TRACKS[currentTrackIdx].artist}</div>
     </div>
     <button type="button" class="bgm-btn-toggle" id="bgm-btn-toggle" title="Oynat / Duraklat">${isPlaying ? '⏸' : '▶'}</button>
+    <button type="button" class="bgm-btn-toggle" id="bgm-btn-next" title="Sonraki Şarkı">⏭</button>
     <input type="range" class="bgm-volume-slider" id="bgm-volume" min="0" max="1" step="0.05" value="${volume}" title="Ses Seviyesi">
   `;
   document.body.appendChild(widget);
 
   const btnToggle = document.getElementById('bgm-btn-toggle');
+  const btnNext = document.getElementById('bgm-btn-next');
+  const titleEl = document.getElementById('bgm-title');
+  const artistEl = document.getElementById('bgm-artist');
   const sliderVolume = document.getElementById('bgm-volume');
   const iconWrap = document.getElementById('bgm-icon');
+
+  function setTrack(idx) {
+    currentTrackIdx = idx % TRACKS.length;
+    localStorage.setItem('bgm_track_idx', currentTrackIdx);
+    const track = TRACKS[currentTrackIdx];
+    audio.src = track.src;
+    if (titleEl) titleEl.textContent = track.title;
+    if (artistEl) artistEl.textContent = track.artist;
+    if (isPlaying) {
+      audio.play().catch(() => {});
+    }
+  }
+
+  function nextTrack() {
+    setTrack((currentTrackIdx + 1) % TRACKS.length);
+  }
+
+  if (btnNext) {
+    btnNext.addEventListener('click', (e) => {
+      e.stopPropagation();
+      nextTrack();
+    });
+  }
 
   function tryPlay() {
     audio.play().then(() => {

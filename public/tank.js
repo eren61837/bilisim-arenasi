@@ -183,12 +183,39 @@
     document.body.appendChild(fireBtn);
   })();
 
+  // Juice & Visual FX: Particles & Tread Marks
+  const tankParticles = [];
+  function spawnTankSparks(x, y, color = '#ff9100', count = 10) {
+    for (let i = 0; i < count; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const spd = 1.2 + Math.random() * 4.0;
+      tankParticles.push({
+        x, y,
+        vx: Math.cos(angle) * spd,
+        vy: Math.sin(angle) * spd,
+        color,
+        size: 2 + Math.random() * 2.5,
+        life: 1.0,
+        decay: 0.04 + Math.random() * 0.03
+      });
+    }
+  }
+
+  const tracks = [];
+  let trackCounter = 0;
+
   function tryShoot() {
     if (!state.alive) return;
     const now = Date.now();
     if (now - state.lastShoot < 350) return;
     state.lastShoot = now;
     SoundFX.shoot();
+
+    // Muzzle blast sparks
+    const tipX = state.x + Math.cos(state.turretAngle) * 26;
+    const tipY = state.y + Math.sin(state.turretAngle) * 26;
+    spawnTankSparks(tipX, tipY, '#ffe600', 6);
+
     if (state.ws && state.ws.readyState === WebSocket.OPEN) {
       state.ws.send(JSON.stringify({ type: 'tank_shoot' }));
     }
@@ -257,6 +284,8 @@
       else if (data.type === 'tank_dead') {
         state.alive = false;
         SoundFX.explode();
+        spawnTankSparks(state.x, state.y, '#ff3d00', 35);
+        spawnTankSparks(state.x, state.y, '#ffea00', 20);
         const dModal = document.getElementById('tank-death');
         const msg = document.getElementById('tank-death-msg');
         if (msg) msg.textContent = `${esc(data.killer || 'Bir düşman')} tarafından vuruldun!`;
@@ -331,6 +360,13 @@
         if (!collides) {
           state.x = nx;
           state.y = ny;
+
+          // Track tread marks
+          trackCounter++;
+          if (trackCounter % 4 === 0) {
+            tracks.push({ x: state.x, y: state.y, angle: state.angle, life: 1.0 });
+            if (tracks.length > 90) tracks.shift();
+          }
         }
       }
 
@@ -367,6 +403,20 @@
     }
     for (let y = 0; y < canvas.height; y += 40) {
       ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke();
+    }
+
+    // Fading tank tread marks on ground
+    for (let i = tracks.length - 1; i >= 0; i--) {
+      const tr = tracks[i];
+      tr.life -= 0.0035;
+      if (tr.life <= 0) { tracks.splice(i, 1); continue; }
+      ctx.save();
+      ctx.translate(tr.x, tr.y);
+      ctx.rotate(tr.angle);
+      ctx.fillStyle = `rgba(0, 0, 0, ${tr.life * 0.22})`;
+      ctx.fillRect(-14, -14, 28, 4);
+      ctx.fillRect(-14, 10, 28, 4);
+      ctx.restore();
     }
 
     // Walls (Maze)
@@ -486,6 +536,24 @@
       ctx.shadowColor = '#000';
       ctx.fillText((isMe ? '▶ ' : '') + t.username.replace('🤖 ', ''), x, y - 24);
       ctx.shadowBlur = 0;
+    }
+
+    // Spark & explosion particles
+    for (let i = tankParticles.length - 1; i >= 0; i--) {
+      const p = tankParticles[i];
+      p.x += p.vx;
+      p.y += p.vy;
+      p.life -= p.decay;
+      if (p.life <= 0) { tankParticles.splice(i, 1); continue; }
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.size * p.life, 0, Math.PI * 2);
+      ctx.fillStyle = p.color;
+      ctx.shadowBlur = 8;
+      ctx.shadowColor = p.color;
+      ctx.globalAlpha = Math.max(0, p.life);
+      ctx.fill();
+      ctx.restore();
     }
   }
 

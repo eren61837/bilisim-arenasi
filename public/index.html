@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>⚡ Bilişim Sınıfı & Dünya Multiplayer Oyun Arenası</title>
     <link rel="stylesheet" href="bgm.css">
-    <link rel="stylesheet" href="portal.css">
+    <link rel="stylesheet" href="portal.css?v=3">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎮</text></svg>">
 </head>
 <body>
@@ -16,17 +16,62 @@
 <div class="ambient-glow orb-2"></div>
 <div class="ambient-glow orb-3"></div>
 
-<!-- WELCOME MODAL: GLOBAL USERNAME PICKER (shows on first visit) -->
+<!-- WELCOME & AUTH MODAL: GLOBAL LOGIN / REGISTER / GUEST SYSTEM -->
 <div id="modal-welcome" class="welcome-modal-backdrop" style="display:none;">
   <div class="welcome-modal">
     <div class="welcome-logo">🎮</div>
     <h1 class="welcome-title">BİLİŞİM ARENASINA<br>HOŞ GELDİN!</h1>
-    <div style="display:inline-block; background:rgba(0,219,255,0.15); color:#00dbff; border:1px solid #00dbff; padding:4px 14px; border-radius:20px; font-size:12px; font-weight:800; margin-bottom:12px;">👑 Sistem Geliştirici: Halil Eren</div>
-    <p class="welcome-sub">Tüm oyunlarda kullanılacak oyuncu adını belirle (Zorunlu • Küfür/Absürt Kelime Yasak)</p>
-    <input type="text" id="welcome-name-input" class="welcome-name-input" placeholder="Oyuncu adın... (örn: ProGamer, Eren)" maxlength="20" autocomplete="off">
-    <div id="welcome-name-error" class="welcome-name-error" style="display:none;">En az 2 karakter gir!</div>
-    <button id="welcome-start-btn" class="welcome-start-btn" onclick="window.submitPortalWelcome &amp;&amp; window.submitPortalWelcome()">OYUNA GİR! 🚀</button>
-    <p class="welcome-hint">İsmini sonradan profilinden değiştirebilirsin ✏️</p>
+    <div style="display:inline-block; background:rgba(0,219,255,0.15); color:#00dbff; border:1px solid #00dbff; padding:4px 14px; border-radius:20px; font-size:12px; font-weight:800; margin-bottom:14px;">👑 Sistem Geliştirici: Halil Eren</div>
+
+    <!-- AUTH TABS -->
+    <div class="auth-tabs" style="display:flex; gap:6px; background:rgba(0,0,0,0.5); padding:4px; border-radius:10px; margin-bottom:18px; border:1px solid rgba(255,255,255,0.1);">
+      <button type="button" class="auth-tab-btn active" id="tab-auth-guest" style="flex:1; padding:8px 6px; border:none; border-radius:6px; background:#00dbff; color:#000; font-weight:900; font-size:12px; cursor:pointer;">🚀 Hızlı Giriş</button>
+      <button type="button" class="auth-tab-btn" id="tab-auth-login" style="flex:1; padding:8px 6px; border:none; border-radius:6px; background:transparent; color:#aaa; font-weight:700; font-size:12px; cursor:pointer;">🔑 Giriş Yap</button>
+      <button type="button" class="auth-tab-btn" id="tab-auth-register" style="flex:1; padding:8px 6px; border:none; border-radius:6px; background:transparent; color:#aaa; font-weight:700; font-size:12px; cursor:pointer;">📝 Kayıt Ol</button>
+    </div>
+
+    <!-- 1. HIZLI GİRİŞ (MİSAFİR) -->
+    <div id="auth-panel-guest" class="auth-panel">
+      <p class="welcome-sub" style="margin-bottom:12px;">Şifresiz oyna! Oyuncu adını seç, anında tüm oyunlara katıl.</p>
+      <input type="text" id="welcome-name-input" class="welcome-name-input" placeholder="Oyuncu adın... (örn: ProGamer, Eren)" maxlength="20" autocomplete="off">
+      <div id="welcome-name-error" class="welcome-name-error" style="display:none;">En az 2 karakter gir!</div>
+      <button id="welcome-start-btn" class="welcome-start-btn">OYUNA GİR! 🚀</button>
+    </div>
+
+    <!-- 2. GİRİŞ YAP (HESAPLI) -->
+    <div id="auth-panel-login" class="auth-panel" style="display:none;">
+      <p class="welcome-sub" style="margin-bottom:12px;">Kayıtlı hesabınla giriş yap, rütbeni ve skorlarını koru!</p>
+      <input type="text" id="login-identifier-input" class="welcome-name-input" placeholder="Kullanıcı adın..." maxlength="30" autocomplete="username">
+      <input type="password" id="login-password-input" class="welcome-name-input" placeholder="Şifren..." maxlength="50" autocomplete="current-password" style="margin-top:8px;">
+      <div id="login-error" class="welcome-name-error" style="display:none;">Hata mesajı</div>
+      <button id="login-submit-btn" class="welcome-start-btn" style="background:linear-gradient(135deg, #00e676, #009624);">GİRİŞ YAP ⚡</button>
+    </div>
+
+    <!-- 3. KAYIT OL (YENİ HESAP) -->
+    <div id="auth-panel-register" class="auth-panel" style="display:none;">
+      <p class="welcome-sub" style="margin-bottom:12px;">Yeni bir hesap aç, ismini başkası alamasın!</p>
+      <input type="text" id="reg-username-input" class="welcome-name-input" placeholder="İstediğin kullanıcı adı..." maxlength="20" autocomplete="username">
+      <input type="password" id="reg-password-input" class="welcome-name-input" placeholder="Şifren (en az 4 karakter)..." maxlength="50" autocomplete="new-password" style="margin-top:8px;">
+      <div id="reg-error" class="welcome-name-error" style="display:none;">Hata mesajı</div>
+      <button id="reg-submit-btn" class="welcome-start-btn" style="background:linear-gradient(135deg, #ff9800, #e65100);">HESAP OLUŞTUR 🛡️</button>
+    </div>
+
+    <p class="welcome-hint" style="margin-top:14px; font-size:11px; color:#777;">Tüm oyunlarda seçtiğin isim otomatik geçerli olur 🎮</p>
+  </div>
+</div>
+
+<!-- USER PROFILE CARD MODAL -->
+<div id="modal-user-profile" class="welcome-modal-backdrop" style="display:none;">
+  <div class="welcome-modal" style="max-width:400px; padding:32px 24px;">
+    <div style="font-size:48px; margin-bottom:10px;">👤</div>
+    <h2 style="font-size:22px; font-weight:900; color:#fff; margin-bottom:4px;" id="prof-display-name">Kral</h2>
+    <div id="prof-badge-type" style="display:inline-block; font-size:11px; font-weight:800; padding:3px 12px; border-radius:12px; background:rgba(0,219,255,0.15); color:#00dbff; border:1px solid #00dbff; margin-bottom:18px;">🟢 Çevrimiçi Oyuncu</div>
+    
+    <div style="display:flex; flex-direction:column; gap:10px; width:100%;">
+      <button id="btn-prof-rename" class="btn-quick-random" style="width:100%; justify-content:center; padding:10px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.2); color:#fff; font-size:13px; font-weight:700; cursor:pointer;">✏️ Oyuncu Adını Değiştir</button>
+      <button id="btn-prof-logout" class="btn-quick-random" style="width:100%; justify-content:center; padding:10px; background:rgba(255,68,68,0.15); border:1px solid #ff4444; color:#ff6666; font-size:13px; font-weight:800; cursor:pointer;">🚪 Hesaptan Çıkış Yap</button>
+      <button id="btn-prof-close" class="btn-quick-random" style="width:100%; justify-content:center; padding:8px; background:transparent; border:none; color:#777; font-size:12px; cursor:pointer;">✕ Kapat</button>
+    </div>
   </div>
 </div>
 
@@ -93,13 +138,16 @@
         <div class="hero-left">
             <h2>🚀 EFSANE OYUN ARENASINA HOŞ GELDİN</h2>
             <p>
-                İndirme yok, kurulum yok! Aynı sınıftaki veya dünyanın herhangi bir yerindeki arkadaşların yukarıdaki linki tarayıcılarına yazarak anında seninle birlikte <strong>3D CS 1.6 FPS</strong>, <strong>Deeeep.io</strong>, <strong>Tank Savaşı</strong>, <strong>Slither.io</strong>, <strong>Agar.io</strong>, <strong>Dünya Haritası PixelPlace</strong> ve <strong>1v1 XOX</strong> oynayabilir!
+                İndirme yok, kurulum yok! Aynı sınıftaki veya dünyanın herhangi bir yerindeki arkadaşların linke tıklayarak anında seninle birlikte <strong>3D CS 1.6 FPS</strong>, <strong>Diep.io Tank</strong>, <strong>Zombs.io Kule Savunması</strong>, <strong>Minecraft 3D</strong>, <strong>Tank Savaşı</strong>, <strong>Slither.io</strong>, <strong>Agar.io</strong>, <strong>PixelPlace Harita</strong> ve <strong>SOS Arenası</strong> oynayabilir!
             </p>
             <div class="hero-badges-row">
-                <div class="hero-badge-item">⚡ <strong>0ms Gecikme</strong> (Yerel Ağ)</div>
-                <div class="hero-badge-item">🎮 <strong>13 Efsane Oyun</strong> (Multiplayer & Tek Kişilik)</div>
-                <div class="hero-badge-item" style="border-color:#ffd700; color:#ffd700">👑 <strong>Geliştirici: Halil Eren</strong></div>
+                <div class="hero-badge-item">⚡ <strong>Sıfır Gecikme</strong> (Ultra Optimize)</div>
+                <div class="hero-badge-item">🎮 <strong>15 Efsane Oyun</strong> (Multiplayer &amp; Tek Kişilik)</div>
+                <div class="hero-badge-item" style="border-color:#ffd700; color:#ffd700">👑 <strong>Geliştirici: erencix &amp; Halil Eren</strong></div>
                 <div class="hero-badge-item">🤖 <strong>Akıllı Bot Desteği</strong></div>
+            </div>
+            <div class="hero-live-trend-bar" id="hero-live-trend">
+                🔥 <span style="color:#ffd700;font-weight:900;">CANLI TREND:</span> <b>Arenadaki oyuncular hesaplanıyor...</b>
             </div>
         </div>
 
@@ -117,7 +165,7 @@
     <div class="filter-tabs-row">
         <div class="section-headline">ARENA OYUNLARI</div>
         <div class="category-buttons">
-            <button class="btn-cat-tab active" data-filter="all">🔥 Tümü (13)</button>
+            <button class="btn-cat-tab active" data-filter="all">🔥 Tümü (15)</button>
             <button class="btn-cat-tab" data-filter="action">🔫 Aksiyon & FPS</button>
             <button class="btn-cat-tab" data-filter="io">🌊 .IO Hayatta Kalma</button>
             <button class="btn-cat-tab" data-filter="strategy">🎨 Yaratıcılık & Zeka</button>
@@ -138,16 +186,16 @@
             </div>
             <div class="game-info">
                 <div class="game-title-row">
-                    <span class="game-title">Counter-Strike 1.6 Web 3D</span>
+                    <span class="game-title">Counter-Strike 1.6 (Orijinal Hazır Motor)</span>
                 </div>
                 <p class="game-desc">
-                    Efsanevi de_dust2 haritasında takımlı maç! Terörist veya CT seç, B tuşuyla AK-47, M4A1, AWP satın al, bombayı kur ve rauntları kazan!
+                    Orijinal WebAssembly CS 1.6 motoru! de_dust2, Aztec, Inferno haritaları, botlar ve canlı sunucular ile sıfır hata, akıcı ve hazır Counter-Strike deneyimi.
                 </p>
                 <div class="game-tags">
-                    <span class="game-tag">WebGL 3D FPS</span>
-                    <span class="game-tag">Silah Mağazası (B)</span>
-                    <span class="game-tag">Takım Seçimi (M)</span>
+                    <span class="game-tag">WASM 1.6</span>
+                    <span class="game-tag">Botlar & Online</span>
                     <span class="game-tag">de_dust2</span>
+                    <span class="game-tag">Aztec & Inferno</span>
                 </div>
                 <div class="game-play-btn" style="background:linear-gradient(135deg,#ffb300,#ff3d00); color:#000;">
                     ▶ SAVAŞA BAŞLA
@@ -155,29 +203,56 @@
             </div>
         </a>
 
-        <!-- 2. DEEEEP.IO (OKYANUS EVRİMİ) -->
-        <a href="/deeeep" class="game-card card-deeeep" data-category="io">
-            <div class="game-thumb">
-                <span class="game-thumb-art">🐬</span>
+        <!-- 2. REDMATCH 3D ARENA (KANCA & STAT YÜKSELTMELİ HIZLI FPS) -->
+        <a href="/redmatch" class="game-card card-redmatch" data-category="action">
+            <div class="game-thumb" style="background: radial-gradient(circle, #2a0815 0%, #080c14 100%);">
+                <span class="game-thumb-art">🎯</span>
                 <div class="thumb-gradient-overlay"></div>
-                <div class="genre-tag-floating" style="color:var(--cyan)">OKYANUS EVRİMİ</div>
-                <div class="live-player-badge" id="count-deeeep">🟢 0 Oyuncu</div>
+                <div class="genre-tag-floating" style="color:#ff2255;">3D KANCA &amp; FPS</div>
+                <div class="live-player-badge" id="count-redmatch" style="border-color:#ff2255; color:#ff2255;">🟢 3 Oyuncu</div>
             </div>
             <div class="game-info">
                 <div class="game-title-row">
-                    <span class="game-title">Deeeep.io (Okyanus Evrimi)</span>
+                    <span class="game-title">Redmatch 3D Arena</span>
                 </div>
                 <p class="game-desc">
-                    Palyaço balığı olarak başla! Plankton ve lav parçacıkları ye, evrimleşip Yunus, Köpekbalığı ve Kraken ol! Yüzeyde hava solukla, derin Abyss'e dal.
+                    Attack on Titan tarzı kanca ile binalara tutun, sapan gibi fırlayarak uç! Düşman vurdukça kill puanlarıyla can, hız ve zıplama gücünü yükselt.
                 </p>
                 <div class="game-tags">
-                    <span class="game-tag">8 Evrim Aşaması</span>
-                    <span class="game-tag">Oksijen & Basınç</span>
-                    <span class="game-tag">Abyss Derinlikleri</span>
-                    <span class="game-tag">Apex Avcılar</span>
+                    <span class="game-tag" style="border-color:#ff2255; color:#ff4477;">🪝 KANCA</span>
+                    <span class="game-tag" style="border-color:#ffd54f; color:#ffd54f;">⚡ YÜKSELTMELER</span>
+                    <span class="game-tag">Botlar &amp; Arena</span>
+                    <span class="game-tag">3D FPS</span>
                 </div>
-                <div class="game-play-btn" style="background:linear-gradient(135deg,#00e5ff,#00b0ff); color:#000;">
-                    ▶ DERİNLİKLERE DAL
+                <div class="game-play-btn" style="background:linear-gradient(135deg,#ff2255,#ff5500); color:#fff;">
+                    ▶ ARENAYA GİR
+                </div>
+            </div>
+        </a>
+
+        <!-- 2. DIEP.IO (2D TANK & EVRİM ARENASI) -->
+        <a href="/diep" class="game-card card-diep" data-category="io">
+            <div class="game-thumb">
+                <span class="game-thumb-art">🛡️</span>
+                <div class="thumb-gradient-overlay"></div>
+                <div class="genre-tag-floating" style="color:var(--cyan)">TANK SAVAŞI &amp; EVRİM</div>
+                <div class="live-player-badge" id="count-diep">🟢 0 Oyuncu</div>
+            </div>
+            <div class="game-info">
+                <div class="game-title-row">
+                    <span class="game-title">Diep.io (2D Tank &amp; Evrim Arenası)</span>
+                </div>
+                <p class="game-desc">
+                    Efsanevi tank savaşları! Geometrik şekilleri vur, seviye atla ve 8 farklı stat geliştir. Seviye 15, 30 ve 45'te Twin, Sniper, Machine Gun, Overlord gibi 45 tank sınıfına evril!
+                </p>
+                <div class="game-tags">
+                    <span class="game-tag">🛡️ 45 Tank Sınıfı</span>
+                    <span class="game-tag">⭐ 8 Stat Yükseltme</span>
+                    <span class="game-tag">🎯 Çok Oyunculu MMO</span>
+                    <span class="game-tag">🔥 Orijinal .IO</span>
+                </div>
+                <div class="game-play-btn" style="background:linear-gradient(135deg,#00dbff,#0050a0); color:#000;">
+                    ▶ TANKINI GELİŞTİR &amp; SAVAŞ 🛡️
                 </div>
             </div>
         </a>
@@ -431,7 +506,7 @@
                 <span class="game-thumb-art">⚽</span>
                 <div class="thumb-gradient-overlay"></div>
                 <div class="genre-tag-floating" style="color:#ffd700">MADE BY YUSUF KAAN</div>
-                <div class="live-player-badge" id="count-kafatopu">🟢 Canlı</div>
+                <div class="live-player-badge" id="count-kafatopu">🟢 0 Oyuncu</div>
             </div>
             <div class="game-info">
                 <div class="game-title-row">
@@ -458,7 +533,7 @@
                 <span class="game-thumb-art">🅂🅾🅂</span>
                 <div class="thumb-gradient-overlay"></div>
                 <div class="genre-tag-floating" style="color:var(--cyan)">10x10 & 25x24 STRATEJİ</div>
-                <div class="live-player-badge" id="count-sos">🟢 Turnuva</div>
+                <div class="live-player-badge" id="count-sos">🟢 0 Oyuncu</div>
             </div>
             <div class="game-info">
                 <div class="game-title-row">
@@ -470,11 +545,38 @@
                 <div class="game-tags">
                     <span class="game-tag">10x10 & 25x24 Harita</span>
                     <span class="game-tag">🤖 Zeki Yapay Zeka</span>
-                    <span class="game-tag">⚡ 1v1 Modu</span>
-                    <span class="game-tag">Geliştirici: Halil Eren</span>
+                    <span class="game-tag">👑 İsteyen: Eyüp Kızıldere</span>
+                    <span class="game-tag">⚡ Geliştiren: erencix</span>
                 </div>
                 <div class="game-play-btn" style="background:linear-gradient(135deg,#00dbff,#0050a0); color:#000;">
                     ▶ STRATEJİYE BAŞLA 🅂🅾🅂
+                </div>
+            </div>
+        </a>
+
+        <!-- 14. ZOMBS.IO (ZOMBİ & KULE SAVUNMASI) -->
+        <a href="/zombs" class="game-card card-zombs" data-category="action">
+            <div class="game-thumb">
+                <span class="game-thumb-art">🧟</span>
+                <div class="thumb-gradient-overlay"></div>
+                <div class="genre-tag-floating" style="color:#00e676">ZOMBİ & ÜS KURMA</div>
+                <div class="live-player-badge" id="count-zombs">🟢 0 Oyuncu</div>
+            </div>
+            <div class="game-info">
+                <div class="game-title-row">
+                    <span class="game-title">Zombs.io (Hayatta Kalma &amp; Kule Savunması)</span>
+                </div>
+                <p class="game-desc">
+                    Efsanevi zombi kule savunması! Altın kasanı kur, odun ve taş topla, savunma kuleleri ve duvarlar inşa et. Gece gelen devasa zombi ordularını püskürt!
+                </p>
+                <div class="game-tags">
+                    <span class="game-tag">🏰 Üs &amp; Kule Kurma</span>
+                    <span class="game-tag">🧟 Gece Zombi Dalgaları</span>
+                    <span class="game-tag">👑 İsteyen: Onur Baran</span>
+                    <span class="game-tag">⚡ Geliştirici: erencix</span>
+                </div>
+                <div class="game-play-btn" style="background:linear-gradient(135deg,#00e676,#0050a0); color:#000;">
+                    ▶ HEMEN SAVUNMAYA BAŞLA 🧟
                 </div>
             </div>
         </a>
@@ -547,7 +649,7 @@
     </div>
 </div>
 
-<script src="portal.js"></script>
+<script src="portal.js?v=3"></script>
 <script src="bgm.js"></script>
 <script src="overlay-back.js"></script>
 </body>
