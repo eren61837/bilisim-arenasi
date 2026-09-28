@@ -801,32 +801,44 @@ exit
   else if (pathname === '/redmatch') safePath = '/redmatch.html';
   else if (safePath === '/' || safePath === '\\') safePath = '/index.html';
 
-  const filePath = path.join(PUBLIC_DIR, safePath);
-  fs.stat(filePath, (err, stats) => {
-    if (err || !stats.isFile()) {
-      // Fallback to index.html for SPA
-      const indexFile = path.join(PUBLIC_DIR, 'index.html');
-      fs.readFile(indexFile, (readErr, content) => {
-        if (readErr) {
-          res.writeHead(404, { 'Content-Type': 'text/plain' });
-          res.end('404 Not Found');
-          return;
-        }
-        res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
-        res.end(content);
-      });
-      return;
+  // Check both PUBLIC_DIR and root (__dirname), pick whichever exists and is newer!
+  function resolveStaticFile(sub) {
+    const p1 = path.join(PUBLIC_DIR, sub);
+    const p2 = path.join(__dirname, sub);
+    const has1 = fs.existsSync(p1) && fs.statSync(p1).isFile();
+    const has2 = fs.existsSync(p2) && fs.statSync(p2).isFile();
+    if (has1 && has2) {
+      return (fs.statSync(p2).mtimeMs > fs.statSync(p1).mtimeMs) ? p2 : p1;
     }
+    if (has1) return p1;
+    if (has2) return p2;
+    return null;
+  }
 
-    const ext = path.extname(filePath).toLowerCase();
-    const contentType = MIME_TYPES[ext] || 'application/octet-stream';
-    const cacheHeader = 'no-cache, no-store, must-revalidate';
-    res.writeHead(200, {
-      'Content-Type': contentType,
-      'Cache-Control': cacheHeader
+  const filePath = resolveStaticFile(safePath);
+  if (!filePath) {
+    // Fallback to index.html for SPA
+    const indexFile = resolveStaticFile('/index.html') || path.join(PUBLIC_DIR, 'index.html');
+    fs.readFile(indexFile, (readErr, content) => {
+      if (readErr) {
+        res.writeHead(404, { 'Content-Type': 'text/plain' });
+        res.end('404 Not Found');
+        return;
+      }
+      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+      res.end(content);
     });
-    fs.createReadStream(filePath).pipe(res);
+    return;
+  }
+
+  const ext = path.extname(filePath).toLowerCase();
+  const contentType = MIME_TYPES[ext] || 'application/octet-stream';
+  const cacheHeader = 'no-cache, no-store, must-revalidate';
+  res.writeHead(200, {
+    'Content-Type': contentType,
+    'Cache-Control': cacheHeader
   });
+  fs.createReadStream(filePath).pipe(res);
 });
 
 // -------------------------------------------------------------
