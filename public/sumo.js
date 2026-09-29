@@ -1,10 +1,11 @@
 // sumo.js - AHMET HAKAN: KUTU SUMO -- 2 Kişilik & AI Ragdoll Fizikli Piksel Dövüş Oyunu
-// 100% Tam Aynısı (320x180 Piksel Estetiği, Verlet Ragdoll, Canlı Menü) + Çok Gelişmiş Özellikler
+// 100% Desktop AhmetHakanSumoOyun.py Birebir Aynısı + Üst Düzey Geliştirilmiş Sistemler
+// 👑 Yapımcılar: Ahmet Baki ve Hakan Samet
 (function () {
   'use strict';
 
   /* =========================================================
-     1. SABİTLER, PİKSEL EKRAN VE AYARLAR
+     1. SABİTLER, PİKSEL EKRAN VE TEMEL FİZİK
   ========================================================= */
   const W = 320;
   const H = 180;
@@ -12,12 +13,17 @@
   const DT = 1.0 / FPS;
   const SUBSTEPS = 2;
 
-  // Fizik Çekirdeği
+  // Fizik Çekirdeği (AhmetHakanSumoOyun.py ile birebir)
   const GRAVITY = 820.0;
   const DAMP = 0.995;
   const HARD_VX = 300.0;
   const HARD_VY = 470.0;
   const BOUNCE = 0.14;
+  const GROUND_FRIC = 0.76;
+  const ICE_FRIC = 0.985;
+  const SHRINK_SPEED = 2.4;
+  const MIN_HALF_W = 24.0;
+  const KO_Y = 178;
 
   // Hareket & Kontrol
   const RUN_SPEED = 104.0;
@@ -31,7 +37,7 @@
   const COYOTE_TIME = 0.10;
   const JUMP_BUFFER = 0.12;
 
-  // Yumruk & Süper Güç
+  // Yumruk & Dövüş Mekaniği
   const PUNCH_DRIVE = 2600.0;
   const PUNCH_REACH = 1.75;
   const PUNCH_ACTIVE = 0.22;
@@ -42,7 +48,7 @@
   const CHARGE_POWER = 1.65;
   const BRACE_STIFF = 2.4;
 
-  // Renk Paleti (Orijinal Kutu Sumo Paleti)
+  // Renk Paleti (Desktop AhmetHakanSumoOyun.py Orijinal Paleti)
   const C_EYE = '#181420';
   const C_WHITE = '#f4f4ec';
   const C_YEL = '#fad660';
@@ -73,9 +79,9 @@
   const SAPKALAR = ["yok", "kasket", "boynuz", "taç", "hale", "anten", "bandana"];
   const YUZLER = ["normal", "kızgın", "gülen", "gözlük", "bıyık"];
   const GOVDELER = {
-    ince:   { ad: "İNCE",   govde: 4.4, kafa: 3.6, uzuv: 2.8, kalca: 9.4,  kutle: 0.82 },
-    normal: { ad: "NORMAL", govde: 5.0, kafa: 4.0, uzuv: 3.0, kalca: 9.0,  kutle: 1.0 },
-    tombul: { ad: "TOMBUL", govde: 5.9, kafa: 4.3, uzuv: 3.3, kalca: 8.3,  kutle: 1.28 }
+    ince:   { ad: "İNCE",   govde: 4.4, kafa: 3.6, uzuv: 2.8, kalca: 9.4,  kutle: 0.82, sertlik: 0.95 },
+    normal: { ad: "NORMAL", govde: 5.0, kafa: 4.0, uzuv: 3.0, kalca: 9.0,  kutle: 1.0,  sertlik: 1.0 },
+    tombul: { ad: "TOMBUL", govde: 5.9, kafa: 4.3, uzuv: 3.3, kalca: 8.3,  kutle: 1.28, sertlik: 1.08 }
   };
 
   const AHMET_QUOTES = [
@@ -90,7 +96,7 @@
   ];
 
   /* =========================================================
-     2. 3x5 PİKSEL YAZI TİPİ (RETRO FONT MOTORU)
+     2. 3x5 PİKSEL YAZI TİPİ MOTORU
   ========================================================= */
   const FONT_DATA = {
     "A": "010,101,111,101,101", "B": "110,101,110,101,110", "C": "011,100,100,100,011",
@@ -114,15 +120,15 @@
     " ": "000,000,000,000,000"
   };
 
-  const TR_MAP = { "Ç": "C", "Ğ": "G", "İ": "I", "I": "I", "Ö": "O", "Ş": "S", "Ü": "U",
-                   "ç": "C", "ğ": "G", "ı": "I", "i": "I", "ö": "O", "ş": "S", "ü": "U" };
+  const TR_MAP = {
+    "Ç": "C", "Ğ": "G", "İ": "I", "I": "I", "Ö": "O", "Ş": "S", "Ü": "U",
+    "ç": "C", "ğ": "G", "ı": "I", "i": "I", "ö": "O", "ş": "S", "ü": "U"
+  };
 
   function drawPixelText(targetCtx, str, x, y, color = C_WHITE, scale = 1, align = 'left') {
     str = String(str).toUpperCase();
     let s = "";
-    for (let i = 0; i < str.length; i++) {
-      s += TR_MAP[str[i]] || str[i];
-    }
+    for (let i = 0; i < str.length; i++) s += TR_MAP[str[i]] || str[i];
     const totalW = Math.max(0, s.length * 4 - 1) * scale;
     let startX = x;
     if (align === 'center') startX = Math.round(x - totalW / 2);
@@ -144,7 +150,7 @@
   }
 
   /* =========================================================
-     3. 8-BİT RETRO SES MOTORU (WEB AUDIO API SYNTH)
+     3. 8-BİT RETRO SES MOTORU (Desktop numpy ile aynı)
   ========================================================= */
   const AudioEngine = {
     ctx: null,
@@ -197,12 +203,18 @@
     jump() { this.playTone(240, 620, 'square', 0.11, 0.2); },
     land() { this.playTone(130, 70, 'triangle', 0.09, 0.25); },
     ko() { this.playTone(520, 70, 'square', 0.7, 0.35); },
+    blip() { this.playTone(660, 660, 'square', 0.07, 0.18); },
+    go() { this.playTone(420, 900, 'square', 0.22, 0.28); },
+    win() { this.playTone(300, 900, 'square', 0.55, 0.28); },
+    select() { this.playTone(520, 760, 'square', 0.06, 0.16); },
+    sarj() { this.playTone(300, 700, 'square', 0.35, 0.18); },
     super() { this.playNoise(0.35, 0.5); this.playTone(350, 900, 'square', 0.3, 0.4); },
-    select() { this.playTone(520, 760, 'square', 0.05, 0.16); }
+    lav() { this.playTone(90, 60, 'triangle', 0.5, 0.25); },
+    ruzgar() { this.playNoise(0.4, 0.2); }
   };
 
   /* =========================================================
-     4. OYUN AYARLARI VE KARAKTER TANIMLARI
+     4. KARAKTER & OYUN AYARLARI
   ========================================================= */
   class Karakter {
     constructor(ad, renkIdx, sapka, yuz, govde) {
@@ -220,21 +232,53 @@
     }
   }
 
+  const savedUser = localStorage.getItem('portal_username') || 'AHMET HAKAN';
   const gameSettings = {
     harita: "tv", // tv, klasik, buz, kule, asansor, ruzgar, lav
     tur_sayisi: 3,
-    cpu_zorluk: "NORMAL", // KOLAY, NORMAL, ZOR
-    yer_cekim: "NORMAL",  // AY, NORMAL, AGIR
+    cpu_zorluk: "NORMAL",
+    yer_cekim: "NORMAL",
     cpu_ile: false,
     ses: true,
     efekt: "NORMAL",
-    k1: new Karakter("AHMET HAKAN", 5, "kasket", "gözlük", "normal"),
-    k2: new Karakter("RAKİP SUMO", 1, "boynuz", "kızgın", "tombul")
+    k1: new Karakter(savedUser, 5, "kasket", "gözlük", "normal"),
+    k2: new Karakter("KUTU SUMO", 1, "boynuz", "kızgın", "tombul")
   };
 
   /* =========================================================
-     5. FİZİK MOTORU (VERLET RAGDOLL + KISITLAR)
+     5. İSKELET VE VERLET RAGDOLL FİZİK MOTORU
   ========================================================= */
+  function iskeletKur(gv) {
+    const t = gv.govde;
+    const hf = gv.kafa;
+    const uz = gv.uzuv;
+    const k = gv.kutle;
+
+    const ofs = {
+      tl:    { x: -t, y: -t },
+      tr:    { x: t, y: -t },
+      br:    { x: t, y: t },
+      bl:    { x: -t, y: t },
+      head:  { x: 0.0, y: -t - hf - 1.2 },
+      handL: { x: -t - uz * 2 - 1.4, y: -1.0 },
+      handR: { x: t + uz * 2 + 1.4, y: -1.0 },
+      footL: { x: -t * 0.9, y: gv.kalca },
+      footR: { x: t * 0.9, y: gv.kalca }
+    };
+
+    const yar = {
+      tl: t * 0.66, tr: t * 0.66, br: t * 0.70, bl: t * 0.70,
+      head: hf, handL: uz, handR: uz, footL: uz, footR: uz
+    };
+
+    const kut = {
+      tl: 2.2 * k, tr: 2.2 * k, br: 2.6 * k, bl: 2.6 * k, head: 2.0 * k,
+      handL: 1.0 * k, handR: 1.0 * k, footL: 1.25 * k, footR: 1.25 * k
+    };
+
+    return { ofs, yar, kut };
+  }
+
   class Parcacik {
     constructor(x, y, r, mass, kind) {
       this.x = x;
@@ -261,12 +305,12 @@
   }
 
   class Baglanti {
-    constructor(a, b, tur, rest) {
+    constructor(a, b, tur, rest, stiff = 1.0) {
       this.a = a;
       this.b = b;
       this.tur = tur;
       this.rest = rest !== undefined ? rest : Math.hypot(a.x - b.x, a.y - b.y);
-      this.stiff = 1.0;
+      this.stiff = stiff;
     }
   }
 
@@ -275,58 +319,61 @@
       this.karakter = karakter;
       this.isAhmet = isAhmet;
       this.gv = karakter.body;
-      const t = this.gv.govde;
-      const hf = this.gv.kafa;
-      const uz = this.gv.uzuv;
-      const k = this.gv.kutle;
+      const isk = iskeletKur(this.gv);
+      this.isk = isk;
 
-      this.parts = {
-        head:  new Parcacik(x, y - t - hf - 1.2, hf, 2.0 * k, "head"),
-        tl:    new Parcacik(x - t, y - t, t * 0.66, 2.2 * k, "tl"),
-        tr:    new Parcacik(x + t, y - t, t * 0.66, 2.2 * k, "tr"),
-        br:    new Parcacik(x + t, y + t, t * 0.70, 2.6 * k, "br"),
-        bl:    new Parcacik(x - t, y + t, t * 0.70, 2.6 * k, "bl"),
-        handL: new Parcacik(x - t - uz * 2 - 1.4, y - 1.0, uz, 1.0 * k, "handL"),
-        handR: new Parcacik(x + t + uz * 2 + 1.4, y - 1.0, uz, 1.0 * k, "handR"),
-        footL: new Parcacik(x - t * 0.9, y + this.gv.kalca, uz, 1.25 * k, "footL"),
-        footR: new Parcacik(x + t * 0.9, y + this.gv.kalca, uz, 1.25 * k, "footR")
-      };
+      this.parts = {};
+      for (const k in isk.ofs) {
+        this.parts[k] = new Parcacik(
+          x + isk.ofs[k].x,
+          y + isk.ofs[k].y,
+          isk.yar[k],
+          isk.kut[k],
+          k
+        );
+      }
 
       const p = this.parts;
+      const kSert = this.gv.sertlik;
+
+      // Kemik Çubukları (AhmetHakanSumoOyun.py ile birebir)
       this.sticks = [
-        new Baglanti(p.tl, p.tr, "govde"),
-        new Baglanti(p.tr, p.br, "govde"),
-        new Baglanti(p.br, p.bl, "govde"),
-        new Baglanti(p.bl, p.tl, "govde"),
-        new Baglanti(p.tl, p.br, "capraz"),
-        new Baglanti(p.tr, p.bl, "capraz"),
-        new Baglanti(p.head, p.tl, "boyun"),
-        new Baglanti(p.head, p.tr, "boyun"),
-        new Baglanti(p.tl, p.handL, "kol", uz * 2.5),
-        new Baglanti(p.tr, p.handR, "kol", uz * 2.5),
-        new Baglanti(p.bl, p.footL, "bacak", this.gv.kalca * 1.1),
-        new Baglanti(p.br, p.footR, "bacak", this.gv.kalca * 1.1)
+        new Baglanti(p.tl, p.tr, "govde", Math.hypot(isk.ofs.tl.x - isk.ofs.tr.x, isk.ofs.tl.y - isk.ofs.tr.y), Math.min(1.0, 1.0 * kSert)),
+        new Baglanti(p.tr, p.br, "govde", Math.hypot(isk.ofs.tr.x - isk.ofs.br.x, isk.ofs.tr.y - isk.ofs.br.y), Math.min(1.0, 1.0 * kSert)),
+        new Baglanti(p.br, p.bl, "govde", Math.hypot(isk.ofs.br.x - isk.ofs.bl.x, isk.ofs.br.y - isk.ofs.bl.y), Math.min(1.0, 1.0 * kSert)),
+        new Baglanti(p.bl, p.tl, "govde", Math.hypot(isk.ofs.bl.x - isk.ofs.tl.x, isk.ofs.bl.y - isk.ofs.tl.y), Math.min(1.0, 1.0 * kSert)),
+        new Baglanti(p.tl, p.br, "capraz", Math.hypot(isk.ofs.tl.x - isk.ofs.br.x, isk.ofs.tl.y - isk.ofs.br.y), Math.min(1.0, 1.0 * kSert)),
+        new Baglanti(p.tr, p.bl, "capraz", Math.hypot(isk.ofs.tr.x - isk.ofs.bl.x, isk.ofs.tr.y - isk.ofs.bl.y), Math.min(1.0, 1.0 * kSert)),
+        new Baglanti(p.head, p.tl, "boyun", Math.hypot(isk.ofs.head.x - isk.ofs.tl.x, isk.ofs.head.y - isk.ofs.tl.y) * 0.93, Math.min(1.0, 0.95 * kSert)),
+        new Baglanti(p.head, p.tr, "boyun", Math.hypot(isk.ofs.head.x - isk.ofs.tr.x, isk.ofs.head.y - isk.ofs.tr.y) * 0.93, Math.min(1.0, 0.95 * kSert)),
+        new Baglanti(p.handL, p.tl, "kol", Math.hypot(isk.ofs.handL.x - isk.ofs.tl.x, isk.ofs.handL.y - isk.ofs.tl.y), Math.min(1.0, 0.34 * kSert)),
+        new Baglanti(p.handR, p.tr, "kol", Math.hypot(isk.ofs.handR.x - isk.ofs.tr.x, isk.ofs.handR.y - isk.ofs.tr.y), Math.min(1.0, 0.34 * kSert)),
+        new Baglanti(p.footL, p.bl, "bacak", Math.hypot(isk.ofs.footL.x - isk.ofs.bl.x, isk.ofs.footL.y - isk.ofs.bl.y), Math.min(1.0, 0.55 * kSert)),
+        new Baglanti(p.footR, p.br, "bacak", Math.hypot(isk.ofs.footR.x - isk.ofs.br.x, isk.ofs.footR.y - isk.ofs.br.y), Math.min(1.0, 0.55 * kSert))
       ];
 
       this.facing = 1;
+      this.stun = 0;
       this.punch_cd = 0;
+      this.jump_cd = 0;
+      this.brace = false;
+      this.arm_kick = 0;
       this.punch_timer = 0;
       this.punch_guc = 1.0;
       this.punch_sarjli = false;
       this.sarj_t = 0;
       this.sarj_kullanildi = false;
-      this.brace = false;
-      this.stun = 0;
-      this.ko = false;
-      this.superMeter = 0;
-      this.coyote = 0;
-      this.jump_buf = 0;
-      this.onceki_tilt = 0;
       this.stiff_mult = 1.0;
       this.leg_soft = 1.0;
-      this.land_timer = 0;
+      this.coyote = 0;
+      this.jump_buf = 0;
       this.blink = 2.0;
       this.eyes_shut = 0;
+      this.dizzy = 0;
+      this.ko = false;
+      this.superMeter = 0;
+      this.land_timer = 0;
+      this.onceki_tilt = 0;
     }
 
     get center() {
@@ -337,10 +384,14 @@
       };
     }
 
+    get grounded() {
+      return this.parts.footL.grounded || this.parts.footR.grounded;
+    }
+
     girdi(ctrl, foe, dt, env) {
       if (this.ko) return;
       const p = this.parts;
-      const yerde = p.footL.grounded || p.footR.grounded;
+      const yerde = this.grounded;
 
       if (yerde) this.coyote = COYOTE_TIME;
       else this.coyote = Math.max(0, this.coyote - dt);
@@ -469,24 +520,21 @@
       const c = this.center;
 
       if (this.isAhmet) {
-        // TARAFSIZ BÖLGE MASA VURUŞU
         triggerMemePopup(AHMET_QUOTES[Math.floor(Math.random() * AHMET_QUOTES.length)]);
         spawnPopup(c.x, c.y - 20, "TARAFSIZ BÖLGE! 💥", C_RED);
-
         const fc = foe.center;
         const dx = fc.x - c.x;
-        const push = 260.0;
+        const push = 280.0;
         for (const k in foe.parts) {
           foe.parts[k].add_vel((dx > 0 ? 1 : -1) * push, -180.0);
         }
         foe.stun = 0.6;
         for (let i = 0; i < 20; i++) spawnSpark(c.x, c.y, C_RED);
       } else {
-        // MEGA GÖBEK FIRLATMASI
         triggerMemePopup("MEGA SUMO İTİŞİ!");
         spawnPopup(c.x, c.y - 20, "GÖBEK DARBESİ! 🐲", "#2979ff");
         for (const k in foe.parts) {
-          foe.parts[k].add_vel(this.facing * 280.0, -140.0);
+          foe.parts[k].add_vel(this.facing * 300.0, -150.0);
         }
         foe.stun = 0.55;
       }
@@ -530,7 +578,7 @@
 
         if (s.tur === "kol" && yumruk) {
           st = 1.0;
-          rest = s.rest * PUNCH_REACH; // Piston yumruk uzaması
+          rest = s.rest * PUNCH_REACH; // Kol uzaması
         } else {
           st = Math.min(1.0, st * k);
         }
@@ -544,33 +592,72 @@
       }
     }
 
-    zemin_carp(env) {
+    zemin_carp(zeminler, env) {
       const p = this.parts;
-      const platY = env.platY;
-      const platL = env.platL;
-      const platR = env.platR;
 
       for (const k in p) {
         const q = p[k];
         q.grounded = false;
 
-        // Platform Çarpışması
-        if (q.y + q.r >= platY && q.x >= platL && q.x <= platR && q.py <= platY + 10) {
-          q.y = platY - q.r;
-          q.grounded = true;
-          const vx = q.x - q.px;
-          const fric = env.buz ? 0.985 : 0.76;
-          q.px = q.x - vx * fric;
+        for (let i = 0; i < zeminler.length; i++) {
+          const z = zeminler[i];
+          const rx = z.x, ry = z.y, rw = z.w, rh = z.h;
+
+          if (q.x + q.r < rx || q.x - q.r > rx + rw ||
+              q.y + q.r < ry || q.y - q.r > ry + rh) {
+            continue;
+          }
+
+          const sol = (q.x + q.r) - rx;
+          const sag = (rx + rw) - (q.x - q.r);
+          const ust = (q.y + q.r) - ry;
+          const alt = (ry + rh) - (q.y - q.r);
+          const m = Math.min(sol, sag, ust, alt);
+
+          const vx = q.vx_sn * DT;
+          const vy = q.vy_sn * DT;
+          const fric = z.fric;
+
+          if (m === ust) {
+            q.y = ry - q.r;
+            q.grounded = true;
+            if (z.vx) q.x += z.vx * DT;
+            q.px = q.x - (vx * fric + z.vx * DT);
+            if (z.vy < -1) q.py = q.y; // Yukarı çıkan platform
+            if (vy > 12 * DT) {
+              q.py = q.y + vy * (z.kind === "buz" ? BOUNCE * 0.6 : BOUNCE);
+              if (vy > 90 * DT) {
+                spawnDust(q.x, q.y + q.r);
+                if ((q.kind === "footL" || q.kind === "footR") && vy > 150 * DT) {
+                  AudioEngine.land();
+                }
+              }
+            } else if (vy > 0) {
+              q.py = q.y;
+            }
+          } else if (m === alt) {
+            q.y = ry + rh + q.r;
+            q.py = q.y + vy * 0.2;
+          } else if (m === sol) {
+            q.x = rx - q.r;
+            q.px = q.x + vx * 0.25;
+          } else {
+            q.x = rx + rw + q.r;
+            q.px = q.x + vx * 0.25;
+          }
         }
 
-        // Lav Kenarları
-        if (env.isLav && q.y >= platY - 4 && (q.x < platL || q.x > platR)) {
-          q.add_vel(0, -320.0);
-          spawnSpark(q.x, q.y, C_ORANGE);
+        // Lav Teması (Volkanik Arenada)
+        if (env.lav_y !== null && q.y >= env.lav_y && !this.ko) {
+          AudioEngine.lav();
+          q.add_vel(0, -380.0);
+          for (let s = 0; s < 12; s++) spawnSpark(q.x, q.y, C_ORANGE);
+          this.ko = true;
+          handleKO(this);
         }
 
-        // KO Düşüşü
-        if (q.y > H + 30 && !this.ko) {
+        // Uçuruma Düşüş (KO)
+        if (q.y > H + 28 && !this.ko) {
           this.ko = true;
           handleKO(this);
         }
@@ -581,25 +668,23 @@
       const p = this.parts;
       const col = this.karakter.colors;
 
-      // Uzuv Çizgileri (Kollar & Bacaklar)
+      // 1. Uzuv Bağlantı Çizgileri
       targetCtx.lineWidth = 3;
       targetCtx.strokeStyle = col.koyu;
 
-      // Sol Kol / Bacak
       const mSolX = (p.tl.x + p.bl.x) * 0.5, mSolY = (p.tl.y + p.bl.y) * 0.5;
       targetCtx.beginPath();
       targetCtx.moveTo(mSolX, mSolY); targetCtx.lineTo(p.handL.x, p.handL.y);
       targetCtx.moveTo(p.bl.x, p.bl.y); targetCtx.lineTo(p.footL.x, p.footL.y);
       targetCtx.stroke();
 
-      // Sağ Kol / Bacak
       const mSagX = (p.tr.x + p.br.x) * 0.5, mSagY = (p.tr.y + p.br.y) * 0.5;
       targetCtx.beginPath();
       targetCtx.moveTo(mSagX, mSagY); targetCtx.lineTo(p.handR.x, p.handR.y);
       targetCtx.moveTo(p.br.x, p.br.y); targetCtx.lineTo(p.footR.x, p.footR.y);
       targetCtx.stroke();
 
-      // Gövde Çokgeni (Pixel Torso)
+      // 2. Gövde Poligonu (Torso)
       targetCtx.fillStyle = col.ana;
       targetCtx.strokeStyle = col.koyu;
       targetCtx.lineWidth = 1;
@@ -612,7 +697,7 @@
       targetCtx.fill();
       targetCtx.stroke();
 
-      // Ahmet Hakan Takım Elbise / Kravat Detayı
+      // Takım Elbise Kravatı (Ahmet Hakan İmzası)
       if (this.isAhmet) {
         const mx = (p.tl.x + p.tr.x) * 0.5, my = (p.tl.y + p.tr.y) * 0.5;
         targetCtx.fillStyle = C_WHITE;
@@ -621,20 +706,20 @@
         targetCtx.fillRect(mx - 1, my + 2, 2, 8);
       }
 
-      // Kafa (Pixel Kare Kafa)
+      // 3. Kafa Kutusu
       const hx = Math.round(p.head.x), hy = Math.round(p.head.y), hr = Math.round(p.head.r);
       targetCtx.fillStyle = col.ana;
-      targetCtx.strokeStyle = col.koyu;
       targetCtx.fillRect(hx - hr, hy - hr, hr * 2 + 1, hr * 2 + 1);
+      targetCtx.strokeStyle = col.koyu;
       targetCtx.strokeRect(hx - hr, hy - hr, hr * 2 + 1, hr * 2 + 1);
 
-      // Yüz İfadeleri
+      // Yüz İfadesi
       this._yuz_ciz(targetCtx, hx, hy, hr);
 
-      // Şapka
+      // Şapka / Aksesuar
       this._sapka_ciz(targetCtx, hx, hy, hr);
 
-      // Eller & Ayaklar (Kutu Pikseller)
+      // 4. Eller ve Ayaklar
       targetCtx.fillStyle = col.ana;
       [p.footL, p.footR, p.handL, p.handR].forEach(pt => {
         const r = Math.round(pt.r);
@@ -642,7 +727,7 @@
         targetCtx.strokeRect(Math.round(pt.x - r), Math.round(pt.y - r), r * 2, r * 2);
       });
 
-      // Yumruk Parıltısı / Şarj Alevi
+      // Yumruk / Şarj Alevi
       if (this.sarj_t > 0.1) {
         const fist = this.facing === 1 ? p.handR : p.handL;
         targetCtx.fillStyle = C_YEL;
@@ -658,22 +743,35 @@
         targetCtx.fillRect(hx - 3, hy - 1, 1, 1); targetCtx.fillRect(hx - 2, hy - 2, 1, 1);
         targetCtx.fillRect(hx + 2, hy - 2, 1, 1); targetCtx.fillRect(hx + 3, hy - 1, 1, 1);
         targetCtx.fillRect(hx + 2, hy - 1, 1, 1); targetCtx.fillRect(hx + 3, hy - 2, 1, 1);
+        targetCtx.fillStyle = '#e86e82';
+        targetCtx.fillRect(hx, hy + 1, 2, 2);
         return;
       }
 
+      // Göz Kırpma Zamanlayıcısı
+      this.blink -= DT;
+      if (this.blink < 0) {
+        this.blink = Math.random() * 3.3 + 1.2;
+        this.eyes_shut = 0.12;
+      }
+      if (this.eyes_shut > 0) this.eyes_shut -= DT;
+
+      const kapali = this.eyes_shut > 0;
       const yuz = this.karakter.yuz;
       const f = this.facing;
 
-      if (yuz === "gözlük" || this.isAhmet) {
+      if (yuz === "gülen" || kapali) {
+        targetCtx.fillStyle = C_EYE;
+        targetCtx.fillRect(hx - 3, hy - 1, 2, 1);
+        targetCtx.fillRect(hx - 3, hy - 2, 1, 1);
+        targetCtx.fillRect(hx + 2, hy - 1, 2, 1);
+        targetCtx.fillRect(hx + 3, hy - 2, 1, 1);
+      } else if (yuz === "gözlük" || this.isAhmet) {
         targetCtx.fillStyle = C_EYE;
         targetCtx.fillRect(hx - hr + 1, hy - 2, hr * 2 - 1, 3);
         targetCtx.fillStyle = '#78dcf6';
         targetCtx.fillRect(hx - 2, hy - 2, 2, 1);
         targetCtx.fillRect(hx + 2, hy - 2, 2, 1);
-      } else if (yuz === "gülen") {
-        targetCtx.fillStyle = C_EYE;
-        targetCtx.fillRect(hx - 3, hy - 1, 2, 1);
-        targetCtx.fillRect(hx + 2, hy - 1, 2, 1);
       } else {
         targetCtx.fillStyle = C_WHITE;
         targetCtx.fillRect(hx - 3, hy - 2, 3, 3);
@@ -688,184 +786,539 @@
         targetCtx.fillStyle = C_EYE;
         targetCtx.fillRect(hx - 3, hy - hr + 1, 2, 1);
         targetCtx.fillRect(hx + 2, hy - hr + 1, 2, 1);
+        targetCtx.fillRect(hx - 1, hy - hr, 1, 1);
+        targetCtx.fillRect(hx + 1, hy - hr, 1, 1);
+      }
+
+      // Ağız & Bıyık
+      if (this.brace) {
+        targetCtx.fillStyle = C_EYE;
+        targetCtx.fillRect(hx - 1, hy + 2, 3, 1);
+      } else if (yuz === "gülen") {
+        targetCtx.fillStyle = C_EYE;
+        targetCtx.fillRect(hx - 1, hy + 1, 3, 1);
+        targetCtx.fillRect(hx - 2, hy + 2, 1, 1);
+        targetCtx.fillRect(hx + 2, hy + 2, 1, 1);
+      } else {
+        targetCtx.fillStyle = C_EYE;
+        targetCtx.fillRect(hx - 1, hy + 2, 2, 1);
+      }
+
+      if (yuz === "bıyık") {
+        targetCtx.fillStyle = C_EYE;
+        targetCtx.fillRect(hx - 3, hy + 1, 6, 2);
       }
     }
 
     _sapka_ciz(targetCtx, hx, hy, hr) {
       const s = this.karakter.sapka;
+      if (s === "yok") return;
+      const f = this.facing;
+      const col = this.karakter.colors;
+
       if (s === "kasket") {
-        targetCtx.fillStyle = '#2d283e';
-        targetCtx.fillRect(hx - hr - 1, hy - hr - 2, hr * 2 + 2, 3);
-        targetCtx.fillRect(hx + (this.facing === 1 ? 0 : -hr - 2), hy - hr - 1, hr + 3, 2); // Siperlik
+        targetCtx.fillStyle = col.koyu;
+        targetCtx.fillRect(hx - hr + 1, hy - hr - 2, hr * 2 - 1, 2);
+        targetCtx.fillStyle = C_EYE;
+        targetCtx.fillRect(hx - hr + 1, hy - hr, hr * 2 - 1, 1);
+        const burun = f > 0 ? hr : -hr - 1;
+        targetCtx.fillStyle = col.koyu;
+        targetCtx.fillRect(hx + burun - (f > 0 ? 0 : 2), hy - hr - 1, 3, 1);
       } else if (s === "boynuz") {
-        targetCtx.fillStyle = C_RED;
-        targetCtx.fillRect(hx - hr, hy - hr - 3, 2, 3);
-        targetCtx.fillRect(hx + hr - 2, hy - hr - 3, 2, 3);
+        targetCtx.fillStyle = '#eeece2';
+        targetCtx.beginPath();
+        targetCtx.moveTo(hx - hr + 1, hy - hr);
+        targetCtx.lineTo(hx - hr + 2, hy - hr - 4);
+        targetCtx.lineTo(hx - hr + 3, hy - hr);
+        targetCtx.moveTo(hx + hr - 3, hy - hr);
+        targetCtx.lineTo(hx + hr - 2, hy - hr - 4);
+        targetCtx.lineTo(hx + hr - 1, hy - hr);
+        targetCtx.fill();
       } else if (s === "taç") {
         targetCtx.fillStyle = C_YEL;
-        targetCtx.fillRect(hx - hr, hy - hr - 3, hr * 2, 2);
-        targetCtx.fillRect(hx - hr, hy - hr - 5, 2, 2);
-        targetCtx.fillRect(hx - 1, hy - hr - 5, 2, 2);
-        targetCtx.fillRect(hx + hr - 2, hy - hr - 5, 2, 2);
+        targetCtx.fillRect(hx - hr + 1, hy - hr - 2, hr * 2 - 1, 2);
+        [-hr + 1, 0, hr - 2].forEach(dx => {
+          targetCtx.fillRect(hx + dx, hy - hr - 4, 1, 2);
+        });
+      } else if (s === "hale") {
+        targetCtx.strokeStyle = C_YEL;
+        targetCtx.lineWidth = 1;
+        targetCtx.beginPath();
+        targetCtx.ellipse(hx, hy - hr - 4, hr + 2, 2, 0, 0, Math.PI * 2);
+        targetCtx.stroke();
+      } else if (s === "anten") {
+        const rHead = this.parts.head;
+        const eg = Math.max(-2, Math.min(2, Math.round(-rHead.vy_sn * DT * 1.4)));
+        targetCtx.strokeStyle = col.koyu;
+        targetCtx.lineWidth = 1;
+        targetCtx.beginPath();
+        targetCtx.moveTo(hx, hy - hr);
+        targetCtx.lineTo(hx + eg, hy - hr - 5);
+        targetCtx.stroke();
+        targetCtx.fillStyle = C_YEL;
+        targetCtx.fillRect(hx + eg - 1, hy - hr - 7, 2, 2);
       } else if (s === "bandana") {
-        targetCtx.fillStyle = C_RED;
-        targetCtx.fillRect(hx - hr - 1, hy - hr + 1, hr * 2 + 2, 2);
+        targetCtx.fillStyle = C_YEL;
+        targetCtx.fillRect(hx - hr + 1, hy - hr + 1, hr * 2 - 1, 2);
+        const geri = f > 0 ? -1 : 1;
+        targetCtx.fillRect(hx + (hr - 1) * geri, hy - hr + 1, geri * 3, 1);
       }
     }
   }
 
   /* =========================================================
-     6. HARİTALAR VE SAHNE ÇİZİMLERİ (7 EFSANE ARENA)
+     6. HARİTALAR VE ÇOKLU PLATFORM SİSTEMİ (7 EFSANE ARENA)
   ========================================================= */
-  const HARITALAR = {
-    tv: { ad: "CNN TURK STUDYOSU", tema: "tv", zorluk: 2 },
-    klasik: { ad: "KLASIK DOHYO", tema: "gece", zorluk: 1 },
-    buz: { ad: "BUZUL ZIRVESI", tema: "kar", zorluk: 2 },
-    kule: { ad: "IKIZ KULE", tema: "kule", zorluk: 3 },
-    asansor: { ad: "SANAYI ASANSORU", tema: "sanayi", zorluk: 2 },
-    ruzgar: { ad: "RUZGARLI TEPE", tema: "gunbatimi", zorluk: 2 },
-    lav: { ad: "LAV KRATERI", tema: "volkan", zorluk: 3 }
+  class Zemin {
+    constructor(cx, y, w, h, kind = "toprak", erir = false, hareket = null) {
+      this.cx0 = cx;
+      this.y0 = y;
+      this.w0 = w;
+      this.h = h;
+      this.kind = kind;
+      this.erir = erir;
+      this.hareket = hareket;
+      this.x = cx - w * 0.5;
+      this.y = y;
+      this.w = w;
+      this.vx = 0;
+      this.vy = 0;
+      this.erime = 0;
+      this.faz = hareket ? (hareket.faz || 0) : 0;
+    }
+    get fric() {
+      return this.kind === "buz" ? ICE_FRIC : GROUND_FRIC;
+    }
+    guncelle(dt) {
+      const eskiX = this.x, eskiY = this.y;
+      if (this.hareket) {
+        const h = this.hareket;
+        this.faz += dt * h.hiz * Math.PI * 2;
+        const off = Math.sin(this.faz) * h.menzil;
+        if (h.eksen === "y") {
+          this.y = this.y0 + off;
+          this.vy = (this.y - eskiY) / dt;
+        } else {
+          this.x = (this.cx0 - this.w0 * 0.5) + off;
+          this.vx = (this.x - eskiX) / dt;
+        }
+      }
+      if (this.erir && this.erime > 0 && this.w0 > MIN_HALF_W * 2) {
+        const yeniW = Math.max(MIN_HALF_W * 2, this.w0 - this.erime * 2);
+        this.w = yeniW;
+        this.x = this.cx0 - yeniW * 0.5;
+      }
+    }
+  }
+
+  const HARITA_VERILERI = {
+    tv: {
+      ad: "CNN TÜRK STÜDYOSU",
+      tema: "tv",
+      zorluk: 2,
+      zeminler: [
+        { cx: 160, y: 124, w: 180, h: 14, kind: "tv" }
+      ]
+    },
+    klasik: {
+      ad: "KLASİK ARENA",
+      tema: "gece",
+      zorluk: 1,
+      zeminler: [
+        { cx: 160, y: 122, w: 208, h: 14, kind: "toprak", erir: true }
+      ]
+    },
+    buz: {
+      ad: "BUZ ADASI",
+      tema: "kar",
+      zorluk: 2,
+      buz: true,
+      zeminler: [
+        { cx: 160, y: 122, w: 196, h: 14, kind: "buz" },
+        { cx: 88, y: 104, w: 34, h: 10, kind: "buz" },
+        { cx: 232, y: 104, w: 34, h: 10, kind: "buz" }
+      ]
+    },
+    kule: {
+      ad: "İKİZ KULE",
+      tema: "kule",
+      zorluk: 3,
+      zeminler: [
+        { cx: 94, y: 118, w: 56, h: 54, kind: "tas" },
+        { cx: 226, y: 118, w: 56, h: 54, kind: "tas" },
+        { cx: 160, y: 96, w: 26, h: 8, kind: "tas" }
+      ]
+    },
+    asansor: {
+      ad: "SANAYİ ASANSÖRÜ",
+      tema: "sanayi",
+      zorluk: 3,
+      zeminler: [
+        { cx: 160, y: 120, w: 106, h: 12, kind: "metal", hareket: { eksen: "y", menzil: 26, hiz: 0.42 } },
+        { cx: 56, y: 96, w: 36, h: 10, kind: "metal" },
+        { cx: 264, y: 96, w: 36, h: 10, kind: "metal" }
+      ]
+    },
+    ruzgar: {
+      ad: "RÜZGARLI TEPE",
+      tema: "gunbatimi",
+      zorluk: 2,
+      ruzgar: { guc: 168.0, periyot: 6.0, sure: 1.9, uyari: 1.2 },
+      zeminler: [
+        { cx: 160, y: 116, w: 96, h: 14, kind: "cim", erir: true }
+      ]
+    },
+    lav: {
+      ad: "LAV GÖLÜ",
+      tema: "volkan",
+      zorluk: 3,
+      lav: { baslangic: 178.0, hedef: 130.0, hiz: 1.15 },
+      zeminler: [
+        { cx: 160, y: 114, w: 156, h: 16, kind: "tas" }
+      ]
+    }
   };
 
   const Sahne = {
     t: 0,
-    shrinkAmount: 0,
-    yildizlar: Array.from({ length: 25 }, () => ({ x: Math.random() * W, y: Math.random() * 80 })),
-    kalabalik: Array.from({ length: 32 }, (_, i) => ({
-      x: i * 10 + 4,
+    zeminler: [],
+    eriyor: false,
+    erime_t: 0,
+    lav_y: null,
+    ruzgar_x: 0,
+    yildizlar: Array.from({ length: 46 }, () => ({ x: Math.random() * W, y: Math.random() * 80, s: Math.random() * 1.5 + 0.8 })),
+    kalabalik: Array.from({ length: 28 }, (_, i) => ({
+      x: i * 11 + 4,
       y: 165,
-      col: ['#72ce7e', '#ee6c60', '#5cc4e4', '#f6d660', '#b284ec'][i % 5]
+      col: ['#72ce7e', '#ee6c60', '#5cc4e4', '#f6d660', '#b284ec', '#f68cba'][i % 6],
+      sp: Math.random() * 0.5 + 0.5
+    })),
+    bulutlar: Array.from({ length: 5 }, () => ({
+      x: Math.random() * W,
+      y: Math.random() * 50 + 20,
+      w: Math.random() * 0.9 + 0.6,
+      sp: Math.random() * 0.5 + 0.3
     })),
 
-    getEnv() {
-      let platY = 130;
-      let platW = 160;
-      let buz = gameSettings.harita === "buz";
-      let isLav = gameSettings.harita === "lav";
-      let ruzgar_x = 0;
+    kur() {
+      const data = HARITA_VERILERI[gameSettings.harita] || HARITA_VERILERI.tv;
+      this.zeminler = data.zeminler.map(z => new Zemin(z.cx, z.y, z.w, z.h, z.kind, z.erir, z.hareket));
+      this.eriyor = false;
+      this.erime_t = 0;
+      this.t = 0;
+      this.lav_y = data.lav ? data.lav.baslangic : null;
+      this.ruzgar_x = 0;
+    },
 
-      if (gameSettings.harita === "asansor") {
-        platY += Math.sin(this.t * 2.0) * 22; // Asansör salınımı
-      }
-      if (gameSettings.harita === "ruzgar") {
-        ruzgar_x = Math.sin(this.t * 1.6) * 450; // Rüzgar fırtınası
+    guncelle(dt) {
+      this.t += dt;
+      const data = HARITA_VERILERI[gameSettings.harita] || HARITA_VERILERI.tv;
+
+      // Zeminleri güncelle (hareket & erime)
+      this.zeminler.forEach(z => z.guncelle(dt));
+
+      // Erime (Sudden death)
+      if (this.eriyor) {
+        this.erime_t += dt;
+        this.zeminler.forEach(z => {
+          if (z.erir) z.erime += SHRINK_SPEED * dt;
+        });
       }
 
-      const half = Math.max(26, platW * 0.5 - this.shrinkAmount);
+      // Rüzgar Simülasyonu
+      this.ruzgar_x = 0;
+      if (data.ruzgar) {
+        const dongu = this.t % data.ruzgar.periyot;
+        if (dongu < data.ruzgar.sure) {
+          const yon = Math.floor(this.t / data.ruzgar.periyot) % 2 === 0 ? 1 : -1;
+          this.ruzgar_x = data.ruzgar.guc * yon;
+          if (Math.random() < 0.25) AudioEngine.ruzgar();
+          if (Math.random() < 0.7) {
+            spawnWindStreak(0, W, Math.random() * 120 + 30, yon);
+          }
+        }
+      }
+
+      // Lav Yükselişi
+      if (data.lav && this.lav_y !== null && this.lav_y > data.lav.hedef) {
+        this.lav_y -= data.lav.hiz * dt;
+        if (Math.random() < 0.3) {
+          spawnSpark(Math.random() * W, this.lav_y - Math.random() * 4, C_ORANGE);
+        }
+      }
+
       return {
-        platY,
-        platL: 160 - half,
-        platR: 160 + half,
-        buz,
-        isLav,
-        ruzgar_x
+        buz: !!data.buz,
+        lav_y: this.lav_y,
+        ruzgar_x: this.ruzgar_x
       };
     },
 
     ciz(targetCtx, env) {
-      const h = gameSettings.harita;
-      this.t += DT;
+      const data = HARITA_VERILERI[gameSettings.harita] || HARITA_VERILERI.tv;
+      const tema = data.tema;
 
-      // 1. Gökyüzü / Arka Plan
-      if (h === "tv") {
-        // Canlı Yayın Stüdyosu
-        targetCtx.fillStyle = '#0a0d1a';
-        targetCtx.fillRect(0, 0, W, H);
-
-        // Stüdyo Işıkları
-        targetCtx.fillStyle = 'rgba(0, 219, 255, 0.08)';
-        targetCtx.beginPath();
-        targetCtx.moveTo(60, 0); targetCtx.lineTo(20, env.platY); targetCtx.lineTo(140, env.platY); targetCtx.closePath();
-        targetCtx.fill();
-        targetCtx.fillStyle = 'rgba(255, 23, 68, 0.08)';
-        targetCtx.beginPath();
-        targetCtx.moveTo(260, 0); targetCtx.lineTo(180, env.platY); targetCtx.lineTo(300, env.platY); targetCtx.closePath();
-        targetCtx.fill();
-
-        // Kayan Canlı Yayın Bandı
-        targetCtx.fillStyle = '#b71c1c';
-        targetCtx.fillRect(0, 16, W, 10);
-        const shift = Math.round((this.t * 30) % 240);
-        drawPixelText(targetCtx, "SON DAKIKA: AHMET HAKAN ILE TARAFSIZ BOLGE SUMO ARENASI CANLI YAYINDA", W - shift, 19, C_WHITE, 1);
-      } else if (h === "kar" || h === "buz") {
-        // Buzul / Kar
-        targetCtx.fillStyle = '#1e2e4c';
-        targetCtx.fillRect(0, 0, W, H);
-        targetCtx.fillStyle = '#5c789a';
-        targetCtx.beginPath();
-        targetCtx.moveTo(0, 120); targetCtx.lineTo(60, 80); targetCtx.lineTo(130, 120); targetCtx.lineTo(220, 70); targetCtx.lineTo(320, 120); targetCtx.lineTo(320, H); targetCtx.lineTo(0, H);
-        targetCtx.fill();
-      } else if (h === "lav") {
-        // Volkan
-        targetCtx.fillStyle = '#1a0808';
-        targetCtx.fillRect(0, 0, W, H);
-        targetCtx.fillStyle = '#ff3d00';
-        targetCtx.fillRect(0, H - 24, W, 24);
+      // 1. Gökyüzü / Arka Plan Teması
+      if (tema === "tv") {
+        this._ciz_tv(targetCtx);
+      } else if (tema === "kar") {
+        this._ciz_kar(targetCtx);
+      } else if (tema === "kule") {
+        this._ciz_kule(targetCtx);
+      } else if (tema === "sanayi") {
+        this._ciz_sanayi(targetCtx);
+      } else if (tema === "gunbatimi") {
+        this._ciz_gunbatimi(targetCtx);
+      } else if (tema === "volkan") {
+        this._ciz_volkan(targetCtx);
       } else {
-        // Gece / Klasik
-        targetCtx.fillStyle = '#100e20';
-        targetCtx.fillRect(0, 0, W, H);
-        // Yıldızlar
-        this.yildizlar.forEach(s => {
-          targetCtx.fillStyle = '#9492ad';
-          targetCtx.fillRect(Math.round(s.x), Math.round(s.y), 1, 1);
-        });
-        // Ay
-        targetCtx.fillStyle = '#fce490';
-        targetCtx.beginPath();
-        targetCtx.arc(270, 30, 10, 0, Math.PI * 2);
-        targetCtx.fill();
+        this._ciz_gece(targetCtx);
       }
 
-      // Seyirciler (Alt Kısım)
-      this.kalabalik.forEach(k => {
-        const bob = Math.sin(this.t * 4 + k.x) * 2;
-        targetCtx.fillStyle = k.col;
-        targetCtx.fillRect(k.x, k.y + bob, 4, 6);
-        targetCtx.fillStyle = C_EYE;
-        targetCtx.fillRect(k.x + 1, k.y + bob - 2, 2, 2);
+      // 2. Platformların Çizimi
+      this.zeminler.forEach(z => {
+        this._zemin_ciz(targetCtx, z);
       });
 
-      // 2. Platform Zemini
-      const y = Math.round(env.platY);
-      const l = Math.round(env.platL);
-      const r = Math.round(env.platR);
-      const w = r - l;
-
-      if (h === "tv") {
-        // Cam Yayın Masası
-        targetCtx.fillStyle = '#0f172a';
-        targetCtx.fillRect(l, y, w, 18);
-        targetCtx.fillStyle = '#00dbff';
-        targetCtx.fillRect(l, y, w, 2);
-      } else if (h === "buz") {
-        targetCtx.fillStyle = C_ICE;
-        targetCtx.fillRect(l, y, w, 16);
-        targetCtx.fillStyle = '#fff';
-        targetCtx.fillRect(l, y, w, 2);
-      } else {
-        // Dohyo Kum ve Çim
-        targetCtx.fillStyle = C_TOPRAK;
-        targetCtx.fillRect(l, y, w, 16);
-        targetCtx.fillStyle = C_CIM;
-        targetCtx.fillRect(l, y, w, 2);
+      // 3. Yükselen Lav
+      if (this.lav_y !== null) {
+        this._lav_ciz(targetCtx);
       }
+    },
 
-      // Ani Daralma Alarmı
-      if (this.shrinkAmount > 0) {
-        if (Math.sin(this.t * 16) > 0) {
-          targetCtx.fillStyle = C_RED;
-          targetCtx.fillRect(l, y, 4, 16);
-          targetCtx.fillRect(r - 4, y, 4, 16);
+    _zemin_ciz(ctx, z) {
+      const x = Math.round(z.x), y = Math.round(z.y), w = Math.round(z.w), h = Math.round(z.h);
+      if (w <= 0) return;
+
+      if (z.kind === "buz") {
+        ctx.fillStyle = '#96c8e2';
+        ctx.fillRect(x, y, w, h);
+        ctx.fillStyle = C_ICE;
+        ctx.fillRect(x, y + 1, w, h - 3);
+        ctx.fillStyle = '#fafeff';
+        ctx.fillRect(x, y - 2, w, 3);
+        for (let bx = x + 5; bx < x + w - 4; bx += 12) {
+          ctx.fillStyle = '#bae2f4';
+          ctx.fillRect(bx, y + 4, 5, 2);
         }
+      } else if (z.kind === "tas") {
+        ctx.fillStyle = '#4a4854';
+        ctx.fillRect(x, y, w, h);
+        ctx.fillStyle = C_STONE;
+        ctx.fillRect(x, y + 1, w, h - 3);
+        ctx.fillStyle = '#9e9ca8';
+        ctx.fillRect(x, y - 2, w, 3);
+      } else if (z.kind === "metal") {
+        ctx.fillStyle = '#3a3c4a';
+        ctx.fillRect(x, y, w, h);
+        ctx.fillStyle = C_METAL;
+        ctx.fillRect(x, y + 1, w, h - 4);
+        ctx.fillStyle = '#c4c8d6';
+        ctx.fillRect(x, y - 3, w, 4);
+      } else if (z.kind === "tv") {
+        ctx.fillStyle = '#0f172a';
+        ctx.fillRect(x, y, w, h);
+        ctx.fillStyle = '#00dbff';
+        ctx.fillRect(x, y, w, 2);
+        ctx.fillStyle = '#1e293b';
+        ctx.fillRect(x + 4, y + 4, w - 8, h - 6);
+      } else {
+        // Toprak / Çim
+        ctx.fillStyle = '#4e3022';
+        ctx.fillRect(x, y, w, h);
+        ctx.fillStyle = C_TOPRAK;
+        ctx.fillRect(x, y + 1, w, h - 3);
+        ctx.fillStyle = C_CIM;
+        ctx.fillRect(x, y - 2, w, 3);
+        ctx.fillStyle = '#92d876';
+        ctx.fillRect(x, y - 2, w, 1);
       }
+
+      if (z.hareket) {
+        ctx.fillStyle = C_YEL;
+        ctx.fillRect(x + 2, y - 4, 2, 2);
+        ctx.fillRect(x + w - 4, y - 4, 2, 2);
+      }
+    },
+
+    _ciz_gece(ctx) {
+      this._gradient(ctx, '#100e20', '#342a4e');
+      this.yildizlar.forEach(s => {
+        const k = 0.5 + 0.5 * Math.sin(this.t * (1.4 + s.s) + s.x);
+        ctx.fillStyle = `rgba(180, 180, 220, ${k})`;
+        ctx.fillRect(Math.round(s.x), Math.round(s.y), 1, 1);
+      });
+      // Hilal Ay
+      ctx.fillStyle = '#eee4b0';
+      ctx.beginPath(); ctx.arc(272, 34, 12, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#221c3e';
+      ctx.beginPath(); ctx.arc(268, 30, 11, 0, Math.PI * 2); ctx.fill();
+      // Tepe Siluetleri
+      ctx.fillStyle = '#1a162e';
+      ctx.beginPath();
+      ctx.moveTo(0, 110); ctx.lineTo(40, 82); ctx.lineTo(86, 108); ctx.lineTo(140, 78);
+      ctx.lineTo(190, 108); ctx.lineTo(250, 84); ctx.lineTo(320, 110); ctx.lineTo(320, 140); ctx.lineTo(0, 140);
+      ctx.fill();
+      this._kalabalik_ciz(ctx);
+    },
+
+    _ciz_kar(ctx) {
+      this._gradient(ctx, '#1e2e4c', '#607e9e');
+      // Buz Dağları
+      ctx.fillStyle = '#344868';
+      ctx.beginPath();
+      ctx.moveTo(0, 118); ctx.lineTo(30, 96); ctx.lineTo(58, 118); ctx.lineTo(86, 100); ctx.lineTo(320, 118);
+      ctx.lineTo(320, 146); ctx.lineTo(0, 146);
+      ctx.fill();
+      // Kar Örtüsü & Çam Ağaçları
+      ctx.fillStyle = '#d8e6f6';
+      ctx.fillRect(0, 146, 320, 34);
+      [[22, 20], [44, 14], [286, 18], [306, 13], [264, 15]].forEach(([tx, th]) => {
+        ctx.fillStyle = '#1e342e';
+        ctx.beginPath();
+        ctx.moveTo(tx, 150 - th); ctx.lineTo(tx - 7, 150); ctx.lineTo(tx + 7, 150);
+        ctx.fill();
+      });
+      this._kalabalik_ciz(ctx);
+    },
+
+    _ciz_kule(ctx) {
+      this._gradient(ctx, '#281c3e', '#804e58');
+      // Tapınak Siluetleri
+      [48, 160, 272].forEach(tx => {
+        ctx.fillStyle = '#1e162c';
+        ctx.fillRect(tx - 16, 96, 32, 60);
+      });
+      // Uçurum ve Sivri Dikenler
+      ctx.fillStyle = '#0e0a16';
+      ctx.fillRect(86, 150, 148, 30);
+      for (let i = 88; i < 232; i += 9) {
+        ctx.fillStyle = '#782c3a';
+        ctx.beginPath();
+        ctx.moveTo(i, 180); ctx.lineTo(i + 4, 160); ctx.lineTo(i + 8, 180);
+        ctx.fill();
+      }
+      this._kalabalik_ciz(ctx);
+    },
+
+    _ciz_sanayi(ctx) {
+      this._gradient(ctx, '#14141e', '#342e3a');
+      // Çelik Borular
+      [[10, 40, 120], [200, 30, 90], [60, 70, 60]].forEach(([px, py, pl]) => {
+        ctx.fillStyle = '#2c2a36';
+        ctx.fillRect(px, py, pl, 8);
+        ctx.fillStyle = '#42404e';
+        ctx.fillRect(px, py, pl, 2);
+      });
+      // Dönen Dişliler
+      [[70, 120, 22, 1], [250, 108, 16, -1]].forEach(([gx, gy, gr, yon]) => {
+        ctx.save();
+        ctx.translate(gx, gy);
+        ctx.rotate(this.t * yon);
+        ctx.strokeStyle = '#3a3846';
+        ctx.lineWidth = 3;
+        ctx.beginPath(); ctx.arc(0, 0, gr, 0, Math.PI * 2); ctx.stroke();
+        for (let a = 0; a < 8; a++) {
+          ctx.rotate(Math.PI / 4);
+          ctx.fillRect(-2, -gr - 4, 4, 6);
+        }
+        ctx.restore();
+      });
+      this._kalabalik_ciz(ctx);
+    },
+
+    _ciz_gunbatimi(ctx) {
+      this._gradient(ctx, '#faa060', '#48345c');
+      // Güneş
+      ctx.fillStyle = '#ffd68c';
+      ctx.beginPath(); ctx.arc(250, 108, 20, 0, Math.PI * 2); ctx.fill();
+      // Uçan Kuşlar
+      for (let i = 0; i < 4; i++) {
+        const bx = (this.t * 22 + i * 62) % 360 - 20;
+        const by = 44 + (i % 2) * 12 + Math.sin(this.t * 2 + i) * 2;
+        ctx.fillStyle = '#342434';
+        ctx.fillRect(Math.round(bx), Math.round(by), 3, 1);
+      }
+      this._kalabalik_ciz(ctx);
+    },
+
+    _ciz_volkan(ctx) {
+      this._gradient(ctx, '#160c16', '#561e1e');
+      // Volkan Dağı
+      ctx.fillStyle = '#2c161e';
+      ctx.beginPath();
+      ctx.moveTo(20, 150); ctx.lineTo(120, 54); ctx.lineTo(200, 54); ctx.lineTo(300, 150);
+      ctx.fill();
+      // Krater Parlaması
+      const parlak = 0.6 + 0.4 * Math.sin(this.t * 3);
+      ctx.fillStyle = `rgba(255, ${Math.round(140 * parlak)}, 40, 0.8)`;
+      ctx.beginPath();
+      ctx.moveTo(132, 62); ctx.lineTo(188, 62); ctx.lineTo(176, 78); ctx.lineTo(144, 78);
+      ctx.fill();
+    },
+
+    _ciz_tv(ctx) {
+      this._gradient(ctx, '#070a14', '#161c2e');
+      // Hareketli Stüdyo Spotları
+      const spotAngle = Math.sin(this.t * 1.5) * 40;
+      ctx.fillStyle = 'rgba(0, 219, 255, 0.07)';
+      ctx.beginPath();
+      ctx.moveTo(60, 0); ctx.lineTo(60 + spotAngle, 130); ctx.lineTo(130 + spotAngle, 130);
+      ctx.fill();
+
+      ctx.fillStyle = 'rgba(255, 51, 68, 0.07)';
+      ctx.beginPath();
+      ctx.moveTo(260, 0); ctx.lineTo(200 - spotAngle, 130); ctx.lineTo(270 - spotAngle, 130);
+      ctx.fill();
+
+      // Kayan Son Dakika Bandı
+      ctx.fillStyle = '#b71c1c';
+      ctx.fillRect(0, 16, W, 10);
+      const shift = Math.round((this.t * 34) % 260);
+      drawPixelText(ctx, "SON DAKIKA: AHMET HAKAN ILE TARAFSIZ BOLGE SUMO ARENASI CANLI YAYINDA", W - shift, 19, C_WHITE, 1);
+
+      this._kalabalik_ciz(ctx);
+    },
+
+    _lav_ciz(ctx) {
+      const ly = Math.round(this.lav_y);
+      ctx.fillStyle = 'rgba(255, 60, 0, 0.35)';
+      ctx.fillRect(0, ly - 4, W, 4);
+      ctx.fillStyle = '#b32200';
+      ctx.fillRect(0, ly, W, H - ly);
+      ctx.fillStyle = '#ff6b00';
+      ctx.fillRect(0, ly, W, 4);
+      for (let xx = 0; xx < W; xx += 8) {
+        const dalga = Math.sin(this.t * 3 + xx * 0.15) * 2;
+        ctx.fillStyle = (Math.floor(this.t * 6 + xx) % 3 === 0) ? '#ffd54f' : '#ff5722';
+        ctx.fillRect(xx, Math.round(ly - 1 + dalga), 6, 2);
+      }
+    },
+
+    _kalabalik_ciz(ctx) {
+      this.kalabalik.forEach(k => {
+        const bob = Math.sin(this.t * 4 + k.x) * 2;
+        ctx.fillStyle = k.col;
+        ctx.fillRect(k.x, k.y + bob, 4, 6);
+        ctx.fillStyle = C_EYE;
+        ctx.fillRect(k.x + 1, k.y + bob - 2, 2, 2);
+      });
+    },
+
+    _gradient(ctx, c1, c2) {
+      const grad = ctx.createLinearGradient(0, 0, 0, H);
+      grad.addColorStop(0, c1);
+      grad.addColorStop(1, c2);
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, W, H);
     }
   };
 
   /* =========================================================
-     7. EFEKTLER (PARTİKÜLLER & METİN POPUPLARI)
+     7. EFEKTLER (PARTİKÜL, TOZ, RÜZGAR, POPUP)
   ========================================================= */
   const particles = [];
+  const windStreaks = [];
   const popups = [];
 
   function spawnSpark(x, y, color = C_YEL) {
@@ -874,7 +1327,7 @@
       vx: (Math.random() - 0.5) * 80,
       vy: (Math.random() - 0.5) * 80 - 20,
       color,
-      life: 0.3
+      life: 0.35
     });
   }
 
@@ -885,6 +1338,16 @@
       vy: -Math.random() * 15,
       color: '#a09880',
       life: 0.25
+    });
+  }
+
+  function spawnWindStreak(minX, maxX, y, dir) {
+    windStreaks.push({
+      x: dir > 0 ? minX : maxX,
+      y,
+      vx: dir * (Math.random() * 80 + 160),
+      len: Math.random() * 24 + 16,
+      life: 0.4
     });
   }
 
@@ -904,16 +1367,47 @@
   }
 
   /* =========================================================
-     8. OYUN YÖNETİCİSİ VE DURUMLAR (MENU, MAC, KO, AYARLAR)
+     8. DÖVÜŞ VURUŞ ÇARPIŞMALARI
   ========================================================= */
-  const MENU = 0, MAC = 1, KO_DURUM = 2, KARAKTER_SEC = 3, HARITA_SEC = 4, AYARLAR_SEC = 5;
+  function vurusKontrol(saldiran, kurban) {
+    if (saldiran.punch_timer <= 0) return;
+    const yumruk = saldiran.facing === 1 ? saldiran.parts.handR : saldiran.parts.handL;
+
+    for (const k in kurban.parts) {
+      const hedef = kurban.parts[k];
+      const d = Math.hypot(yumruk.x - hedef.x, yumruk.y - hedef.y);
+      if (d < yumruk.r + hedef.r + 3.0) {
+        saldiran.punch_timer = 0;
+        const guc = saldiran.punch_guc;
+
+        if (guc > 1.2) AudioEngine.big();
+        else AudioEngine.hit();
+
+        const savrulma = (saldiran.facing * PUNCH_KNOCK * guc) * (kurban.brace ? 0.35 : 1.0);
+        for (const pk in kurban.parts) {
+          kurban.parts[pk].add_vel(savrulma, -60 * guc);
+        }
+
+        kurban.stun = kurban.brace ? 0.08 : (guc > 1.2 ? 0.52 : 0.30);
+        saldiran.superMeter = Math.min(100, saldiran.superMeter + (guc > 1.2 ? 35 : 18));
+
+        spawnPopup(yumruk.x, yumruk.y - 12, guc > 1.2 ? "GÜÜÜM! 💥" : "POW! 🥊", guc > 1.2 ? C_YEL : C_WHITE);
+        for (let i = 0; i < 6; i++) spawnSpark(yumruk.x, yumruk.y, C_YEL);
+        break;
+      }
+    }
+  }
+
+  /* =========================================================
+     9. OYUN YÖNETİCİSİ VE DURUMLAR
+  ========================================================= */
+  const MENU = 0, MAC = 1, KO_DURUM = 2;
   let oyunDurumu = MENU;
   let menuSecim = 0;
-  const MENU_OGELERI = ["2 KISILIK OYNA", "YAPAY ZEKA (vs CPU)", "ONLINE 1v1", "KARAKTER SEC", "HARITALAR", "AYARLAR"];
+  const MENU_OGELERI = ["2 KİŞİLİK OYNA", "YAPAY ZEKA (vs CPU)", "ONLINE 1v1", "KARAKTER ÖZELLEŞTİR", "HARİTALAR", "AYARLAR"];
 
-  // Dövüşçüler
-  let p1 = new Ragdoll(110, 110, gameSettings.k1, true);
-  let p2 = new Ragdoll(210, 110, gameSettings.k2, false);
+  let p1 = new Ragdoll(110, 100, gameSettings.k1, true);
+  let p2 = new Ragdoll(210, 100, gameSettings.k2, false);
 
   let skor1 = 0;
   let skor2 = 0;
@@ -943,6 +1437,7 @@
     } else if (oyunDurumu === KO_DURUM) {
       if (e.code === 'Enter' || e.code === 'Space') sonrakiTur();
       else if (e.code === 'KeyR') maciSifirla();
+      else if (e.code === 'KeyM') openSettingsModal('maps');
       else if (e.code === 'Escape') oyunDurumu = MENU;
     } else if (oyunDurumu === MAC) {
       if (e.code === 'Escape') oyunDurumu = MENU;
@@ -951,7 +1446,6 @@
 
   window.addEventListener('keyup', e => { keys[e.code] = false; });
 
-  // Menü Seçim Yönlendirici
   function menuOnayla() {
     AudioEngine.select();
     if (menuSecim === 0) {
@@ -965,29 +1459,31 @@
       initOnlineWS();
       maciBaslat();
     } else if (menuSecim === 3) {
-      document.getElementById('settings-modal')?.classList.remove('hidden');
+      openSettingsModal('char');
     } else if (menuSecim === 4) {
-      document.getElementById('settings-modal')?.classList.remove('hidden');
+      openSettingsModal('maps');
     } else if (menuSecim === 5) {
-      document.getElementById('settings-modal')?.classList.remove('hidden');
+      openSettingsModal('rules');
     }
   }
 
   function maciBaslat() {
-    oyunDurumu = MAC;
     skor1 = 0; skor2 = 0; tur = 1;
+    Sahne.kur();
     turBaslat();
   }
 
   function maciSifirla() {
     skor1 = 0; skor2 = 0; tur = 1;
+    Sahne.kur();
     turBaslat();
   }
 
   function turBaslat() {
     oyunDurumu = MAC;
     macSuresi = 0;
-    Sahne.shrinkAmount = 0;
+    Sahne.eriyor = false;
+    Sahne.erime_t = 0;
     slowMo = 1.0;
     geriSayim = 3;
     geriSayimTimer = 0;
@@ -999,9 +1495,11 @@
     const p1Sc = document.getElementById('p1-score');
     const p2Sc = document.getElementById('p2-score');
     const rnd = document.getElementById('round-indicator');
+    const mapName = document.getElementById('current-map-name');
     if (p1Sc) p1Sc.textContent = skor1;
     if (p2Sc) p2Sc.textContent = skor2;
     if (rnd) rnd.textContent = `TUR ${tur}`;
+    if (mapName) mapName.textContent = (HARITA_VERILERI[gameSettings.harita] || HARITA_VERILERI.tv).ad;
     document.getElementById('ko-modal')?.classList.add('hidden');
   }
 
@@ -1028,10 +1526,10 @@
       if (koModal && koTitle && koSub) {
         koModal.classList.remove('hidden');
         if (kazanan === "P1") {
-          koTitle.textContent = "🏆 AHMET HAKAN KAZANDI!";
+          koTitle.textContent = `🏆 ${gameSettings.k1.ad} KAZANDI!`;
           koSub.textContent = "Tarafsız Bölge masasını yumrukladı, rakibi yayından uçurdu!";
         } else {
-          koTitle.textContent = "🏆 RAKİP SUMO KAZANDI!";
+          koTitle.textContent = `🏆 ${gameSettings.k2.ad} KAZANDI!`;
           koSub.textContent = "Geleneksel Kutu Sumo ustası ringin hakimi oldu!";
         }
       }
@@ -1039,7 +1537,7 @@
   }
 
   /* =========================================================
-     9. KONTROLLER & YAPAY ZEKA
+     10. OYUNCU VE YAPAY ZEKA GİRDİLERİ
   ========================================================= */
   function getP1Ctrl() {
     return {
@@ -1054,7 +1552,6 @@
 
   function getP2Ctrl() {
     if (gameSettings.cpu_ile) {
-      // Akıllı Sumo AI
       const dx = p1.center.x - p2.center.x;
       const dist = Math.abs(dx);
       const isZor = gameSettings.cpu_zorluk === "ZOR";
@@ -1079,39 +1576,7 @@
   }
 
   /* =========================================================
-     10. DÖVÜŞ VURUŞ ÇARPIŞMALARI
-  ========================================================= */
-  function vurusKontrol(saldiran, kurban) {
-    if (saldiran.punch_timer <= 0) return;
-    const yumruk = saldiran.facing === 1 ? saldiran.parts.handR : saldiran.parts.handL;
-
-    for (const k in kurban.parts) {
-      const hedef = kurban.parts[k];
-      const d = Math.hypot(yumruk.x - hedef.x, yumruk.y - hedef.y);
-      if (d < yumruk.r + hedef.r + 3.0) {
-        saldiran.punch_timer = 0; // Yumruk isabet etti
-        const guc = saldiran.punch_guc;
-
-        if (guc > 1.2) AudioEngine.big();
-        else AudioEngine.hit();
-
-        const savrulma = (saldiran.facing * PUNCH_KNOCK * guc) * (kurban.brace ? 0.35 : 1.0);
-        for (const pk in kurban.parts) {
-          kurban.parts[pk].add_vel(savrulma, -60 * guc);
-        }
-
-        kurban.stun = kurban.brace ? 0.08 : (guc > 1.2 ? 0.52 : 0.30);
-        saldiran.superMeter = Math.min(100, saldiran.superMeter + (guc > 1.2 ? 35 : 18));
-
-        spawnPopup(yumruk.x, yumruk.y - 12, guc > 1.2 ? "GÜÜÜM! 💥" : "POW! 🥊", guc > 1.2 ? C_YEL : C_WHITE);
-        for (let i = 0; i < 6; i++) spawnSpark(yumruk.x, yumruk.y, C_YEL);
-        break;
-      }
-    }
-  }
-
-  /* =========================================================
-     11. ONLINE WEBSOCKET ÇOK OYUNCULU DESTEĞİ
+     11. ONLINE WEBSOCKET ÇOK OYUNCULU
   ========================================================= */
   let ws = null;
   function initOnlineWS() {
@@ -1143,11 +1608,10 @@
   function oyunDongusu() {
     requestAnimationFrame(oyunDongusu);
 
-    const env = Sahne.getEnv();
+    const env = Sahne.guncelle(DT);
 
     // 1. Menü Durumu (Arkada 2 AI Canlı Dövüşür!)
     if (oyunDurumu === MENU) {
-      // Arka Planda Canlı Dövüşen AI Ragdolls
       const ai1Ctrl = {
         left: p2.center.x < p1.center.x - 10,
         right: p2.center.x > p1.center.x + 10,
@@ -1170,10 +1634,9 @@
 
       p1.entegre(DT, env); p2.entegre(DT, env);
       for (let s = 0; s < SUBSTEPS; s++) { p1.kisitlari_coz(); p2.kisitlari_coz(); }
-      p1.zemin_carp(env); p2.zemin_carp(env);
+      p1.zemin_carp(Sahne.zeminler, env); p2.zemin_carp(Sahne.zeminler, env);
       vurusKontrol(p1, p2); vurusKontrol(p2, p1);
 
-      // Sahne Çiz
       ctx.clearRect(0, 0, W, H);
       Sahne.ciz(ctx, env);
       p1.ciz(ctx); p2.ciz(ctx);
@@ -1182,19 +1645,21 @@
       ctx.fillStyle = 'rgba(10, 8, 18, 0.78)';
       ctx.fillRect(0, 0, W, H);
 
-      // Menü Başlığı (Retro Piksel Sanatı)
-      drawPixelText(ctx, "AHMET HAKAN", 160, 24, C_YEL, 2, 'center');
-      drawPixelText(ctx, "KUTU SUMO ARENASI", 160, 40, C_WHITE, 1, 'center');
+      // Menü Başlığı
+      drawPixelText(ctx, "AHMET HAKAN", 160, 22, C_YEL, 2, 'center');
+      drawPixelText(ctx, "KUTU SUMO ARENASI", 160, 38, C_WHITE, 1, 'center');
 
       // Menü Öğeleri
       for (let i = 0; i < MENU_OGELERI.length; i++) {
         const secili = i === menuSecim;
-        const my = 64 + i * 15;
+        const my = 58 + i * 15;
         const etiket = (secili ? "> " : "  ") + MENU_OGELERI[i] + (secili ? " <" : "");
         drawPixelText(ctx, etiket, 160, my, secili ? C_YEL : UI_YAZI, 1, 'center');
       }
 
-      drawPixelText(ctx, "SEC: YUKARI/ASAGI  ONAYLA: ENTER / SPACE", 160, 165, '#88849c', 1, 'center');
+      // 👑 Yapımcılar Künyesi (Desktop AhmetHakanSumoOyun.py Birebir)
+      drawPixelText(ctx, "YAPIMCILAR: AHMET BAKI & HAKAN SAMET", 160, 154, '#ffd700', 1, 'center');
+      drawPixelText(ctx, "SEC: YUKARI/ASAGI  ONAYLA: ENTER / SPACE", 160, 168, '#88849c', 1, 'center');
       return;
     }
 
@@ -1202,8 +1667,8 @@
     let dt = DT * slowMo;
     macSuresi += dt;
 
-    if (macSuresi > 22.0) {
-      Sahne.shrinkAmount += dt * 4.0; // Platform erimesi (Sudden death)
+    if (macSuresi > 22.0 && !Sahne.eriyor) {
+      Sahne.eriyor = true;
     }
 
     // Geri Sayım
@@ -1212,8 +1677,8 @@
       if (geriSayimTimer >= 0.75) {
         geriSayimTimer = 0;
         geriSayim--;
-        if (geriSayim > 0) AudioEngine.select();
-        else AudioEngine.super();
+        if (geriSayim > 0) AudioEngine.blip();
+        else AudioEngine.go();
       }
     }
 
@@ -1230,10 +1695,9 @@
       p1.kisitlari_coz();
       p2.kisitlari_coz();
     }
-    p1.zemin_carp(env);
-    p2.zemin_carp(env);
+    p1.zemin_carp(Sahne.zeminler, env);
+    p2.zemin_carp(Sahne.zeminler, env);
 
-    // Çarpışma ve Hasar
     if (geriSayim === 0) {
       vurusKontrol(p1, p2);
       vurusKontrol(p2, p1);
@@ -1257,7 +1721,19 @@
       }
     }
 
-    // Metin Popupları (POW, GÜM!)
+    // Rüzgar Çizgileri
+    for (let i = windStreaks.length - 1; i >= 0; i--) {
+      const ws = windStreaks[i];
+      ws.life -= dt;
+      ws.x += ws.vx * dt;
+      if (ws.life <= 0) windStreaks.splice(i, 1);
+      else {
+        ctx.fillStyle = 'rgba(230, 240, 255, 0.4)';
+        ctx.fillRect(Math.round(ws.x), Math.round(ws.y), ws.len, 1);
+      }
+    }
+
+    // Popuplar
     for (let i = popups.length - 1; i >= 0; i--) {
       const pop = popups[i];
       pop.life -= dt;
@@ -1275,21 +1751,74 @@
       drawPixelText(ctx, "BASLA!", 160, 70, C_RED, 2, 'center');
     }
 
-    // HUD Skor Çizgisi
+    // HUD Skor
     drawPixelText(ctx, `${gameSettings.k1.ad}: ${skor1}`, 10, 6, C_RED, 1);
     drawPixelText(ctx, `${gameSettings.k2.ad}: ${skor2}`, W - 10, 6, '#5cc4e4', 1, 'right');
 
-    // YAPIMCILAR KÜNYESİ (Ahmet Baki ve Hakan Samet)
+    // 👑 Alt Künye
     drawPixelText(ctx, "YAPIMCILAR: AHMET BAKI & HAKAN SAMET", W / 2, H - 7, '#ffd700', 1, 'center');
 
-    // Süper Güç Barları
+    // Süper Barlar
     const p1Fill = document.getElementById('p1-super-fill');
     const p2Fill = document.getElementById('p2-super-fill');
     if (p1Fill) p1Fill.style.width = `${p1.superMeter}%`;
     if (p2Fill) p2Fill.style.width = `${p2.superMeter}%`;
   }
 
-  // RETRO 90S ARCADE LOADING SCREEN MOTORU
+  /* =========================================================
+     13. MODAL YÖNETİMİ & KARAKTER ÖZELLEŞTİRİCİSİ
+  ========================================================= */
+  function openSettingsModal(defaultTab = 'maps') {
+    const modal = document.getElementById('settings-modal');
+    if (modal) modal.classList.remove('hidden');
+    window.switchModalTab(defaultTab);
+    window.updateCharPreview();
+  }
+
+  window.switchModalTab = function (tabName) {
+    document.querySelectorAll('.modal-tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+
+    const btn = document.getElementById(`tab-btn-${tabName}`);
+    const content = document.getElementById(`tab-content-${tabName}`);
+    if (btn) btn.classList.add('active');
+    if (content) content.classList.add('active');
+  };
+
+  window.updateCharPreview = function () {
+    // P1 Önizleme
+    const p1Body = document.getElementById('p1-body-select')?.value || 'normal';
+    const p1Col = parseInt(document.getElementById('p1-color-select')?.value || '5');
+    const p1Hat = document.getElementById('p1-hat-select')?.value || 'kasket';
+    const p1Face = document.getElementById('p1-face-select')?.value || 'gözlük';
+    const p1Name = document.getElementById('p1-name-input')?.value || 'AHMET HAKAN';
+
+    // P2 Önizleme
+    const p2Body = document.getElementById('p2-body-select')?.value || 'tombul';
+    const p2Col = parseInt(document.getElementById('p2-color-select')?.value || '1');
+    const p2Hat = document.getElementById('p2-hat-select')?.value || 'boynuz';
+    const p2Face = document.getElementById('p2-face-select')?.value || 'kızgın';
+    const p2Name = document.getElementById('p2-name-input')?.value || 'KUTU SUMO';
+
+    const p1Dummy = new Ragdoll(40, 48, new Karakter(p1Name, p1Col, p1Hat, p1Face, p1Body), true);
+    const p2Dummy = new Ragdoll(40, 48, new Karakter(p2Name, p2Col, p2Hat, p2Face, p2Body), false);
+
+    const c1 = document.getElementById('p1-preview-canvas');
+    if (c1) {
+      const cx1 = c1.getContext('2d');
+      cx1.clearRect(0, 0, 80, 80);
+      p1Dummy.ciz(cx1);
+    }
+
+    const c2 = document.getElementById('p2-preview-canvas');
+    if (c2) {
+      const cx2 = c2.getContext('2d');
+      cx2.clearRect(0, 0, 80, 80);
+      p2Dummy.ciz(cx2);
+    }
+  };
+
+  // RETRO 90S ARCADE LOADING SCREEN
   function initLoadingScreen() {
     const screen = document.getElementById('sumo-loading-screen');
     const fill = document.getElementById('sumo-loading-bar-fill');
@@ -1305,20 +1834,7 @@
         fill.style.width = '100%';
         if (status) status.textContent = 'Arena hazır! Yapımcılar: Ahmet Baki ve Hakan Samet %100';
 
-        // 8-bit retro açılış sesi
-        try {
-          const actx = new (window.AudioContext || window.webkitAudioContext)();
-          const osc = actx.createOscillator();
-          const g = actx.createGain();
-          osc.connect(g);
-          g.connect(actx.destination);
-          osc.frequency.setValueAtTime(260, actx.currentTime);
-          osc.frequency.exponentialRampToValueAtTime(780, actx.currentTime + 0.16);
-          g.gain.setValueAtTime(0.2, actx.currentTime);
-          g.gain.linearRampToValueAtTime(0.01, actx.currentTime + 0.16);
-          osc.start(actx.currentTime);
-          osc.stop(actx.currentTime + 0.16);
-        } catch (_) {}
+        AudioEngine.win();
 
         setTimeout(() => {
           screen.classList.add('fade-out');
@@ -1333,17 +1849,11 @@
     }, 110);
   }
 
-  // UI Düğmeleri
+  // UI Olay Dinleyicileri
   document.getElementById('btn-next-round')?.addEventListener('click', sonrakiTur);
   document.getElementById('btn-restart-match')?.addEventListener('click', maciSifirla);
-  document.getElementById('btn-choose-map')?.addEventListener('click', () => {
-    document.getElementById('settings-modal')?.classList.remove('hidden');
-  });
-
-  // Modal Kontrolleri
-  document.getElementById('btn-open-settings')?.addEventListener('click', () => {
-    document.getElementById('settings-modal')?.classList.remove('hidden');
-  });
+  document.getElementById('btn-choose-map')?.addEventListener('click', () => openSettingsModal('maps'));
+  document.getElementById('btn-open-settings')?.addEventListener('click', () => openSettingsModal('maps'));
   document.getElementById('btn-close-settings')?.addEventListener('click', () => {
     document.getElementById('settings-modal')?.classList.add('hidden');
   });
@@ -1354,14 +1864,38 @@
       card.classList.add('active');
       gameSettings.harita = card.dataset.map;
       const el = document.getElementById('current-map-name');
-      if (el) el.textContent = HARITALAR[gameSettings.harita]?.ad || 'ARENA';
+      if (el) el.textContent = (HARITA_VERILERI[gameSettings.harita] || HARITA_VERILERI.tv).ad;
     });
   });
 
   document.getElementById('btn-save-settings')?.addEventListener('click', () => {
+    // Ayarları kaydet
     gameSettings.yer_cekim = document.getElementById('sel-gravity')?.value || 'NORMAL';
     gameSettings.tur_sayisi = parseInt(document.getElementById('sel-rounds')?.value || '3');
     gameSettings.cpu_zorluk = document.getElementById('sel-ai-diff')?.value || 'NORMAL';
+
+    // Karakter 1 Özelleştirmeleri
+    const p1Body = document.getElementById('p1-body-select')?.value || 'normal';
+    const p1Col = parseInt(document.getElementById('p1-color-select')?.value || '5');
+    const p1Hat = document.getElementById('p1-hat-select')?.value || 'kasket';
+    const p1Face = document.getElementById('p1-face-select')?.value || 'gözlük';
+    const p1Name = document.getElementById('p1-name-input')?.value || 'AHMET HAKAN';
+    gameSettings.k1 = new Karakter(p1Name, p1Col, p1Hat, p1Face, p1Body);
+
+    // Karakter 2 Özelleştirmeleri
+    const p2Body = document.getElementById('p2-body-select')?.value || 'tombul';
+    const p2Col = parseInt(document.getElementById('p2-color-select')?.value || '1');
+    const p2Hat = document.getElementById('p2-hat-select')?.value || 'boynuz';
+    const p2Face = document.getElementById('p2-face-select')?.value || 'kızgın';
+    const p2Name = document.getElementById('p2-name-input')?.value || 'KUTU SUMO';
+    gameSettings.k2 = new Karakter(p2Name, p2Col, p2Hat, p2Face, p2Body);
+
+    // İsimleri UI'ya yansıt
+    const p1Disp = document.getElementById('p1-display-name');
+    const p2Disp = document.getElementById('p2-display-name');
+    if (p1Disp) p1Disp.textContent = p1Name;
+    if (p2Disp) p2Disp.textContent = p2Name;
+
     document.getElementById('settings-modal')?.classList.add('hidden');
     maciSifirla();
   });
@@ -1381,7 +1915,34 @@
     maciBaslat();
   });
 
+  // Tam Ekran
+  document.getElementById('btn-fullscreen')?.addEventListener('click', () => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch(() => {});
+    } else {
+      document.exitFullscreen().catch(() => {});
+    }
+  });
+
+  // Mobil Dokunmatik Kontroller
+  const touchMap = {
+    'touch-left': 'KeyA',
+    'touch-right': 'KeyD',
+    'touch-jump': 'KeyW',
+    'touch-block': 'KeyS',
+    'touch-punch': 'Space',
+    'touch-super': 'KeyQ'
+  };
+  for (const [btnId, code] of Object.entries(touchMap)) {
+    const el = document.getElementById(btnId);
+    if (el) {
+      el.addEventListener('touchstart', (e) => { e.preventDefault(); keys[code] = true; AudioEngine.init(); });
+      el.addEventListener('touchend', (e) => { e.preventDefault(); keys[code] = false; });
+    }
+  }
+
   // Başlat
+  Sahne.kur();
   initLoadingScreen();
   turBaslat();
   oyunDongusu();

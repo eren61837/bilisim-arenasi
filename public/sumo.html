@@ -143,13 +143,20 @@
     <div id="settings-modal" class="settings-modal-backdrop hidden">
         <div class="settings-modal">
             <div class="modal-header">
-                <h2>⚙️ OYUN VE HARİTA AYARLARI</h2>
+                <h2>⚙️ OYUN VE KARAKTER AYARLARI</h2>
                 <button id="btn-close-settings" class="btn-modal-close">✕</button>
             </div>
 
-            <!-- MAP SELECTOR -->
-            <div class="setting-group">
-                <label class="setting-title">🗺️ DÖVÜŞ HARİTASI SEÇ</label>
+            <!-- MODAL TABS -->
+            <div class="modal-tabs">
+                <button class="modal-tab-btn active" id="tab-btn-maps" onclick="switchModalTab('maps')">🗺️ Haritalar</button>
+                <button class="modal-tab-btn" id="tab-btn-char" onclick="switchModalTab('char')">🥋 Karakter Özelleştir</button>
+                <button class="modal-tab-btn" id="tab-btn-rules" onclick="switchModalTab('rules')">⚖️ Fizik ve Kurallar</button>
+            </div>
+
+            <!-- TAB 1: MAPS -->
+            <div id="tab-content-maps" class="tab-content active">
+                <label class="setting-title">🗺️ DÖVÜŞ HARİTASI SEÇ (7 EFSANE ARENA)</label>
                 <div class="maps-grid-selector">
                     <div class="map-card active" data-map="tv">
                         <span class="map-icon">📺</span>
@@ -161,73 +168,190 @@
                     <div class="map-card" data-map="klasik">
                         <span class="map-icon">⛩️</span>
                         <div class="map-info">
-                            <strong>Klasik Dohyo Ringi</strong>
-                            <small>Geleneksel Japon sumo platformu, fenerler &amp; tezahürat</small>
+                            <strong>Klasik Arena</strong>
+                            <small>Geniş dohyo platformu, zamanla daralır (Sudden Death)</small>
                         </div>
                     </div>
                     <div class="map-card" data-map="buz">
                         <span class="map-icon">❄️</span>
                         <div class="map-info">
-                            <strong>Buzul Zirvesi</strong>
-                            <small>Aşırı kaygan zemin! Duruş hakimiyeti zorlaşır</small>
+                            <strong>Buz Adası</strong>
+                            <small>Aşırı kaygan zemin! 2 yan platform, fren tutmaz</small>
                         </div>
                     </div>
                     <div class="map-card" data-map="kule">
                         <span class="map-icon">🏛️</span>
                         <div class="map-info">
-                            <strong>İkiz Kule Tapınağı</strong>
-                            <small>İki yüksek kule tepesi, ortada derin uçurum &amp; sivri dikenler!</small>
+                            <strong>İkiz Kule</strong>
+                            <small>İki yüksek taş kule, ortada ölümcül sivri dikenli uçurum!</small>
                         </div>
                     </div>
                     <div class="map-card" data-map="asansor">
                         <span class="map-icon">🛗</span>
                         <div class="map-info">
-                            <strong>Gökdelen Asansörü</strong>
-                            <small>Hareketli asansör platformu, aşağı düşen elenir</small>
+                            <strong>Sanayi Asansörü</strong>
+                            <small>Dönen dişliler, hareketli metal asansör platformu seni taşır</small>
                         </div>
                     </div>
                     <div class="map-card" data-map="ruzgar">
                         <span class="map-icon">🌪️</span>
                         <div class="map-info">
-                            <strong>Rüzgarlı Siber Tepe</strong>
-                            <small>Şiddetli rüzgar dalgaları dövüşçüleri savurur</small>
+                            <strong>Rüzgarlı Tepe</strong>
+                            <small>Dar çim tepe, ani fırtına dalgaları dövüşçüleri savurur</small>
                         </div>
                     </div>
                     <div class="map-card" data-map="lav">
                         <span class="map-icon">🌋</span>
                         <div class="map-info">
-                            <strong>Lav Krateri</strong>
-                            <small>Düşen alev alır ve göğe fırlar!</small>
+                            <strong>Lav Gölü</strong>
+                            <small>Ateşli volkan, yükselen lav gölüne düşen anında kül olur!</small>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- GRAVITY & RULES -->
-            <div class="setting-row">
-                <div>
-                    <label class="setting-title">🌍 YER ÇEKİMİ</label>
-                    <select id="sel-gravity" class="sumo-select">
-                        <option value="AY">🌙 Ay (Hafif &amp; Uzun Zıplama)</option>
-                        <option value="NORMAL" selected>⚖️ Normal Fizik</option>
-                        <option value="AGIR">🏋️ Ağır (Sert &amp; Hızlı Kavga)</option>
-                    </select>
+            <!-- TAB 2: CHARACTER CUSTOMIZATION -->
+            <div id="tab-content-char" class="tab-content hidden">
+                <div class="char-custom-grid">
+                    <!-- P1 CUSTOMIZER -->
+                    <div class="char-col">
+                        <h3 class="char-col-title" style="color:var(--red);">🔴 OYUNCU 1 (Ahmet Hakan)</h3>
+                        <div class="char-preview-box">
+                            <canvas id="p1-preview-canvas" width="80" height="80"></canvas>
+                        </div>
+                        <div class="form-row">
+                            <label>İsim:</label>
+                            <input type="text" id="p1-name-input" class="sumo-input" value="AHMET HAKAN" maxlength="15">
+                        </div>
+                        <div class="form-row">
+                            <label>Gövde Tipi (Kütle &amp; Hız):</label>
+                            <select id="p1-body-select" class="sumo-select" onchange="updateCharPreview()">
+                                <option value="ince">İnce (Hafif &amp; Çevik)</option>
+                                <option value="normal" selected>Normal (Dengeli Usta)</option>
+                                <option value="tombul">Tombul (Ağır &amp; Güçlü)</option>
+                            </select>
+                        </div>
+                        <div class="form-row">
+                            <label>Renk:</label>
+                            <select id="p1-color-select" class="sumo-select" onchange="updateCharPreview()">
+                                <option value="0">Mavi</option>
+                                <option value="1">Kırmızı</option>
+                                <option value="2">Yeşil</option>
+                                <option value="3">Sarı</option>
+                                <option value="4">Mor</option>
+                                <option value="5" selected>Turuncu (Ahmet Özel)</option>
+                                <option value="6">Pembe</option>
+                                <option value="7">Gri</option>
+                            </select>
+                        </div>
+                        <div class="form-row">
+                            <label>Şapka / Aksesuar:</label>
+                            <select id="p1-hat-select" class="sumo-select" onchange="updateCharPreview()">
+                                <option value="yok">Yok</option>
+                                <option value="kasket" selected>Kasket</option>
+                                <option value="boynuz">Boynuz</option>
+                                <option value="taç">Kral Tacı</option>
+                                <option value="hale">Melek Halesi</option>
+                                <option value="anten">Uzaylı Anteni</option>
+                                <option value="bandana">Dövüş Bandanası</option>
+                            </select>
+                        </div>
+                        <div class="form-row">
+                            <label>Yüz İfadesi:</label>
+                            <select id="p1-face-select" class="sumo-select" onchange="updateCharPreview()">
+                                <option value="normal">Normal</option>
+                                <option value="kızgın">Kızgın</option>
+                                <option value="gülen">Gülen (^ ^)</option>
+                                <option value="gözlük" selected>Gözlük (Karizmatik)</option>
+                                <option value="bıyık">Pala Bıyık</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- P2 CUSTOMIZER -->
+                    <div class="char-col">
+                        <h3 class="char-col-title" style="color:var(--blue);">🔵 OYUNCU 2 (Rakip Sumo / AI)</h3>
+                        <div class="char-preview-box">
+                            <canvas id="p2-preview-canvas" width="80" height="80"></canvas>
+                        </div>
+                        <div class="form-row">
+                            <label>İsim:</label>
+                            <input type="text" id="p2-name-input" class="sumo-input" value="KUTU SUMO" maxlength="15">
+                        </div>
+                        <div class="form-row">
+                            <label>Gövde Tipi (Kütle &amp; Hız):</label>
+                            <select id="p2-body-select" class="sumo-select" onchange="updateCharPreview()">
+                                <option value="ince">İnce (Hafif &amp; Çevik)</option>
+                                <option value="normal">Normal (Dengeli Usta)</option>
+                                <option value="tombul" selected>Tombul (Ağır &amp; Güçlü)</option>
+                            </select>
+                        </div>
+                        <div class="form-row">
+                            <label>Renk:</label>
+                            <select id="p2-color-select" class="sumo-select" onchange="updateCharPreview()">
+                                <option value="0">Mavi</option>
+                                <option value="1" selected>Kırmızı</option>
+                                <option value="2">Yeşil</option>
+                                <option value="3">Sarı</option>
+                                <option value="4">Mor</option>
+                                <option value="5">Turuncu</option>
+                                <option value="6">Pembe</option>
+                                <option value="7">Gri</option>
+                            </select>
+                        </div>
+                        <div class="form-row">
+                            <label>Şapka / Aksesuar:</label>
+                            <select id="p2-hat-select" class="sumo-select" onchange="updateCharPreview()">
+                                <option value="yok">Yok</option>
+                                <option value="kasket">Kasket</option>
+                                <option value="boynuz" selected>Boynuz</option>
+                                <option value="taç">Kral Tacı</option>
+                                <option value="hale">Melek Halesi</option>
+                                <option value="anten">Uzaylı Anteni</option>
+                                <option value="bandana">Dövüş Bandanası</option>
+                            </select>
+                        </div>
+                        <div class="form-row">
+                            <label>Yüz İfadesi:</label>
+                            <select id="p2-face-select" class="sumo-select" onchange="updateCharPreview()">
+                                <option value="normal">Normal</option>
+                                <option value="kızgın" selected>Kızgın</option>
+                                <option value="gülen">Gülen (^ ^)</option>
+                                <option value="gözlük">Gözlük</option>
+                                <option value="bıyık">Pala Bıyık</option>
+                            </select>
+                        </div>
+                    </div>
                 </div>
-                <div>
-                    <label class="setting-title">🏆 KAZANMA SKORU</label>
-                    <select id="sel-rounds" class="sumo-select">
-                        <option value="1">1 Tur (Ani Ölüm)</option>
-                        <option value="3" selected>3 Tur Kazanan</option>
-                        <option value="5">5 Tur Kazanan (Büyük Final)</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="setting-title">🤖 AI ZORLUK SEVİYESİ</label>
-                    <select id="sel-ai-diff" class="sumo-select">
-                        <option value="KOLAY">Acemi Çaylak</option>
-                        <option value="NORMAL" selected>Normal Ahmet Hakan</option>
-                        <option value="ZOR">🔥 Efsane Sumo Ustası</option>
-                    </select>
+            </div>
+
+            <!-- TAB 3: RULES & PHYSICS -->
+            <div id="tab-content-rules" class="tab-content hidden">
+                <div class="setting-row">
+                    <div>
+                        <label class="setting-title">🌍 YER ÇEKİMİ</label>
+                        <select id="sel-gravity" class="sumo-select">
+                            <option value="AY">🌙 Ay (Hafif &amp; Uzun Zıplama)</option>
+                            <option value="NORMAL" selected>⚖️ Normal Fizik (820 px/s²)</option>
+                            <option value="AGIR">🏋️ Ağır (Sert &amp; Hızlı Kavga)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="setting-title">🏆 KAZANMA SKORU</label>
+                        <select id="sel-rounds" class="sumo-select">
+                            <option value="1">1 Tur (Ani Ölüm)</option>
+                            <option value="3" selected>3 Tur Kazanan</option>
+                            <option value="5">5 Tur Kazanan (Büyük Final)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="setting-title">🤖 AI ZORLUK SEVİYESİ</label>
+                        <select id="sel-ai-diff" class="sumo-select">
+                            <option value="KOLAY">Acemi Çaylak</option>
+                            <option value="NORMAL" selected>Normal Sumo</option>
+                            <option value="ZOR">🔥 Efsane Sumo Ustası</option>
+                        </select>
+                    </div>
                 </div>
             </div>
 

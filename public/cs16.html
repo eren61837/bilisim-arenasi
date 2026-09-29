@@ -114,11 +114,78 @@
             top: 48px;
             left: 0;
             width: 100vw;
-            height: calc(100vh - 48px);
+            height: calc(100vh - 48px - 30px);
             border: none;
             display: block;
             z-index: 10;
             background: #000;
+        }
+
+        /* BOTTOM CONTROLS RIBBON */
+        .cs-bottom-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 30px;
+            background: rgba(13, 17, 23, 0.98);
+            border-top: 1px solid rgba(255, 152, 0, 0.4);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 16px;
+            font-size: 11px;
+            color: #aaa;
+            z-index: 2000;
+            user-select: none;
+        }
+        .cs-key-tip {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .cs-key-tip kbd {
+            background: #21262d;
+            border: 1px solid #ff9800;
+            color: #ff9800;
+            padding: 1px 5px;
+            border-radius: 4px;
+            font-weight: 800;
+            font-family: inherit;
+        }
+
+        /* CLICK TO PLAY POINTER LOCK OVERLAY */
+        #cs-click-overlay {
+            position: fixed;
+            top: 48px;
+            left: 0;
+            width: 100vw;
+            height: calc(100vh - 48px - 30px);
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(2px);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            cursor: pointer;
+            transition: opacity 0.3s;
+        }
+        #cs-click-overlay.hidden {
+            display: none;
+        }
+        .cs-play-card {
+            background: rgba(15, 20, 30, 0.95);
+            border: 2px solid #ff9800;
+            border-radius: 14px;
+            padding: 24px 36px;
+            text-align: center;
+            box-shadow: 0 0 40px rgba(255, 152, 0, 0.4);
+            animation: pulsePlay 1.5s infinite alternate;
+        }
+        @keyframes pulsePlay {
+            from { transform: scale(1); }
+            to { transform: scale(1.03); box-shadow: 0 0 60px rgba(255, 152, 0, 0.7); }
         }
 
         /* LOADING SPINNER */
@@ -156,29 +223,41 @@
     <header class="cs-top-bar">
         <div class="cs-brand">
             <a href="/" class="btn-cs-nav">🏠 Portale Dön</a>
-            <span style="font-weight:900; font-size:14px; color:#ff9800; letter-spacing:0.5px;">🔫 COUNTER-STRIKE 1.6 WEB</span>
-            <span class="cs-badge-live">🟢 Hazır İnternet Motoru (WASM)</span>
+            <span style="font-weight:900; font-size:14px; color:#ff9800; letter-spacing:0.5px;">🔫 COUNTER-STRIKE 1.6 ONLINE</span>
+            <span class="cs-badge-live">🟢 Canlı Sunucu Motoru (WASM)</span>
         </div>
 
         <!-- SERVER / ENGINE SWITCHER -->
         <div class="cs-servers-group">
             <span style="font-size:11px; color:#888; font-weight:700; margin-right:4px;">SUNUCU:</span>
-            <button class="cs-server-btn active" id="btn-srv-csjs" onclick="switchServer('csjs')">⚡ CSJS.live (Dust2 / Pro)</button>
-            <button class="cs-server-btn" id="btn-srv-playcs" onclick="switchServer('playcs')">🌐 Play-CS.com (Global)</button>
+            <button class="cs-server-btn active" id="btn-srv-csjs" onclick="switchServer('csjs')">⚡ Doğrudan Oyna (CSJS Dust2)</button>
+            <button class="cs-server-btn" id="btn-srv-servers" onclick="switchServer('servers')">🌐 Canlı Sunucu Listesi (Play-CS)</button>
+            <button class="cs-server-btn" id="btn-srv-playcs" onclick="switchServer('playcs')">🎯 Play-CS Ana Lobi</button>
         </div>
 
         <!-- ACTIONS -->
         <div class="cs-actions">
+            <button class="btn-cs-nav" id="btn-lock-pointer" onclick="lockGamePointer()">🎯 Fareyi Kilitle</button>
             <button class="btn-cs-nav" id="btn-fullscreen" onclick="toggleFullscreen()">⛶ Tam Ekran</button>
             <button class="btn-cs-nav" id="btn-reload" onclick="reloadGame()">🔄 Yenile</button>
         </div>
     </header>
 
+    <!-- CLICK TO FOCUS / PLAY OVERLAY -->
+    <div id="cs-click-overlay" onclick="startDirectGame()">
+        <div class="cs-play-card">
+            <div style="font-size:42px; margin-bottom:8px;">🎯</div>
+            <h2 style="font-size:22px; font-weight:900; color:#ff9800; margin-bottom:6px;">OYUNU BAŞLAT &amp; FAREYİ KİLİTLE</h2>
+            <p style="font-size:13px; color:#ddd; margin-bottom:12px;">Doğrudan sunucuya bağlanmak ve fareyi kontrol etmek için tıkla!</p>
+            <span style="background:#ff9800; color:#000; font-weight:900; padding:8px 18px; border-radius:8px; font-size:13px; display:inline-block;">BAŞLA (CLICK TO PLAY) 🚀</span>
+        </div>
+    </div>
+
     <!-- LOADING SCREEN -->
     <div id="cs-loader">
         <div class="cs-spinner"></div>
-        <h2 style="font-size:18px; letter-spacing:1px;">Counter-Strike 1.6 Web Başlatılıyor...</h2>
-        <p style="font-size:12px; color:#888;">Gerçek online sunuculara ve botlara doğrudan bağlanılıyor.</p>
+        <h2 style="font-size:18px; letter-spacing:1px;">Counter-Strike 1.6 Sunucusuna Bağlanılıyor...</h2>
+        <p style="font-size:12px; color:#888;">WebAssembly motoru ve harita varlıkları yükleniyor. Hazır olunca doğrudan oyuna girersiniz.</p>
     </div>
 
     <!-- AUTHENTIC CS 1.6 WEB ENGINE IFRAME -->
@@ -188,14 +267,29 @@
             tabindex="0">
     </iframe>
 
+    <!-- BOTTOM CONTROLS RIBBON -->
+    <footer class="cs-bottom-bar">
+        <div class="cs-key-tip"><kbd>WASD</kbd> Hareket</div>
+        <div class="cs-key-tip"><kbd>SOL TIK</kbd> Ateş</div>
+        <div class="cs-key-tip"><kbd>SAĞ TIK</kbd> Dürbün / Susturucu</div>
+        <div class="cs-key-tip"><kbd>R</kbd> Şarjör</div>
+        <div class="cs-key-tip"><kbd>B</kbd> Silah Satın Alma Menüsü</div>
+        <div class="cs-key-tip"><kbd>SPACE</kbd> Zıpla</div>
+        <div class="cs-key-tip"><kbd>CTRL</kbd> Çömel</div>
+        <div class="cs-key-tip"><kbd>TAB</kbd> Skor Tablosu</div>
+        <div class="cs-key-tip"><kbd>ESC</kbd> Menü / Fareyi Çıkar</div>
+    </footer>
+
     <script>
         const SERVERS = {
             csjs: 'https://csjs.live/',
+            servers: 'https://play-cs.com/en/servers',
             playcs: 'https://play-cs.com/'
         };
 
         const frame = document.getElementById('cs-game-frame');
         const loader = document.getElementById('cs-loader');
+        const overlay = document.getElementById('cs-click-overlay');
 
         frame.onload = function() {
             setTimeout(() => {
@@ -203,12 +297,27 @@
             }, 600);
         };
 
+        function startDirectGame() {
+            if (overlay) overlay.classList.add('hidden');
+            lockGamePointer();
+        }
+
+        function lockGamePointer() {
+            try {
+                frame.focus();
+                if (frame.contentWindow) {
+                    frame.contentWindow.focus();
+                }
+            } catch (_) {}
+        }
+
         function switchServer(key) {
             document.querySelectorAll('.cs-server-btn').forEach(btn => btn.classList.remove('active'));
             const targetBtn = document.getElementById('btn-srv-' + key);
             if (targetBtn) targetBtn.classList.add('active');
 
             if (loader) loader.style.display = 'flex';
+            if (overlay) overlay.classList.remove('hidden');
             if (SERVERS[key]) {
                 frame.src = SERVERS[key];
             }
@@ -216,6 +325,7 @@
 
         function reloadGame() {
             if (loader) loader.style.display = 'flex';
+            if (overlay) overlay.classList.remove('hidden');
             frame.src = frame.src;
         }
 
