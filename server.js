@@ -1578,6 +1578,11 @@ wss.on('connection', (ws, req) => {
       }
     }
 
+    if (data.type && data.type.startsWith('sw_')) {
+      handleStickWarMessage(ws, data);
+      return;
+    }
+
     if (data.type && data.type.startsWith('sos_')) {
       handleSosMessage(ws, data);
       return;
@@ -1776,6 +1781,7 @@ wss.on('connection', (ws, req) => {
   ws.on('close', () => {
     connectedClients.delete(ws);
     if (gamesManager) gamesManager.handleDisconnect(ws);
+    cleanupStickWarPlayer(ws);
     broadcastOnlineCount();
   });
 });
@@ -2140,6 +2146,150 @@ function getSosState(room) {
     turn: room.turn,
     grid: room.grid
   };
+}
+
+// -------------------------------------------------------------
+// STICK WAR LEGACY ONLINE 1v1 & 2v2 MULTIPLAYER
+// -------------------------------------------------------------
+const swRooms = new Map();
+const swQueue1v1 = [];
+const swQueue2v2 = [];
+
+function handleStickWarMessage(ws, data) {
+  ws.room = 'stickwar';
+
+  if (data.type === 'sw_find_match') {
+    const mode = data.mode || '1v1';
+    const username = String(data.username || ws.user?.username || 'Savaşçı_' + Math.floor(100 + Math.random() * 900)).trim();
+    ws.swUsername = username;
+    ws.swMode = mode;
+
+    if (mode === '1v1') {
+      const validQueue = swQueue1v1.filter(s => s !== ws && s.readyState === 1);
+      swQueue1v1.length = 0;
+      swQueue1v1.push(...validQueue);
+
+      if (swQueue1v1.length > 0) {
+        const opponent = swQueue1v1.shift();
+        const roomId = 'sw_' + Math.random().toString(36).substring(2, 9);
+        const room = {
+          id: roomId,
+          mode: '1v1',
+          players: [
+            { ws: opponent, name: opponent.swUsername, side: 'order' },
+            { ws: ws, name: username, side: 'chaos' }
+          ]
+        };
+        swRooms.set(roomId, room);
+        opponent.swRoom = roomId;
+        ws.swRoom = roomId;
+
+        opponent.send(JSON.stringify({
+          type: 'sw_matched',
+          roomId,
+          mode: '1v1',
+          side: 'order',
+          opponentName: username
+        }));
+
+        ws.send(JSON.stringify({
+          type: 'sw_matched',
+          roomId,
+          mode: '1v1',
+          side: 'chaos',
+          opponentName: opponent.swUsername
+        }));
+      } else {
+        swQueue1v1.push(ws);
+        ws.send(JSON.stringify({ type: 'sw_waiting', mode: '1v1' }));
+      }
+    } else if (mode === '2v2') {
+      const validQueue = swQueue2v2.filter(s => s !== ws && s.readyState === 1);
+      swQueue2v2.length = 0;
+      swQueue2v2.push(...validQueue);
+
+      if (swQueue2v2.length >= 3) {
+        const p1 = swQueue2v2.shift();
+        const p2 = swQueue2v2.shift();
+        const p3 = swQueue2v2.shift();
+        const p4 = ws;
+        const roomId = 'sw2v2_' + Math.random().toString(36).substring(2, 9);
+        const room = {
+          id: roomId,
+          mode: '2v2',
+          players: [
+            { ws: p1, name: p1.swUsername, side: 'order', slot: 1 },
+            { ws: p2, name: p2.swUsername, side: 'order', slot: 2 },
+            { ws: p3, name: p3.swUsername, side: 'chaos', slot: 1 },
+            { ws: p4, name: p4.swUsername, side: 'chaos', slot: 2 }
+          ]
+        };
+        swRooms.set(roomId, room);
+        [p1, p2, p3, p4].forEach(p => { p.swRoom = roomId; });
+
+        p1.send(JSON.stringify({ type: 'sw_matched', roomId, mode: '2v2', side: 'order', team: [p1.swUsername, p2.swUsername], enemy: [p3.swUsername, p4.swUsername] }));
+        p2.send(JSON.stringify({ type: 'sw_matched', roomId, mode: '2v2', side: 'order', team: [p1.swUsername, p2.swUsername], enemy: [p3.swUsername, p4.swUsername] }));
+        p3.send(JSON.stringify({ type: 'sw_matched', roomId, mode: '2v2', side: 'chaos', team: [p3.swUsername, p4.swUsername], enemy: [p1.swUsername, p2.swUsername] }));
+        p4.send(JSON.stringify({ type: 'sw_matched', roomId, mode: '2v2', side: 'chaos', team: [p3.swUsername, p4.swUsername], enemy: [p1.swUsername, p2.swUsername] }));
+      } else {
+        swQueue2v2.push(ws);
+        ws.send(JSON.stringify({ type: 'sw_waiting', mode: '2v2', count: swQueue2v2.length }));
+      }
+    }
+  } else if (data.type === 'sw_action') {
+    const room = swRooms.get(ws.swRoom);
+    if (!room) return;
+    const payload = JSON.stringify({
+      type: 'sw_action',
+      action: data.action,
+      side: data.side,
+      unitType: data.unitType,
+      order: data.order,
+      spell: data.spell,
+      sender: ws.swUsername
+    });
+    room.players.forEach(p => {
+      if (p.ws !== ws && p.ws.readyState === 1) {
+        p.ws.send(payload);
+      }
+    });
+  } else if (data.type === 'sw_statue_dmg') {
+    const room = swRooms.get(ws.swRoom);
+    if (!room) return;
+    const payload = JSON.stringify({
+      type: 'sw_statue_dmg',
+      targetSide: data.targetSide,
+      dmg: data.dmg,
+      newHp: data.newHp
+    });
+    room.players.forEach(p => {
+      if (p.ws !== ws && p.ws.readyState === 1) {
+        p.ws.send(payload);
+      }
+    });
+  } else if (data.type === 'sw_leave') {
+    cleanupStickWarPlayer(ws);
+  }
+}
+
+function cleanupStickWarPlayer(ws) {
+  const idx1 = swQueue1v1.indexOf(ws);
+  if (idx1 !== -1) swQueue1v1.splice(idx1, 1);
+  const idx2 = swQueue2v2.indexOf(ws);
+  if (idx2 !== -1) swQueue2v2.splice(idx2, 1);
+
+  if (ws.swRoom) {
+    const room = swRooms.get(ws.swRoom);
+    if (room) {
+      room.players.forEach(p => {
+        if (p.ws !== ws && p.ws.readyState === 1) {
+          p.ws.send(JSON.stringify({ type: 'sw_opponent_left', name: ws.swUsername }));
+        }
+      });
+      swRooms.delete(ws.swRoom);
+    }
+    ws.swRoom = null;
+  }
 }
 
 server.listen(PORT, () => {

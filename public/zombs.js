@@ -599,9 +599,9 @@
     player.swingTimer = 0.2;
     AudioEngine.swing();
 
-    // Weapon hit area
-    const hitDistance = isSpear ? 65 : 45;
-    const hitRadius = isSpear ? 24 : 18;
+    // Weapon hit area (Increased reach for easier stationary harvesting!)
+    const hitDistance = isSpear ? 85 : 60;
+    const hitRadius = isSpear ? 30 : 26;
     const hitX = player.x + Math.cos(player.angle) * hitDistance;
     const hitY = player.y + Math.sin(player.angle) * hitDistance;
 
@@ -1131,52 +1131,112 @@
       ctx.save();
       ctx.translate(b.x, b.y);
 
-      // Building Box / Circle
+      // Detailed Authentic Zombs.io Vector Rendering
       if (b.type === 'stash') {
-        ctx.fillStyle = '#ffd700';
+        // Gold Stash Core
+        ctx.fillStyle = '#2c3e50';
+        ctx.beginPath(); ctx.arc(0, 0, 24, 0, Math.PI * 2); ctx.fill();
+        ctx.lineWidth = 4; ctx.strokeStyle = '#f1c40f'; ctx.stroke();
+        ctx.fillStyle = '#f39c12';
+        ctx.beginPath(); ctx.arc(0, 0, 16, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#f1c40f';
+        ctx.beginPath(); ctx.arc(-3, -3, 6, 0, Math.PI * 2); ctx.fill();
         ctx.shadowBlur = 18; ctx.shadowColor = '#ffd700';
-        ctx.fillRect(-22, -22, 44, 44);
-        ctx.fillStyle = '#000'; ctx.font = '22px sans-serif'; ctx.textAlign = 'center'; ctx.fillText('👑', 0, 7);
+        ctx.fillStyle = '#fff';
+        ctx.beginPath(); ctx.arc(0, 0, 8, 0, Math.PI * 2); ctx.fill();
       } else if (b.type === 'wall' || b.type === 'stonewall') {
-        ctx.fillStyle = b.type === 'stonewall' ? '#9e9e9e' : '#8d6e63';
+        const isStone = b.type === 'stonewall';
+        ctx.fillStyle = isStone ? '#7f8c8d' : '#8d6e63';
         ctx.fillRect(-20, -20, 40, 40);
-        ctx.strokeStyle = '#000'; ctx.lineWidth = 2; ctx.strokeRect(-20, -20, 40, 40);
-      } else if (b.type === 'door') {
-        ctx.fillStyle = '#8d6e63';
-        ctx.fillRect(-20, -20, 40, 40);
-        ctx.strokeStyle = '#4e342e'; ctx.lineWidth = 3; ctx.strokeRect(-20, -20, 40, 40);
+        ctx.fillStyle = isStone ? '#95a5a6' : '#a1887f';
+        ctx.fillRect(-16, -16, 32, 32);
+        ctx.strokeStyle = '#2c3e50'; ctx.lineWidth = 2;
+        ctx.strokeRect(-20, -20, 40, 40);
+        // Inner detail lines
         ctx.beginPath();
-        ctx.moveTo(-6, -18); ctx.lineTo(-6, 18);
-        ctx.moveTo(6, -18); ctx.lineTo(6, 18);
+        ctx.moveTo(-20, -20); ctx.lineTo(-16, -16);
+        ctx.moveTo(20, -20); ctx.lineTo(16, -16);
+        ctx.moveTo(-20, 20); ctx.lineTo(-16, 16);
+        ctx.moveTo(20, 20); ctx.lineTo(16, 16);
         ctx.stroke();
-        ctx.fillStyle = '#ffd700';
-        ctx.beginPath(); ctx.arc(10, 0, 3.5, 0, Math.PI * 2); ctx.fill();
-        ctx.fillStyle = '#fff'; ctx.font = '14px sans-serif'; ctx.textAlign = 'center'; ctx.fillText('🚪', 0, 5);
+      } else if (b.type === 'door') {
+        ctx.fillStyle = '#5d4037';
+        ctx.fillRect(-20, -20, 40, 40);
+        ctx.fillStyle = '#795548';
+        ctx.fillRect(-16, -20, 32, 40);
+        ctx.strokeStyle = '#3e2723'; ctx.lineWidth = 3;
+        ctx.strokeRect(-20, -20, 40, 40);
+        // Wooden planks
+        ctx.beginPath();
+        ctx.moveTo(-8, -20); ctx.lineTo(-8, 20);
+        ctx.moveTo(8, -20); ctx.lineTo(8, 20);
+        ctx.stroke();
+        // Door hinges/knob
+        ctx.fillStyle = '#9e9e9e';
+        ctx.beginPath(); ctx.arc(12, 0, 3, 0, Math.PI * 2); ctx.fill();
       } else if (b.type === 'healer') {
-        ctx.fillStyle = '#eceff1';
+        // Medical Tent
+        ctx.fillStyle = '#ecf0f1';
         ctx.beginPath(); ctx.arc(0, 0, 22, 0, Math.PI * 2); ctx.fill();
-        ctx.strokeStyle = '#e91e63'; ctx.lineWidth = 2.5; ctx.stroke();
-        ctx.fillStyle = '#e91e63';
+        ctx.strokeStyle = '#bdc3c7'; ctx.lineWidth = 3; ctx.stroke();
+        ctx.fillStyle = '#e74c3c';
         ctx.fillRect(-4, -12, 8, 24);
         ctx.fillRect(-12, -4, 24, 8);
-        ctx.strokeStyle = 'rgba(233, 30, 99, 0.25)'; ctx.lineWidth = 1.5;
+        ctx.strokeStyle = 'rgba(231, 76, 60, 0.2)'; ctx.lineWidth = 1.5;
         ctx.beginPath(); ctx.arc(0, 0, 180, 0, Math.PI * 2); ctx.stroke();
       } else if (b.type === 'spike') {
-        ctx.fillStyle = '#e65100';
+        ctx.fillStyle = '#e67e22';
         ctx.fillRect(-20, -20, 40, 40);
-        ctx.fillStyle = '#fff'; ctx.font = '16px sans-serif'; ctx.textAlign = 'center'; ctx.fillText('🌵', 0, 5);
+        ctx.strokeStyle = '#d35400'; ctx.lineWidth = 2; ctx.strokeRect(-20, -20, 40, 40);
+        // Spikes
+        ctx.fillStyle = '#bdc3c7';
+        for (let sx = -12; sx <= 12; sx += 12) {
+          for (let sy = -12; sy <= 12; sy += 12) {
+            ctx.beginPath();
+            ctx.moveTo(sx, sy - 6); ctx.lineTo(sx + 6, sy + 6); ctx.lineTo(sx - 6, sy + 6);
+            ctx.fill();
+            ctx.stroke();
+          }
+        }
       } else if (b.type === 'arrow') {
-        ctx.fillStyle = '#00e5ff';
-        ctx.beginPath(); ctx.arc(0, 0, 20, 0, Math.PI * 2); ctx.fill();
-        ctx.fillStyle = '#000'; ctx.font = '16px sans-serif'; ctx.textAlign = 'center'; ctx.fillText('🏹', 0, 5);
-      } else if (b.type === 'cannon') {
-        ctx.fillStyle = '#ff1744';
+        // Arrow Tower Base
+        ctx.fillStyle = '#7f8c8d';
         ctx.beginPath(); ctx.arc(0, 0, 22, 0, Math.PI * 2); ctx.fill();
-        ctx.fillStyle = '#000'; ctx.font = '16px sans-serif'; ctx.textAlign = 'center'; ctx.fillText('💣', 0, 6);
+        ctx.strokeStyle = '#2c3e50'; ctx.lineWidth = 2; ctx.stroke();
+        // Crossbow on top
+        ctx.fillStyle = '#8d6e63';
+        ctx.fillRect(-14, -4, 28, 8);
+        ctx.strokeStyle = '#ecf0f1'; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.arc(0, 0, 14, Math.PI * 0.8, Math.PI * 2.2); ctx.stroke();
+        ctx.fillStyle = '#e74c3c';
+        ctx.beginPath(); ctx.arc(0, 0, 6, 0, Math.PI * 2); ctx.fill();
+      } else if (b.type === 'cannon') {
+        // Cannon Tower Base
+        ctx.fillStyle = '#34495e';
+        ctx.beginPath(); ctx.arc(0, 0, 24, 0, Math.PI * 2); ctx.fill();
+        ctx.strokeStyle = '#2c3e50'; ctx.lineWidth = 3; ctx.stroke();
+        // Big Cannon Barrel
+        ctx.fillStyle = '#2c3e50';
+        ctx.fillRect(-8, -20, 16, 20);
+        ctx.fillStyle = '#000';
+        ctx.beginPath(); ctx.arc(0, -18, 5, 0, Math.PI * 2); ctx.fill();
+        // Red Core
+        ctx.fillStyle = '#e74c3c';
+        ctx.beginPath(); ctx.arc(0, 0, 10, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#c0392b';
+        ctx.beginPath(); ctx.arc(0, 0, 5, 0, Math.PI * 2); ctx.fill();
       } else if (b.type === 'goldmine') {
-        ctx.fillStyle = '#ffb300';
-        ctx.fillRect(-20, -20, 40, 40);
-        ctx.fillStyle = '#000'; ctx.font = '16px sans-serif'; ctx.textAlign = 'center'; ctx.fillText('💰', 0, 5);
+        // Gold Mine Rig
+        ctx.fillStyle = '#8d6e63';
+        ctx.fillRect(-22, -22, 44, 44);
+        ctx.strokeStyle = '#5d4037'; ctx.lineWidth = 3; ctx.strokeRect(-22, -22, 44, 44);
+        ctx.fillStyle = '#3e2723'; // Hole
+        ctx.beginPath(); ctx.arc(0, 0, 14, 0, Math.PI * 2); ctx.fill();
+        // Gold chunks
+        ctx.fillStyle = '#f1c40f';
+        ctx.beginPath(); ctx.arc(-5, -5, 4, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(6, 4, 5, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(-4, 6, 3.5, 0, Math.PI * 2); ctx.fill();
       }
 
       ctx.shadowBlur = 0;

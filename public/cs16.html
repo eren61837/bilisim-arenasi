@@ -223,27 +223,33 @@
     <header class="cs-top-bar">
         <div class="cs-brand">
             <a href="/" class="btn-cs-nav">🏠 Portale Dön</a>
-            <span style="font-weight:900; font-size:14px; color:#ff9800; letter-spacing:0.5px;">🔫 COUNTER-STRIKE 1.6 ONLINE</span>
-            <span class="cs-badge-live">🟢 Canlı Sunucu Motoru (Play-CS)</span>
+            <span style="font-weight:900; font-size:14px; color:#ff9800; letter-spacing:0.5px;">🔫 COUNTER-STRIKE 1.6</span>
+            <div class="cs-servers-group">
+                <button class="cs-server-btn active" id="btn-engine-playcs" onclick="switchEngine('playcs')">Motor 1 (Play-CS)</button>
+                <button class="cs-server-btn" id="btn-engine-kirka" onclick="switchEngine('kirka')">Motor 2 (Kirka Dust 2 - Doğrulamasız)</button>
+            </div>
         </div>
 
         <!-- ACTIONS -->
         <div class="cs-actions">
+            <button class="btn-cs-nav" style="background:linear-gradient(135deg, #00e5ff, #0088ff); color:#000; font-weight:900;" onclick="openDirectPlayCS()" title="Cloudflare Doğrulamasını Anında Geçer">🚀 Doğrudan Pencerede Aç</button>
             <button class="btn-cs-nav" id="btn-lock-pointer" onclick="lockGamePointer()">🎯 Fareyi Kilitle</button>
             <button class="btn-cs-nav" id="btn-fullscreen" onclick="toggleFullscreen()">⛶ Tam Ekran</button>
             <button class="btn-cs-nav" id="btn-reload" onclick="reloadGame()">🔄 Yenile</button>
         </div>
     </header>
 
-    <!-- DIRECT PLAY NOTIFICATION (NON-BLOCKING) -->
-    <div id="cs-direct-hint" style="position:fixed; top:54px; right:16px; background:rgba(0,0,0,0.88); border:1px solid #ff9800; border-radius:8px; padding:7px 16px; font-size:12px; color:#ff9800; z-index:1500; display:flex; align-items:center; gap:8px; pointer-events:none; box-shadow:0 0 20px rgba(255,152,0,0.4);">
-        <span>⚡ MEB Engelsiz CS 1.6: Ekrana tıklayarak doğrudan oynamaya başla!</span>
+    <!-- CLOUDFLARE BYPASS PROMPT BANNER -->
+    <div id="cs-direct-hint" style="position:fixed; top:54px; left:50%; transform:translateX(-50%); background:rgba(15, 23, 42, 0.95); border:2px solid #00e5ff; border-radius:10px; padding:10px 20px; font-size:13px; color:#fff; z-index:1500; display:flex; align-items:center; gap:14px; box-shadow:0 0 30px rgba(0,229,255,0.4);">
+        <span>⚠️ Cloudflare <strong>"Verify your browser"</strong> döngüsünde kalıyorsan:</span>
+        <button onclick="openDirectPlayCS()" style="background:linear-gradient(135deg, #ff9800, #ff5722); color:#000; font-weight:900; font-size:12px; border:none; padding:7px 16px; border-radius:6px; cursor:pointer; box-shadow:0 0 15px rgba(255,152,0,0.5);">🚀 PENCEREDE AÇ (DOĞRULAMAYI ATLA)</button>
+        <button onclick="switchEngine('kirka')" style="background:linear-gradient(135deg, #00e676, #00a843); color:#000; font-weight:900; font-size:12px; border:none; padding:7px 16px; border-radius:6px; cursor:pointer;">🎮 MOTOR 2'YE GEÇ (DOĞRULAMASIZ)</button>
     </div>
 
     <!-- LOADING SCREEN -->
     <div id="cs-loader">
         <div class="cs-spinner"></div>
-        <h2 style="font-size:18px; letter-spacing:1px;">Counter-Strike 1.6 Sunucuları Yükleniyor...</h2>
+        <h2 style="font-size:18px; letter-spacing:1px;" id="cs-loader-title">Counter-Strike 1.6 Sunucuları Yükleniyor...</h2>
         <p style="font-size:12px; color:#888;">Lütfen bekleyin...</p>
     </div>
 
@@ -305,6 +311,32 @@
                 document.documentElement.requestFullscreen().catch(() => {});
             } else {
                 document.exitFullscreen().catch(() => {});
+            }
+        }
+
+        function openDirectPlayCS() {
+            window.open('https://play-cs.com/en/servers', '_blank', 'width=1280,height=720');
+        }
+
+        function switchEngine(engine) {
+            const btnPlayCS = document.getElementById('btn-engine-playcs');
+            const btnKirka = document.getElementById('btn-engine-kirka');
+            const title = document.getElementById('cs-loader-title');
+
+            if (loader) loader.style.display = 'flex';
+
+            if (engine === 'kirka') {
+                if (btnKirka) btnKirka.classList.add('active');
+                if (btnPlayCS) btnPlayCS.classList.remove('active');
+                if (title) title.textContent = 'Kirka Dust 2 (Doğrulamasız CS) Yükleniyor...';
+                frame.src = 'https://kirka.io/';
+                if (hint) hint.style.display = 'none';
+            } else {
+                if (btnPlayCS) btnPlayCS.classList.add('active');
+                if (btnKirka) btnKirka.classList.remove('active');
+                if (title) title.textContent = 'Counter-Strike 1.6 Sunucuları Yükleniyor...';
+                frame.src = 'https://play-cs.com/en/servers';
+                if (hint) hint.style.display = 'flex';
             }
         }
 

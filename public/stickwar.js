@@ -499,6 +499,14 @@
         isGameOver: false,
         screenShake: 0,
 
+        // Online Multiplayer State
+        ws: null,
+        isOnlineMatch: false,
+        onlineMode: null,
+        onlineSide: 'order',
+        onlineRoomId: null,
+        opponentName: 'Rakip',
+
         /* INITIALIZATION */
         init() {
             this.canvas = document.getElementById('stickwar-canvas');
@@ -507,6 +515,7 @@
             window.addEventListener('resize', () => this.resize());
 
             SoundManager.init();
+            this.initOnlineMultiplayer();
 
             // Spawn initial units
             this.spawnUnit('order', 'miner');
@@ -525,6 +534,118 @@
 
             // Start Animation Loop
             requestAnimationFrame((ts) => this.loop(ts));
+        },
+
+        initOnlineMultiplayer() {
+            try {
+                const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+                this.ws = new WebSocket(`${proto}//${location.host}`);
+                this.ws.onmessage = (e) => {
+                    try {
+                        const data = JSON.parse(e.data);
+                        this.handleOnlineMessage(data);
+                    } catch (_) {}
+                };
+            } catch (err) {
+                console.warn('WS Init err:', err);
+            }
+        },
+
+        startOnlineMatchmaking(mode) {
+            const mmModal = document.getElementById('modal-sw-matchmaking');
+            const mmTitle = document.getElementById('sw-mm-title');
+            const mmSub = document.getElementById('sw-mm-sub');
+            if (mmModal) mmModal.classList.remove('hidden');
+            if (mmTitle) mmTitle.textContent = mode === '2v2' ? '👥 2v2 CANLI TAKIM SAVAŞI ARANIYOR...' : '⚔️ 1v1 CANLI RAKİP ARANIYOR...';
+            if (mmSub) mmSub.textContent = 'Canlı sunucuya bağlanılıyor. Diğer oyuncunun girmesi bekleniyor...';
+
+            this.onlineMode = mode;
+            if (!this.ws || this.ws.readyState !== 1) {
+                this.initOnlineMultiplayer();
+            }
+
+            const username = localStorage.getItem('portal_username') || 'Savaşçı_' + Math.floor(100 + Math.random() * 900);
+            const trySend = () => {
+                if (this.ws && this.ws.readyState === 1) {
+                    this.ws.send(JSON.stringify({
+                        type: 'sw_find_match',
+                        mode: mode,
+                        username: username
+                    }));
+                } else {
+                    setTimeout(trySend, 250);
+                }
+            };
+            trySend();
+        },
+
+        cancelOnlineMatchmaking() {
+            const mmModal = document.getElementById('modal-sw-matchmaking');
+            if (mmModal) mmModal.classList.add('hidden');
+            if (this.ws && this.ws.readyState === 1) {
+                this.ws.send(JSON.stringify({ type: 'sw_leave' }));
+            }
+        },
+
+        sendOnlineAction(actionData) {
+            if (!this.isOnlineMatch || !this.ws || this.ws.readyState !== 1) return;
+            this.ws.send(JSON.stringify({
+                type: 'sw_action',
+                side: this.onlineSide,
+                ...actionData
+            }));
+        },
+
+        handleOnlineMessage(data) {
+            if (data.type === 'sw_waiting') {
+                const mmSub = document.getElementById('sw-mm-sub');
+                if (mmSub) {
+                    mmSub.textContent = data.mode === '2v2' ? 
+                        `👥 Oyuncular bekleniyor... (${data.count || 1}/4 Oyuncu Hazır)` : 
+                        '⏳ Rakip bekleniyor... İlk katılan oyuncuyla canlı düello başlayacak!';
+                }
+            } else if (data.type === 'sw_matched') {
+                const mmModal = document.getElementById('modal-sw-matchmaking');
+                if (mmModal) mmModal.classList.add('hidden');
+
+                this.isOnlineMatch = true;
+                this.onlineMode = data.mode;
+                this.onlineSide = data.side || 'order';
+                this.onlineRoomId = data.roomId;
+                this.opponentName = data.opponentName || 'Online Rakip';
+
+                this.resetMatch();
+                this.addFloatingText(550, GROUND_Y - 160, `⚔️ CANLI SAVAŞ BAŞLADI! Rakip: ${this.opponentName}`, '#00e5ff');
+                SoundManager.playOrderFanfare('attack');
+            } else if (data.type === 'sw_action') {
+                if (data.action === 'spawn') {
+                    const enemySpawnSide = this.onlineSide === 'order' ? 'chaos' : 'order';
+                    this.spawnUnit(enemySpawnSide, data.unitType);
+                    this.addFloatingText(enemySpawnSide === 'chaos' ? 2900 : 200, GROUND_Y - 120, `⚠️ ${data.sender} [${data.unitType}] çağırdı!`, '#ff3d00');
+                } else if (data.action === 'order') {
+                    this.enemyAIState = data.order;
+                    this.addFloatingText(2900, GROUND_Y - 150, `📢 Rakip Emri: ${data.order.toUpperCase()}`, '#ff9800');
+                    SoundManager.playOrderFanfare(data.order);
+                } else if (data.action === 'spell') {
+                    const enemySide = this.onlineSide === 'order' ? 'chaos' : 'order';
+                    if (data.spell === 'rage') {
+                        this.screenShake = 6;
+                        this.addFloatingText(2900, GROUND_Y - 160, '⚡ RAKİP ÖFKE BÜYÜSÜ ATTI!', '#ff1744');
+                        this.units.forEach(u => { if (u.side === enemySide) { u.rageBoost = 2.0; } });
+                    }
+                }
+            } else if (data.type === 'sw_statue_dmg') {
+                if (data.targetSide && this.statues[data.targetSide]) {
+                    this.statues[data.targetSide].hp = Math.max(0, data.newHp);
+                    this.updateStatueUI();
+                    if (this.statues[data.targetSide].hp <= 0) {
+                        this.triggerGameOver(data.targetSide === 'chaos');
+                    }
+                }
+            } else if (data.type === 'sw_opponent_left') {
+                this.addFloatingText(550, GROUND_Y - 160, `🏆 ${data.name || 'Rakip'} savaştan kaçtı! ZAFER SENİN!`, '#00e676');
+                this.triggerGameOver(true);
+            }
         },
 
         resize() {
@@ -569,6 +690,21 @@
                                     type === 'giant' ? 'giant' : 'miner';
                     this.purchaseUnit('order', unitKey);
                 });
+            });
+
+            // Online Multiplayer Matchmaking Buttons
+            document.getElementById('btn-sw-online-1v1')?.addEventListener('click', () => {
+                this.startOnlineMatchmaking('1v1');
+            });
+            document.getElementById('btn-sw-online-2v2')?.addEventListener('click', () => {
+                this.startOnlineMatchmaking('2v2');
+            });
+            document.getElementById('btn-mm-cancel')?.addEventListener('click', () => {
+                this.cancelOnlineMatchmaking();
+            });
+            document.getElementById('btn-mm-fill-bots')?.addEventListener('click', () => {
+                this.cancelOnlineMatchmaking();
+                this.startChapter(this.onlineMode === '2v2' ? '7' : '6');
             });
 
             // Chapters Modal
@@ -745,6 +881,9 @@
                 this.spawnUnit('order', unitTypeKey);
                 SoundManager.playVoice(unitTypeKey);
                 this.updateUI();
+                if (this.isOnlineMatch) {
+                    this.sendOnlineAction({ action: 'spawn', unitType: unitTypeKey });
+                }
             } else {
                 if (this.enemyGold >= cfg.cost && (this.enemyPop + cfg.pop <= this.enemyMaxPop)) {
                     this.enemyGold -= cfg.cost;
@@ -967,6 +1106,10 @@
             // CRITICAL USER REQUIREMENT:
             // "saldırı yaparken hymn for weekejnd çalsın savunmada yada en gerideyken run from your demons çalsın"
             SoundManager.playModeMusic(mode);
+
+            if (this.isOnlineMatch) {
+                this.sendOnlineAction({ action: 'order', order: mode });
+            }
         },
 
         /* MANUAL DIRECT CONTROL */
@@ -1040,6 +1183,58 @@
                 }
             } else {
                 this.performMeleeAttack(unit);
+            }
+        },
+
+        performManualSpecial(unit) {
+            const now = Date.now() / 1000;
+            if (!unit.specialCdTimer) unit.specialCdTimer = 0;
+            if (now - unit.specialCdTimer < 2.0) return; // 2 sec cooldown for specials
+            unit.specialCdTimer = now;
+
+            if (unit.type === 'sword') {
+                // Sword Jump
+                unit.vy = -350;
+                unit.vx = unit.facing * 180;
+                unit.isJumpingSlash = true;
+                SoundManager.playSfx('slash');
+                this.addFloatingText(unit.x, unit.y - 60, 'Sıçrayış! ⚔️', '#00e5ff');
+            } else if (unit.type === 'spear') {
+                // Spear Throw
+                SoundManager.playSfx('bow');
+                unit.animAction = 'attack';
+                unit.animTimer = 0.3;
+                this.arrows.push({
+                    side: unit.side,
+                    x: unit.x + unit.facing * 20,
+                    y: unit.y - 40,
+                    vx: unit.facing * 800,
+                    vy: -150,
+                    damage: unit.damage * 2,
+                    isFire: false,
+                    isSpear: true,
+                    stuck: false,
+                    stuckTimer: 0,
+                    life: 0
+                });
+                this.addFloatingText(unit.x, unit.y - 60, 'Mızrak Atışı! 🎯', '#00e5ff');
+            } else if (unit.type === 'giant') {
+                // Giant Earthquake (Slam)
+                this.performGiantSmash(unit);
+            } else if (unit.type === 'mage') {
+                // Magikill Stun Blast or Summon
+                SoundManager.playSfx('magicBoom');
+                this.addFloatingText(unit.x, unit.y - 70, 'Gölge Şoku! 🔮', '#7c4dff');
+                this.screenShake = 8;
+                const targetSide = unit.side === 'order' ? 'chaos' : 'order';
+                this.units.forEach(t => {
+                    if (t.side === targetSide && t.hp > 0 && Math.abs(t.x - unit.x) < 200) {
+                        this.damageUnit(t, unit.damage, unit);
+                        t.vx = (t.x > unit.x ? 1 : -1) * 100;
+                        t.animAction = 'hurt';
+                        t.animTimer = 1.0; // Stun effect
+                    }
+                });
             }
         },
 
@@ -1444,6 +1639,11 @@
 
         /* AI LOGIC */
         updateAI(dt) {
+            if (this.isOnlineMatch) {
+                // Online Multiplayer: Real players control units, disable bot AI
+                return;
+            }
+
             if (this.is2v2 || this.currentChapter === 7) {
                 this.updateAllyAI(dt);
             }
@@ -1663,6 +1863,12 @@
                 if (u.y < GROUND_Y) {
                     u.vy += 800 * dt;
                 } else {
+                    if (u.isJumpingSlash && u.vy > 0) {
+                        u.isJumpingSlash = false;
+                        this.screenShake = 5;
+                        this.performMeleeAttack(u);
+                        this.addHitSparks(u.x + u.facing * 30, GROUND_Y, '#ff3d00');
+                    }
                     u.y = GROUND_Y;
                     u.vy = 0;
                 }
@@ -1820,6 +2026,13 @@
             // Attack on Space
             if (this.keys.space) {
                 this.performManualAttack(u);
+            }
+
+            // Special Ability on Q or F
+            if (this.keys.q || this.keys.f) {
+                this.performManualSpecial(u);
+                this.keys.q = false;
+                this.keys.f = false;
             }
         },
 
@@ -3153,6 +3366,37 @@
         },
 
         renderProjectiles(ctx) {
+            // Archidon manual aiming arc
+            if (this.controlledUnit && this.controlledUnit.type === 'archer') {
+                const u = this.controlledUnit;
+                const startX = u.x + u.facing * 20;
+                const startY = u.y - 50;
+                const targetX = this.worldMouseX;
+                const targetY = this.worldMouseY;
+                
+                const dx = targetX - startX;
+                const dy = targetY - startY;
+                const dist = Math.abs(dx);
+                const flightTime = Math.max(0.4, Math.min(1.2, dist / 450));
+                const vx = dx / flightTime;
+                const vy = (dy - 0.5 * 900 * flightTime * flightTime) / flightTime;
+
+                ctx.save();
+                ctx.strokeStyle = 'rgba(0, 229, 255, 0.4)';
+                ctx.lineWidth = 2;
+                ctx.setLineDash([5, 5]);
+                ctx.beginPath();
+                ctx.moveTo(startX, startY);
+                for (let t = 0; t <= flightTime; t += 0.05) {
+                    const px = startX + vx * t;
+                    const py = startY + vy * t + 0.5 * 900 * t * t;
+                    ctx.lineTo(px, py);
+                    if (py > GROUND_Y) break;
+                }
+                ctx.stroke();
+                ctx.restore();
+            }
+
             // Ballistic Arrows
             this.arrows.forEach(a => {
                 ctx.save();

@@ -1023,12 +1023,12 @@
 
         if (dist > 1.8) {
           const pullDir = pullVec.clone().normalize();
-          // Dynamic pull force: snappy and powerful
-          const pullSpeed = Math.min(Math.max(dist * 3.8, 50), 85);
+          // Dynamic pull force: snappy and powerful (Increased!)
+          const pullSpeed = Math.min(Math.max(dist * 6.5, 90), 160);
           state.vel.addScaledVector(pullDir, pullSpeed * dt);
 
           // Counter gravity and lift player up into the air
-          state.vel.y += 32 * dt;
+          state.vel.y += 48 * dt;
           state.onGround = false;
 
           // Update 3D Cable line
@@ -1053,7 +1053,7 @@
 
       // 4. Substepped Position Update & Rock-Solid Collision (No Wall Clipping / Tunneling)
       const pRad = 0.55;
-      const SUBSTEPS = 3;
+      const SUBSTEPS = 6; // Increased substeps for high-speed grapple stability
       const sdt = dt / SUBSTEPS;
 
       let onColRoof = false;
@@ -1064,17 +1064,15 @@
         for (const col of colliders) {
           const feetY = state.pos.y - 1.6;
           const headY = state.pos.y + 0.2;
-          if (feetY < col.max.y - 0.1 && headY > col.min.y) {
+          if (feetY < col.max.y && headY > col.min.y) {
             if (state.pos.x + pRad > col.min.x && state.pos.x - pRad < col.max.x &&
                 state.pos.z + pRad > col.min.z && state.pos.z - pRad < col.max.z) {
-              const overlapLeft = (state.pos.x + pRad) - col.min.x;
-              const overlapRight = col.max.x - (state.pos.x - pRad);
-              if (overlapLeft < overlapRight) {
+              if (state.vel.x > 0) {
                 state.pos.x = col.min.x - pRad;
-                if (state.vel.x > 0) state.vel.x = 0;
-              } else {
+                state.vel.x = 0;
+              } else if (state.vel.x < 0) {
                 state.pos.x = col.max.x + pRad;
-                if (state.vel.x < 0) state.vel.x = 0;
+                state.vel.x = 0;
               }
             }
           }
@@ -1085,17 +1083,15 @@
         for (const col of colliders) {
           const feetY = state.pos.y - 1.6;
           const headY = state.pos.y + 0.2;
-          if (feetY < col.max.y - 0.1 && headY > col.min.y) {
+          if (feetY < col.max.y && headY > col.min.y) {
             if (state.pos.x + pRad > col.min.x && state.pos.x - pRad < col.max.x &&
                 state.pos.z + pRad > col.min.z && state.pos.z - pRad < col.max.z) {
-              const overlapFront = (state.pos.z + pRad) - col.min.z;
-              const overlapBack = col.max.z - (state.pos.z - pRad);
-              if (overlapFront < overlapBack) {
+              if (state.vel.z > 0) {
                 state.pos.z = col.min.z - pRad;
-                if (state.vel.z > 0) state.vel.z = 0;
-              } else {
+                state.vel.z = 0;
+              } else if (state.vel.z < 0) {
                 state.pos.z = col.max.z + pRad;
-                if (state.vel.z < 0) state.vel.z = 0;
+                state.vel.z = 0;
               }
             }
           }
@@ -1107,14 +1103,17 @@
           if (state.pos.x + pRad > col.min.x && state.pos.x - pRad < col.max.x &&
               state.pos.z + pRad > col.min.z && state.pos.z - pRad < col.max.z) {
             const feetY = state.pos.y - 1.6;
-            if (state.vel.y <= 0 && feetY <= col.max.y && feetY >= col.max.y - 2.5) {
-              state.pos.y = col.max.y + 1.6;
-              state.vel.y = 0;
-              state.onGround = true;
-              onColRoof = true;
-            } else if (state.vel.y > 0 && state.pos.y >= col.min.y && state.pos.y - 1.6 < col.min.y) {
-              state.pos.y = col.min.y - 0.05;
-              state.vel.y = 0;
+            const headY = state.pos.y + 0.2;
+            if (feetY < col.max.y && headY > col.min.y) {
+                if (state.vel.y < 0) {
+                  state.pos.y = col.max.y + 1.6;
+                  state.vel.y = 0;
+                  state.onGround = true;
+                  onColRoof = true;
+                } else if (state.vel.y > 0) {
+                  state.pos.y = col.min.y - 0.2;
+                  state.vel.y = 0;
+                }
             }
           }
         }

@@ -6,6 +6,30 @@
 (function () {
     'use strict';
 
+    // Polyfill for CanvasRenderingContext2D.prototype.roundRect
+    if (!CanvasRenderingContext2D.prototype.roundRect) {
+        CanvasRenderingContext2D.prototype.roundRect = function (x, y, w, h, r) {
+            if (typeof r === 'undefined') r = 0;
+            if (typeof r === 'number') r = { tl: r, tr: r, br: r, bl: r };
+            else {
+                const defaultR = { tl: 0, tr: 0, br: 0, bl: 0 };
+                for (let side in defaultR) r[side] = r[side] || defaultR[side];
+            }
+            this.beginPath();
+            this.moveTo(x + (r.tl || 0), y);
+            this.lineTo(x + w - (r.tr || 0), y);
+            this.quadraticCurveTo(x + w, y, x + w, y + (r.tr || 0));
+            this.lineTo(x + w, y + h - (r.br || 0));
+            this.quadraticCurveTo(x + w, y + h, x + w - (r.br || 0), y + h);
+            this.lineTo(x + (r.bl || 0), y + h);
+            this.quadraticCurveTo(x, y + h, x, y + h - (r.bl || 0));
+            this.lineTo(x, y + (r.tl || 0));
+            this.quadraticCurveTo(x, y, x + (r.tl || 0), y);
+            this.closePath();
+            return this;
+        };
+    }
+
     // --- DOM Elements ---
     const canvas = document.getElementById('gd-canvas');
     const ctx = canvas.getContext('2d');
@@ -323,9 +347,10 @@
 
     const btnQuickDemons = document.getElementById('btn-quick-demons');
     if (btnQuickDemons) {
-        btnQuickDemons.addEventListener('click', () => {
+        btnQuickDemons.addEventListener('click', (e) => {
+            if (e) e.stopPropagation();
             currentLevel = 'demons';
-            levelSelect.value = 'demons';
+            if (levelSelect) levelSelect.value = 'demons';
             resetLevel();
             startGame();
         });
@@ -599,9 +624,17 @@
     }
 
     function startGame() {
-        startOverlay.classList.add('hidden');
-        victoryOverlay.classList.add('hidden');
+        if (startOverlay) {
+            startOverlay.classList.add('hidden');
+            startOverlay.style.display = 'none';
+        }
+        if (victoryOverlay) {
+            victoryOverlay.classList.add('hidden');
+            victoryOverlay.style.display = 'none';
+        }
         isPlaying = true;
+        isDead = false;
+        hasWon = false;
         startMusic();
     }
 
@@ -645,7 +678,10 @@
         isPlaying = false;
         stopMusic();
         victoryStats.textContent = `Muazzam refleksler! Seviye %100 tamamlandı. (${attempts} Deneme)`;
-        victoryOverlay.classList.remove('hidden');
+        if (victoryOverlay) {
+            victoryOverlay.classList.remove('hidden');
+            victoryOverlay.style.display = 'flex';
+        }
     }
 
     // ========================================================================

@@ -334,29 +334,138 @@
     }
 
     function buildEnvironment() {
-        // Starfield / Cyber Grid Sky Dome
-        const skyGeo = new THREE.SphereGeometry(900, 24, 24);
+        // 1. Deep Cyber Night Sky Dome
+        const skyGeo = new THREE.SphereGeometry(950, 32, 32);
         const skyMat = new THREE.MeshBasicMaterial({
-            color: 0x050811,
+            color: 0x070c18,
             side: THREE.BackSide
         });
         scene.add(new THREE.Mesh(skyGeo, skyMat));
 
-        // Perimeter floodlights along track
-        const poleGeo = new THREE.CylinderGeometry(0.35, 0.45, 18, 8);
-        const poleMat = new THREE.MeshStandardMaterial({ color: 0x37474f, metalness: 0.8, roughness: 0.3 });
-        const lampMat = new THREE.MeshBasicMaterial({ color: 0x00dbff });
+        // 2. Stars Particle Field
+        const starsGeo = new THREE.BufferGeometry();
+        const starPositions = [];
+        for (let i = 0; i < 900; i++) {
+            const theta = Math.random() * Math.PI * 2;
+            const phi = Math.acos(Math.random() * 0.9);
+            const r = 920;
+            starPositions.push(
+                r * Math.sin(phi) * Math.cos(theta),
+                r * Math.cos(phi),
+                r * Math.sin(phi) * Math.sin(theta)
+            );
+        }
+        starsGeo.setAttribute('position', new THREE.Float32BufferAttribute(starPositions, 3));
+        const starsMat = new THREE.PointsMaterial({ color: 0xffffff, size: 2.2, transparent: true, opacity: 0.85 });
+        scene.add(new THREE.Points(starsGeo, starsMat));
 
-        for (let i = 0; i < TRACK_POINTS_3D.length; i += 2) {
-            const p = TRACK_POINTS_3D[i];
+        // 3. Glowing Neon Moon
+        const moonGeo = new THREE.SphereGeometry(32, 16, 16);
+        const moonMat = new THREE.MeshBasicMaterial({ color: 0xfff3d0 });
+        const moon = new THREE.Mesh(moonGeo, moonMat);
+        moon.position.set(-350, 360, -500);
+        scene.add(moon);
+
+        // 4. Procedural Cyber City Skyscrapers (75+ buildings around perimeter)
+        const windowColors = [0x00e5ff, 0xffd600, 0xff007f, 0x00ff88, 0xff6d00];
+        const bldgMat = new THREE.MeshStandardMaterial({
+            color: 0x111827,
+            roughness: 0.7,
+            metalness: 0.3
+        });
+
+        const cityClusters = [
+            { cx: 300, cz: -180, count: 18, radius: 160 },
+            { cx: 580, cz: 250, count: 18, radius: 180 },
+            { cx: 200, cz: 600, count: 16, radius: 160 },
+            { cx: -320, cz: 480, count: 16, radius: 160 },
+            { cx: -520, cz: -80, count: 20, radius: 200 }
+        ];
+
+        cityClusters.forEach(cluster => {
+            for (let i = 0; i < cluster.count; i++) {
+                const angle = (i / cluster.count) * Math.PI * 2 + Math.random() * 0.3;
+                const dist = cluster.radius * (0.6 + Math.random() * 0.7);
+                const bx = cluster.cx + Math.cos(angle) * dist;
+                const bz = cluster.cz + Math.sin(angle) * dist;
+
+                const bw = 18 + Math.random() * 22;
+                const bd = 18 + Math.random() * 22;
+                const bh = 50 + Math.random() * 110;
+
+                const bldgMesh = new THREE.Mesh(new THREE.BoxGeometry(bw, bh, bd), bldgMat);
+                bldgMesh.position.set(bx, bh / 2, bz);
+                bldgMesh.castShadow = true;
+                bldgMesh.receiveShadow = true;
+                scene.add(bldgMesh);
+
+                // Lit Window Strips / Neon Facade Accents
+                const winColor = windowColors[Math.floor(Math.random() * windowColors.length)];
+                const winMat = new THREE.MeshBasicMaterial({ color: winColor });
+                const floors = Math.floor(bh / 14);
+                for (let f = 1; f < floors; f++) {
+                    if (Math.random() > 0.3) {
+                        const stripGeo = new THREE.BoxGeometry(bw + 0.4, 1.8, bd + 0.4);
+                        const stripMesh = new THREE.Mesh(stripGeo, winMat);
+                        stripMesh.position.set(bx, f * 14, bz);
+                        scene.add(stripMesh);
+                    }
+                }
+
+                // Rooftop Red Aviation Beacon
+                const beacon = new THREE.Mesh(new THREE.SphereGeometry(1.2, 6, 6), new THREE.MeshBasicMaterial({ color: 0xff1744 }));
+                beacon.position.set(bx, bh + 1.5, bz);
+                scene.add(beacon);
+            }
+        });
+
+        // 5. Trackside Palm Trees with Illuminated Foliage
+        const trunkMat = new THREE.MeshStandardMaterial({ color: 0x4e342e, roughness: 0.9 });
+        const leafMat = new THREE.MeshStandardMaterial({ color: 0x00e676, roughness: 0.4, emissive: 0x00a843, emissiveIntensity: 0.18 });
+
+        for (let i = 0; i < TOTAL_POINTS; i += 12) {
+            const frame = getTrackFrameAt(i / TOTAL_POINTS);
+            [-1, 1].forEach(side => {
+                const treePos = new THREE.Vector3().copy(frame.pt).addScaledVector(frame.normal, side * (HALF_ROAD + 8 + Math.random() * 6));
+                const treeGroup = new THREE.Group();
+                treeGroup.position.set(treePos.x, 0, treePos.z);
+
+                const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.6, 9, 7), trunkMat);
+                trunk.position.y = 4.5;
+                trunk.rotation.z = (Math.random() - 0.5) * 0.15;
+                treeGroup.add(trunk);
+
+                for (let k = 0; k < 6; k++) {
+                    const leaf = new THREE.Mesh(new THREE.ConeGeometry(2.4, 5.5, 4), leafMat);
+                    leaf.position.set(0, 9, 0);
+                    leaf.rotation.x = Math.PI / 3;
+                    leaf.rotation.y = (k / 6) * Math.PI * 2;
+                    treeGroup.add(leaf);
+                }
+                scene.add(treeGroup);
+            });
+        }
+
+        // 6. Modern Arching Highway Streetlights with Light Cones
+        const poleMat = new THREE.MeshStandardMaterial({ color: 0x263238, metalness: 0.85, roughness: 0.25 });
+        const lanternMat = new THREE.MeshBasicMaterial({ color: 0xffea00 });
+        const poleGeo = new THREE.CylinderGeometry(0.3, 0.4, 14, 8);
+
+        for (let i = 0; i < TOTAL_POINTS; i += 8) {
+            const frame = getTrackFrameAt(i / TOTAL_POINTS);
+            const polePos = new THREE.Vector3().copy(frame.pt).addScaledVector(frame.normal, HALF_ROAD + 3.8);
             const pole = new THREE.Mesh(poleGeo, poleMat);
-            pole.position.set(p.x * 1.12, 9, p.z * 1.12);
-            pole.castShadow = true;
+            pole.position.set(polePos.x, 7, polePos.z);
             scene.add(pole);
 
-            const lamp = new THREE.Mesh(new THREE.BoxGeometry(2, 0.8, 1.2), lampMat);
-            lamp.position.set(p.x * 1.12, 18, p.z * 1.12);
-            scene.add(lamp);
+            const arm = new THREE.Mesh(new THREE.BoxGeometry(4.2, 0.4, 0.4), poleMat);
+            arm.position.set(polePos.x - frame.normal.x * 1.8, 14, polePos.z - frame.normal.z * 1.8);
+            arm.quaternion.setFromUnitVectors(new THREE.Vector3(1, 0, 0), frame.normal.clone().negate());
+            scene.add(arm);
+
+            const lantern = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.4, 0.9), lanternMat);
+            lantern.position.set(polePos.x - frame.normal.x * 3.2, 13.7, polePos.z - frame.normal.z * 3.2);
+            scene.add(lantern);
         }
     }
 
@@ -569,39 +678,86 @@
     }
 
     function buildStartFinishGantry() {
-        const frame = getTrackFrameAt(0.0);
-        const gantryGroup = new THREE.Group();
-        gantryGroup.position.copy(frame.pt);
-        gantryGroup.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), frame.tangent);
+        const gantryConfigs = [
+            { u: 0.0, color: 0x00e5ff, title: "🏁 START / FINISH - BİLİŞİM GP 🏁" },
+            { u: 0.25, color: 0xff007f, title: "⚡ NEED FOR SPEED: UNDERGROUND ⚡" },
+            { u: 0.55, color: 0x00ff88, title: "🚀 EXTREME NITRO ZONE 🚀" },
+            { u: 0.82, color: 0xffd600, title: "🔥 DRIFT APEX - 300 KM/H 🔥" }
+        ];
 
-        const trussMat = new THREE.MeshStandardMaterial({ color: 0x263238, metalness: 0.8, roughness: 0.3 });
-        const bannerMat = new THREE.MeshBasicMaterial({ color: 0x00dbff });
+        const trussMat = new THREE.MeshStandardMaterial({ color: 0x263238, metalness: 0.85, roughness: 0.25 });
 
-        // Left & Right Support Pillars
-        const pillarGeo = new THREE.BoxGeometry(1.2, 10, 1.2);
-        const leftPillar = new THREE.Mesh(pillarGeo, trussMat);
-        leftPillar.position.set(HALF_ROAD + 1.8, 5, 0);
-        leftPillar.castShadow = true;
-        gantryGroup.add(leftPillar);
+        gantryConfigs.forEach(cfg => {
+            const frame = getTrackFrameAt(cfg.u);
+            const gantryGroup = new THREE.Group();
+            gantryGroup.position.copy(frame.pt);
+            gantryGroup.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), frame.tangent);
 
-        const rightPillar = new THREE.Mesh(pillarGeo, trussMat);
-        rightPillar.position.set(-(HALF_ROAD + 1.8), 5, 0);
-        rightPillar.castShadow = true;
-        gantryGroup.add(rightPillar);
+            // Left & Right Support Pillars
+            const pillarGeo = new THREE.BoxGeometry(1.4, 11, 1.4);
+            const leftPillar = new THREE.Mesh(pillarGeo, trussMat);
+            leftPillar.position.set(HALF_ROAD + 2.2, 5.5, 0);
+            leftPillar.castShadow = true;
+            gantryGroup.add(leftPillar);
 
-        // Overhead Cross Beam
-        const beamGeo = new THREE.BoxGeometry(ROAD_WIDTH + 6, 1.6, 1.6);
-        const beam = new THREE.Mesh(beamGeo, trussMat);
-        beam.position.set(0, 10, 0);
-        gantryGroup.add(beam);
+            const rightPillar = new THREE.Mesh(pillarGeo, trussMat);
+            rightPillar.position.set(-(HALF_ROAD + 2.2), 5.5, 0);
+            rightPillar.castShadow = true;
+            gantryGroup.add(rightPillar);
 
-        // Digital Banner Sign
-        const signGeo = new THREE.BoxGeometry(ROAD_WIDTH - 2, 2.2, 0.3);
-        const sign = new THREE.Mesh(signGeo, bannerMat);
-        sign.position.set(0, 8.5, 0.4);
-        gantryGroup.add(sign);
+            // Overhead Cross Beam
+            const beamGeo = new THREE.BoxGeometry(ROAD_WIDTH + 8, 1.8, 1.8);
+            const beam = new THREE.Mesh(beamGeo, trussMat);
+            beam.position.set(0, 10.5, 0);
+            gantryGroup.add(beam);
 
-        scene.add(gantryGroup);
+            // Glowing Neon Banner Sign
+            const bannerMat = new THREE.MeshBasicMaterial({ color: cfg.color });
+            const sign = new THREE.Mesh(new THREE.BoxGeometry(ROAD_WIDTH, 2.4, 0.4), bannerMat);
+            sign.position.set(0, 9.2, 0.5);
+            gantryGroup.add(sign);
+
+            // Strobe Lights on top of gantry
+            const strobeMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+            for (let s = -4; s <= 4; s += 2) {
+                const strobe = new THREE.Mesh(new THREE.SphereGeometry(0.35, 6, 6), strobeMat);
+                strobe.position.set(s * 2.5, 11.6, 0.5);
+                gantryGroup.add(strobe);
+            }
+
+            scene.add(gantryGroup);
+        });
+
+        // 3D Stadium Grandstands with Tiered Bleachers along the home straight
+        const grandstandUs = [0.02, 0.06, 0.94];
+        const standMat = new THREE.MeshStandardMaterial({ color: 0x263238, roughness: 0.6, metalness: 0.4 });
+        const roofMat = new THREE.MeshStandardMaterial({ color: 0x00dbff, roughness: 0.3, metalness: 0.8 });
+        const crowdColors = [0xff0055, 0x00e5ff, 0xffd600, 0x00e676, 0xffffff];
+
+        grandstandUs.forEach(u => {
+            const frame = getTrackFrameAt(u);
+            const standPos = new THREE.Vector3().copy(frame.pt).addScaledVector(frame.normal, -(HALF_ROAD + 14));
+            const standGroup = new THREE.Group();
+            standGroup.position.set(standPos.x, 0, standPos.z);
+            standGroup.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), frame.tangent);
+
+            for (let t = 0; t < 5; t++) {
+                const tier = new THREE.Mesh(new THREE.BoxGeometry(36, 1.6 * (t + 1), 3.0), standMat);
+                tier.position.set(0, (1.6 * (t + 1)) / 2, -(t * 2.8));
+                tier.castShadow = true;
+                standGroup.add(tier);
+
+                const crowd = new THREE.Mesh(new THREE.BoxGeometry(34, 0.8, 1.4), new THREE.MeshBasicMaterial({ color: crowdColors[t % crowdColors.length] }));
+                crowd.position.set(0, 1.6 * (t + 1) + 0.4, -(t * 2.8));
+                standGroup.add(crowd);
+            }
+
+            const roof = new THREE.Mesh(new THREE.BoxGeometry(38, 0.8, 16), roofMat);
+            roof.position.set(0, 14, -5);
+            standGroup.add(roof);
+
+            scene.add(standGroup);
+        });
     }
 
     // ------------------------------------------------------------------------
@@ -613,110 +769,215 @@
         const bodyColor = new THREE.Color(colorHex);
         const bodyMat = new THREE.MeshStandardMaterial({
             color: bodyColor,
-            roughness: 0.25,
-            metalness: 0.75
+            roughness: 0.18,
+            metalness: 0.85
+        });
+        const carbonMat = new THREE.MeshStandardMaterial({
+            color: 0x0c0f14,
+            roughness: 0.35,
+            metalness: 0.65
         });
         const darkTrimMat = new THREE.MeshStandardMaterial({
             color: 0x10141b,
-            roughness: 0.5,
+            roughness: 0.4,
             metalness: 0.5
         });
         const glassMat = new THREE.MeshStandardMaterial({
-            color: 0x111827,
-            roughness: 0.1,
-            metalness: 0.9,
+            color: 0x050a12,
+            roughness: 0.05,
+            metalness: 0.95,
             transparent: true,
-            opacity: 0.85
+            opacity: 0.88
         });
 
-        // 1. Lower Aerodynamic Chassis
-        const chassis = new THREE.Mesh(new THREE.BoxGeometry(2.1, 0.55, 4.4), bodyMat);
-        chassis.position.y = 0.5;
+        // 1. Aerodynamic Wedge Chassis
+        const chassis = new THREE.Mesh(new THREE.BoxGeometry(2.15, 0.45, 4.3), bodyMat);
+        chassis.position.y = 0.48;
         chassis.castShadow = true;
         chassis.receiveShadow = true;
         carGroup.add(chassis);
 
-        // 2. Front Splitter
-        const splitter = new THREE.Mesh(new THREE.BoxGeometry(2.2, 0.12, 1.0), darkTrimMat);
-        splitter.position.set(0, 0.28, 2.2);
+        // 2. Slanted Sports Hood
+        const hoodGeo = new THREE.BoxGeometry(2.0, 0.22, 1.8);
+        const hood = new THREE.Mesh(hoodGeo, bodyMat);
+        hood.position.set(0, 0.62, 1.1);
+        hood.rotation.x = 0.08;
+        hood.castShadow = true;
+        carGroup.add(hood);
+
+        // Hood Dual Carbon Air Scoops
+        [-0.45, 0.45].forEach(hx => {
+            const scoop = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.08, 0.6), carbonMat);
+            scoop.position.set(hx, 0.74, 0.9);
+            carGroup.add(scoop);
+        });
+
+        // 3. Front Bumper, Grille & Carbon Splitter with Canards
+        const frontBumper = new THREE.Mesh(new THREE.BoxGeometry(2.2, 0.4, 0.8), bodyMat);
+        frontBumper.position.set(0, 0.4, 2.15);
+        frontBumper.castShadow = true;
+        carGroup.add(frontBumper);
+
+        const grille = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.22, 0.1), new THREE.MeshBasicMaterial({ color: 0x000000 }));
+        grille.position.set(0, 0.36, 2.56);
+        carGroup.add(grille);
+
+        const splitter = new THREE.Mesh(new THREE.BoxGeometry(2.35, 0.08, 1.1), carbonMat);
+        splitter.position.set(0, 0.22, 2.2);
         carGroup.add(splitter);
 
-        // 3. Cabin & Cockpit Roof
-        const cabin = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.55, 2.2), glassMat);
-        cabin.position.set(0, 0.95, -0.2);
+        // Front Aero Canards
+        [-1.15, 1.15].forEach(cx => {
+            const canard = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.06, 0.5), carbonMat);
+            canard.position.set(cx, 0.32, 2.3);
+            canard.rotation.y = (cx > 0 ? -1 : 1) * 0.35;
+            carGroup.add(canard);
+        });
+
+        // 4. Sleek Fastback Cockpit with Tinted Glass & Driver Silhouette
+        const cabin = new THREE.Mesh(new THREE.BoxGeometry(1.55, 0.55, 2.1), glassMat);
+        cabin.position.set(0, 0.92, -0.25);
         cabin.castShadow = true;
         carGroup.add(cabin);
 
-        // 4. Rear Racing Wing (Spoiler)
-        const wingMountLeft = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.5, 0.2), darkTrimMat);
-        wingMountLeft.position.set(0.65, 0.95, -1.9);
+        // Driver Helmet Silhouette inside Cockpit
+        const helmet = new THREE.Mesh(new THREE.SphereGeometry(0.24, 8, 8), new THREE.MeshStandardMaterial({ color: 0xffd600, metalness: 0.6 }));
+        helmet.position.set(0.32, 0.94, -0.2);
+        carGroup.add(helmet);
+
+        // 5. Side Skirts with Carbon Winglets
+        [-1.08, 1.08].forEach(sx => {
+            const skirt = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.14, 2.4), carbonMat);
+            skirt.position.set(sx, 0.25, 0);
+            carGroup.add(skirt);
+        });
+
+        // 6. High-Downforce GT Carbon Wing (Rear Spoiler)
+        const wingMountLeft = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.55, 0.25), carbonMat);
+        wingMountLeft.position.set(0.68, 0.98, -1.92);
         carGroup.add(wingMountLeft);
 
-        const wingMountRight = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.5, 0.2), darkTrimMat);
-        wingMountRight.position.set(-0.65, 0.95, -1.9);
+        const wingMountRight = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.55, 0.25), carbonMat);
+        wingMountRight.position.set(-0.68, 0.98, -1.92);
         carGroup.add(wingMountRight);
 
-        const wingBlade = new THREE.Mesh(new THREE.BoxGeometry(2.3, 0.1, 0.6), bodyMat);
-        wingBlade.position.set(0, 1.2, -1.9);
+        const wingBlade = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.1, 0.65), carbonMat);
+        wingBlade.position.set(0, 1.25, -1.95);
+        wingBlade.rotation.x = -0.06;
         wingBlade.castShadow = true;
         carGroup.add(wingBlade);
 
-        // 5. Headlights & Taillights
-        const headlightGeo = new THREE.BoxGeometry(0.4, 0.15, 0.1);
+        // Wing Endplates
+        [-1.22, 1.22].forEach(ex => {
+            const endplate = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.45, 0.8), bodyMat);
+            endplate.position.set(ex, 1.25, -1.95);
+            carGroup.add(endplate);
+        });
+
+        // 7. Projector Xenon Headlights & LED Light Strip
         const headlightMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
-        const hlLeft = new THREE.Mesh(headlightGeo, headlightMat);
-        hlLeft.position.set(0.75, 0.55, 2.21);
-        carGroup.add(hlLeft);
+        [-0.78, 0.78].forEach(hx => {
+            const hl = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.14, 0.15), headlightMat);
+            hl.position.set(hx, 0.52, 2.48);
+            carGroup.add(hl);
+        });
 
-        const hlRight = new THREE.Mesh(headlightGeo, headlightMat);
-        hlRight.position.set(-0.75, 0.55, 2.21);
-        carGroup.add(hlRight);
-
+        // Full-Width LED Taillight Bar
         const taillightMat = new THREE.MeshBasicMaterial({ color: 0xff1744 });
-        const tlLeft = new THREE.Mesh(headlightGeo, taillightMat);
-        tlLeft.position.set(0.75, 0.55, -2.21);
-        carGroup.add(tlLeft);
+        const tlBar = new THREE.Mesh(new THREE.BoxGeometry(1.9, 0.12, 0.12), taillightMat);
+        tlBar.position.set(0, 0.64, -2.16);
+        carGroup.add(tlBar);
 
-        const tlRight = new THREE.Mesh(headlightGeo, taillightMat);
-        tlRight.position.set(-0.75, 0.55, -2.21);
-        carGroup.add(tlRight);
+        // 8. Aggressive Rear Diffuser & Twin Chrome Exhausts
+        const diffuser = new THREE.Mesh(new THREE.BoxGeometry(1.9, 0.2, 0.6), carbonMat);
+        diffuser.position.set(0, 0.26, -2.05);
+        carGroup.add(diffuser);
 
-        // 6. Wheels (4 Rotating Cylinders with Silver Rims)
-        const wheelGeo = new THREE.CylinderGeometry(0.42, 0.42, 0.35, 16);
-        wheelGeo.rotateZ(Math.PI / 2);
-        const wheelMat = new THREE.MeshStandardMaterial({ color: 0x1c1c1c, roughness: 0.8, metalness: 0.2 });
+        const exhaustGeo = new THREE.CylinderGeometry(0.12, 0.12, 0.4, 8);
+        exhaustGeo.rotateX(Math.PI / 2);
+        const exhaustMat = new THREE.MeshStandardMaterial({ color: 0xddeeff, metalness: 0.95, roughness: 0.1 });
+
+        [-0.45, 0.45].forEach(exX => {
+            const pipe = new THREE.Mesh(exhaustGeo, exhaustMat);
+            pipe.position.set(exX, 0.35, -2.25);
+            carGroup.add(pipe);
+        });
+
+        // 9. Wheels with Tires, Silver Rims, Discs & Red Brake Calipers
+        const tireGeo = new THREE.CylinderGeometry(0.44, 0.44, 0.38, 18);
+        tireGeo.rotateZ(Math.PI / 2);
+        const tireMat = new THREE.MeshStandardMaterial({ color: 0x141414, roughness: 0.9, metalness: 0.1 });
+
+        const rimGeo = new THREE.CylinderGeometry(0.32, 0.32, 0.39, 10);
+        rimGeo.rotateZ(Math.PI / 2);
+        const rimMat = new THREE.MeshStandardMaterial({ color: 0xe0e6ed, metalness: 0.9, roughness: 0.15 });
+
+        const discGeo = new THREE.CylinderGeometry(0.26, 0.26, 0.08, 12);
+        discGeo.rotateZ(Math.PI / 2);
+        const discMat = new THREE.MeshStandardMaterial({ color: 0x90a4ae, metalness: 0.95, roughness: 0.2 });
+
+        const caliperGeo = new THREE.BoxGeometry(0.12, 0.18, 0.12);
+        const caliperMat = new THREE.MeshBasicMaterial({ color: 0xff0033 });
 
         const wheels = [];
         const wheelOffsets = [
-            { x: 1.05, y: 0.42, z: 1.35, isFront: true },   // Front Left
-            { x: -1.05, y: 0.42, z: 1.35, isFront: true },  // Front Right
-            { x: 1.05, y: 0.42, z: -1.35, isFront: false }, // Rear Left
-            { x: -1.05, y: 0.42, z: -1.35, isFront: false } // Rear Right
+            { x: 1.08, y: 0.44, z: 1.35, isFront: true },
+            { x: -1.08, y: 0.44, z: 1.35, isFront: true },
+            { x: 1.08, y: 0.44, z: -1.35, isFront: false },
+            { x: -1.08, y: 0.44, z: -1.35, isFront: false }
         ];
 
         wheelOffsets.forEach(pos => {
-            const wheelMesh = new THREE.Mesh(wheelGeo, wheelMat);
-            wheelMesh.position.set(pos.x, pos.y, pos.z);
-            wheelMesh.castShadow = true;
-            carGroup.add(wheelMesh);
-            wheels.push({ mesh: wheelMesh, isFront: pos.isFront });
+            const wheelAnchor = new THREE.Group();
+            wheelAnchor.position.set(pos.x, pos.y, pos.z);
+
+            const tire = new THREE.Mesh(tireGeo, tireMat);
+            tire.castShadow = true;
+            wheelAnchor.add(tire);
+
+            const rim = new THREE.Mesh(rimGeo, rimMat);
+            wheelAnchor.add(rim);
+
+            const disc = new THREE.Mesh(discGeo, discMat);
+            wheelAnchor.add(disc);
+
+            const caliper = new THREE.Mesh(caliperGeo, caliperMat);
+            caliper.position.set(0, 0.18, 0.08);
+            wheelAnchor.add(caliper);
+
+            carGroup.add(wheelAnchor);
+            wheels.push({ mesh: wheelAnchor, isFront: pos.isFront });
         });
 
-        // 7. Nitro Flame Exhaust Plumes
-        const flameGeo = new THREE.ConeGeometry(0.2, 1.2, 8);
-        flameGeo.rotateX(-Math.PI / 2);
-        const flameMat = new THREE.MeshBasicMaterial({ color: 0x00e5ff });
-        const nitroFlame = new THREE.Mesh(flameGeo, flameMat);
-        nitroFlame.position.set(0, 0.4, -2.7);
-        nitroFlame.visible = false;
-        carGroup.add(nitroFlame);
+        // 10. Dual Nitro Fire Jet Plumes (Outer cyan + Inner core)
+        const flameGroup = new THREE.Group();
+        flameGroup.position.set(0, 0.35, -2.4);
 
-        // 8. Underglow Neon (Player & AI)
-        const glowGeo = new THREE.PlaneGeometry(2.4, 4.2);
+        [-0.45, 0.45].forEach(fx => {
+            const outerGeo = new THREE.ConeGeometry(0.24, 1.6, 8);
+            outerGeo.rotateX(-Math.PI / 2);
+            const outerMat = new THREE.MeshBasicMaterial({ color: 0x00e5ff });
+            const outerFlame = new THREE.Mesh(outerGeo, outerMat);
+            outerFlame.position.set(fx, 0, -0.8);
+            flameGroup.add(outerFlame);
+
+            const innerGeo = new THREE.ConeGeometry(0.12, 1.2, 8);
+            innerGeo.rotateX(-Math.PI / 2);
+            const innerMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+            const innerFlame = new THREE.Mesh(innerGeo, innerMat);
+            innerFlame.position.set(fx, 0, -0.6);
+            flameGroup.add(innerFlame);
+        });
+
+        flameGroup.visible = false;
+        carGroup.add(flameGroup);
+
+        // 11. Underglow Neon Kit
+        const glowGeo = new THREE.PlaneGeometry(2.6, 4.4);
         const glowMat = new THREE.MeshBasicMaterial({
             color: bodyColor,
             transparent: true,
-            opacity: 0.35
+            opacity: 0.4
         });
         const underglow = new THREE.Mesh(glowGeo, glowMat);
         underglow.rotation.x = -Math.PI / 2;
@@ -725,7 +986,7 @@
 
         scene.add(carGroup);
 
-        return { carGroup, wheels, nitroFlame, taillightMat };
+        return { carGroup, wheels, nitroFlame: flameGroup, taillightMat };
     }
 
     // ------------------------------------------------------------------------
@@ -1169,22 +1430,31 @@
         if (state.cameraMode === 1) {
             // Hood / Bumper 1st-Person Immersive Camera
             desiredCamPos.copy(carPos)
-                .addScaledVector(forward, 1.6)
-                .add(new THREE.Vector3(0, 1.3, 0));
+                .addScaledVector(forward, 1.8)
+                .add(new THREE.Vector3(0, 1.25, 0));
             desiredLookTarget.copy(carPos)
-                .addScaledVector(forward, 22.0)
-                .add(new THREE.Vector3(0, 1.0, 0));
+                .addScaledVector(forward, 25.0)
+                .add(new THREE.Vector3(0, 0.9, 0));
+            camera.up.set(0, 1, 0);
         } else {
-            // Chase 3rd-Person Camera
-            const followDist = 8.6 + (playerCar.speed / playerCar.maxNitroSpeed) * 3.8;
-            const followHeight = 3.6;
+            // Authentic Need for Speed 3rd-Person Chase Camera
+            // Follow distance and height tuned specifically to frame the sports car prominently
+            const speedRatio = Math.min(1.0, Math.abs(playerCar.speed) / playerCar.maxNitroSpeed);
+            const followDist = 5.8 + speedRatio * 2.2;
+            const followHeight = 2.15 + (playerCar.isNitro ? -0.15 : 0);
 
             desiredCamPos.copy(carPos)
                 .subScaledVector(forward, followDist)
                 .add(new THREE.Vector3(0, followHeight, 0));
+
+            // Aim look target at the car's upper body / hood and slightly forward
             desiredLookTarget.copy(carPos)
-                .addScaledVector(forward, 6.0)
-                .add(new THREE.Vector3(0, 1.2, 0));
+                .addScaledVector(forward, 3.8)
+                .add(new THREE.Vector3(0, 1.15, 0));
+
+            // Need for Speed signature dynamic camera banking / roll into drifts & turns!
+            const bankAngle = -(playerCar.driftAngle * 0.45 + (playerCar.steerAngle || 0) * 0.18);
+            camera.up.set(Math.sin(bankAngle), Math.cos(bankAngle), 0);
         }
 
         // Camera Shake on barrier crash or extreme nitro
@@ -1192,13 +1462,16 @@
             desiredCamPos.x += (Math.random() - 0.5) * cameraShake * 1.5;
             desiredCamPos.y += (Math.random() - 0.5) * cameraShake * 1.5;
             cameraShake = Math.max(0, cameraShake - dt * 2.5);
+        } else if (playerCar.isNitro) {
+            desiredCamPos.x += (Math.random() - 0.5) * 0.12;
+            desiredCamPos.y += (Math.random() - 0.5) * 0.12;
         }
 
-        camera.position.lerp(desiredCamPos, Math.min(1.0, 12.0 * dt));
+        camera.position.lerp(desiredCamPos, Math.min(1.0, 14.0 * dt));
         camera.lookAt(desiredLookTarget);
 
         // Dynamic FOV kicking back during Nitro for extreme speed sensation!
-        const targetFov = playerCar.isNitro ? 84 : (state.cameraMode === 1 ? 75 : 65);
+        const targetFov = playerCar.isNitro ? 84 : (state.cameraMode === 1 ? 75 : 66);
         camera.fov = THREE.MathUtils.lerp(camera.fov, targetFov, 9.0 * dt);
         camera.updateProjectionMatrix();
     }
