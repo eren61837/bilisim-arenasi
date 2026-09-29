@@ -57,6 +57,7 @@
     botCount: 4,
     gameSpeedMult: 1.3,
     gravityMult: 1.0,
+    mouseSensitivity: parseFloat(localStorage.getItem('rm_mouse_sens')) || 0.0035,
 
     ws: null
   };
@@ -570,14 +571,14 @@
     if (!state.isLocked || state.isDead) return;
     const rawX = e.movementX || e.mozMovementX || 0;
     const rawY = e.movementY || e.mozMovementY || 0;
-    // PointerLock recentering glitch spike filter (> 80px in 1 frame)
-    if (Math.abs(rawX) > 80 || Math.abs(rawY) > 80) return;
-    const sens = 0.0015;
-    const dx = Math.max(-25, Math.min(25, rawX));
-    const dy = Math.max(-25, Math.min(25, rawY));
-    state.yaw -= dx * sens;
-    state.pitch -= dy * sens;
-    state.pitch = Math.max(-1.42, Math.min(1.42, state.pitch));
+
+    // Ignore massive teleport glitch when locking pointer (> 400px in single frame)
+    if (Math.abs(rawX) > 400 || Math.abs(rawY) > 400) return;
+
+    const sens = state.mouseSensitivity || 0.0035;
+    state.yaw -= rawX * sens;
+    state.pitch -= rawY * sens;
+    state.pitch = Math.max(-1.45, Math.min(1.45, state.pitch));
   });
 
   document.addEventListener('keydown', (e) => {
@@ -908,6 +909,10 @@
   btnSettings?.addEventListener('click', () => {
     if (document.exitPointerLock) document.exitPointerLock();
     state.isLocked = false;
+    const sensEl = document.getElementById('opt-mouse-sens');
+    if (sensEl && state.mouseSensitivity) {
+      sensEl.value = String(state.mouseSensitivity);
+    }
     if (modalSettings) modalSettings.classList.add('active');
   });
 
@@ -919,6 +924,12 @@
     initBots(state.botCount);
 
     state.gameSpeedMult = parseFloat(document.getElementById('opt-speed').value) || 1.3;
+
+    const sensVal = parseFloat(document.getElementById('opt-mouse-sens')?.value);
+    if (!isNaN(sensVal) && sensVal > 0) {
+      state.mouseSensitivity = sensVal;
+      localStorage.setItem('rm_mouse_sens', sensVal);
+    }
 
     if (modalSettings) modalSettings.classList.remove('active');
     enterGame();
