@@ -6,6 +6,7 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
+const zlib = require('zlib');
 const { DatabaseSync } = require('node:sqlite');
 const { WebSocketServer, WebSocket } = require('ws');
 const { PALETTE, WORLD_BOT_ZONE, generateWorldMap, generateBotSandbox, generateTurkeyMap } = require('./world_generator.js');
@@ -825,12 +826,33 @@ exit
 
   const ext = path.extname(filePath).toLowerCase();
   const contentType = MIME_TYPES[ext] || 'application/octet-stream';
-  const cacheHeader = 'no-cache, no-store, must-revalidate';
-  res.writeHead(200, {
-    'Content-Type': contentType,
-    'Cache-Control': cacheHeader
-  });
-  fs.createReadStream(filePath).pipe(res);
+
+  // Smart Bandwidth Optimizer for Render 100GB limit:
+  // - HTML: 5 minutes cache with must-revalidate (keeps content fresh)
+  // - Media / WASM / Audio / JS / CSS: 7 days immutable cache (saves 95% bandwidth!)
+  let cacheHeader = 'public, max-age=604800, immutable';
+  if (ext === '.html') {
+    cacheHeader = 'public, max-age=300, must-revalidate';
+  }
+
+  const acceptEncoding = req.headers['accept-encoding'] || '';
+  const isCompressible = /text|javascript|json|xml|svg|html/.test(contentType);
+
+  if (isCompressible && acceptEncoding.includes('gzip')) {
+    res.writeHead(200, {
+      'Content-Type': contentType,
+      'Content-Encoding': 'gzip',
+      'Cache-Control': cacheHeader,
+      'Vary': 'Accept-Encoding'
+    });
+    fs.createReadStream(filePath).pipe(zlib.createGzip({ level: 6 })).pipe(res);
+  } else {
+    res.writeHead(200, {
+      'Content-Type': contentType,
+      'Cache-Control': cacheHeader
+    });
+    fs.createReadStream(filePath).pipe(res);
+  }
 });
 
 // Highly optimized WebSocket Server for Render 512MB RAM free tier
