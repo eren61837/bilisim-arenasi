@@ -1,0 +1,37 @@
+name: Deploy Bilisim Arenasi to Oracle Cloud
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 🚀 SSH ile Oracle Cloud Sunucusuna Baglan ve Guncelle
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.OCI_HOST }}
+          username: ubuntu
+          key: ${{ secrets.OCI_SSH_KEY }}
+          port: 22
+          script: |
+            set -e
+            echo "📥 Depo guncelleniyor..."
+            if [ -d "$HOME/bilisim-arenasi" ]; then
+              cd $HOME/bilisim-arenasi
+              git pull origin main
+              npm install --production
+              pm2 restart bilisim-arenasi || pm2 start server.js --name "bilisim-arenasi"
+              pm2 save
+            else
+              echo "⚠️ bilisim-arenasi klasoru bulunamadi, repo klonlaniyor..."
+              cd $HOME
+              git clone https://github.com/eren61837/bilisim-arenasi.git
+              cd bilisim-arenasi
+              npm install --production
+              pm2 start server.js --name "bilisim-arenasi"
+              pm2 save
+            fi
+            echo "✅ Guncelleme basariyla tamamlandi!"
