@@ -711,3 +711,24 @@
 <script src="overlay-back.js"></script>
 </body>
 </html>
+<!-- GÜNCELLEME NOTLARI MODAL -->
+<div id="modal-patch-notes" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.85); z-index:99999; align-items:center; justify-content:center;">
+    <div style="background:#0d1117; border:2px solid #00e5ff; border-radius:12px; width:600px; max-width:90%; padding:30px; position:relative; box-shadow:0 0 40px rgba(0,229,255,0.3); color:#fff; font-family:sans-serif;">
+        <button onclick="document.getElementById('modal-patch-notes').style.display='none'" style="position:absolute; top:15px; right:20px; background:transparent; border:none; color:#ff5252; font-size:24px; font-weight:bold; cursor:pointer;">&times;</button>
+        <h2 style="color:#00e5ff; margin-top:0; border-bottom:1px solid #333; padding-bottom:10px;">?? Güncelleme Notlarý & Düzeltmeler</h2>
+        
+        <div style="margin-top:20px; max-height:400px; overflow-y:auto; padding-right:10px;">
+            <h3 style="color:#ffd54f;">v2.1 - Son Düzeltmeler</h3>
+            <ul style="line-height:1.6; margin-left:20px; color:#ccc;">
+                <li><b style="color:#fff">Yarýþ Oyunu:</b> Oyun motoru tamamen 3D yapýldý. Nitro sistemi (<kbd>SHIFT</kbd> veya ekrandaki buton) aktif edildi! Pist kenarlarýna çarpýp yavaþlayacaðýnýz çelik bariyerler eklendi! (NOT: 3D motoru görmek için <b>CTRL + F5</b> yaparak önbelleði temizleyin!)</li>
+                <li><b style="color:#fff">Zombs.io:</b> Kulelerin görünmeme (texture) hatasý düzeltildi! Artýk odun veya taþ kasmak için yürümek gerekmiyor, durduðunuz yerden sürekli vurabilirsiniz. (Deðiþiklikleri görmek için <b>CTRL + F5</b> yapýn!)</li>
+                <li><b style="color:#fff">Stick War: Legacy:</b> Asker formasyonlarý birebir orijinal oyuna uygun hale getirildi (Okçular her zaman Kýlýçlýlarýn arkasýnda durur). Yapay zeka ordu biriktirmeden saldýrmaz. "Kaleye Sýðýn" (Retreat) dendiðinde piyadeler kapýdan kalenin içine girerek saklanýr, Okçular kalenin üst surlarýna çýkarak savunma atýþý yapar!</li>
+                <li><b style="color:#fff">CS 1.6:</b> Engellenen "csjs.live" sunucusu kaldýrýlarak doðrudan çalýþan "play-cs" sunucu motoruna geçiþ yapýldý.</li>
+                <li><b style="color:#fff">Vampire Survivors:</b> Menüde karakter seçildiðinde oluþan bug ve oyun ortasýnda aniden donma / takýlma sorunu tamamen çözüldü!</li>
+                <li><b style="color:#fff">Redmatch 2:</b> Duvarlarýn içinden geçme sorunu (clipping) düzeltildi. Kancanýn gücü artýrýldý!</li>
+                <li><b style="color:#fff">Genel Uyarý:</b> Bu güncellemeleri görebilmek için mutlaka <b>CTRL + F5</b> tuþlarýna basarak sitenin önbelleðini temizleyin, aksi halde eski versiyonda oynarsýnýz!</li>
+            </ul>
+        </div>
+        <button onclick="document.getElementById('modal-patch-notes').style.display='none'" style="margin-top:20px; width:100%; padding:12px; background:#00e5ff; color:#000; border:none; font-weight:bold; font-size:16px; border-radius:8px; cursor:pointer;">ANLADIM & OYUNA DEVAM ET ??</button>
+    </div>
+</div>

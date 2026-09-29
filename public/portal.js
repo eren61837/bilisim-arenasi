@@ -1085,3 +1085,18 @@
   showUpdateNotification();
 
 })();
+
+// PATCH NOTES BUTTON LOGIC
+document.addEventListener('DOMContentLoaded', () => {
+    const shareGroup = document.querySelector('.share-links-group');
+    if (shareGroup) {
+        const btn = document.createElement('button');
+        btn.innerHTML = '?? GÜNCELLEME NOTLARI';
+        btn.style.cssText = 'background:#00e5ff; color:#000; font-weight:900; margin-right:15px; padding:6px 14px; font-size:13px; border:none; border-radius:8px; cursor:pointer; box-shadow:0 0 10px rgba(0,229,255,0.4);';
+        btn.onclick = () => {
+            const modal = document.getElementById('modal-patch-notes');
+            if (modal) modal.style.display = 'flex';
+        };
+        shareGroup.prepend(btn);
+    }
+});
