@@ -229,11 +229,9 @@
 
         <!-- SERVER / ENGINE SWITCHER -->
         <div class="cs-servers-group">
-            <span style="font-size:11px; color:#888; font-weight:700; margin-right:4px;">SUNUCU:</span>
-            <button class="cs-server-btn active" id="btn-srv-csjs" onclick="switchServer('csjs')">⚡ Doğrudan Oyna (CSJS)</button>
-            <button class="cs-server-btn" id="btn-srv-private" onclick="switchServer('private')">🔒 Özel Bilişim Odası (Sadece Biz)</button>
-            <button class="cs-server-btn" id="btn-srv-servers" onclick="switchServer('servers')">🌐 Canlı Sunucu Listesi</button>
-            <button class="cs-server-btn" id="btn-srv-poki" onclick="switchServer('poki')">🎮 Poki 3D FPS Arenası</button>
+            <span style="font-size:11px; color:#888; font-weight:700; margin-right:4px;">CS 1.6:</span>
+            <button class="cs-server-btn active" id="btn-srv-csjs" onclick="switchServer('csjs')">⚡ Doğrudan Oyna (Dust2)</button>
+            <button class="cs-server-btn" id="btn-srv-servers" onclick="switchServer('servers')">🌐 Sunucu Listesi &amp; Özel Oda (Play-CS)</button>
         </div>
 
         <!-- ACTIONS -->
@@ -245,14 +243,14 @@
     </header>
 
     <!-- DIRECT PLAY NOTIFICATION (NON-BLOCKING) -->
-    <div id="cs-direct-hint" style="position:fixed; top:54px; right:16px; background:rgba(0,0,0,0.85); border:1px solid #ff9800; border-radius:8px; padding:6px 14px; font-size:12px; color:#ff9800; z-index:1500; display:flex; align-items:center; gap:8px; pointer-events:none; box-shadow:0 0 15px rgba(255,152,0,0.3);">
-        <span>⚡ Doğrudan Oyna Aktif: Ekrana tıklayarak hemen oynamaya başla!</span>
+    <div id="cs-direct-hint" style="position:fixed; top:54px; right:16px; background:rgba(0,0,0,0.88); border:1px solid #ff9800; border-radius:8px; padding:7px 16px; font-size:12px; color:#ff9800; z-index:1500; display:flex; align-items:center; gap:8px; pointer-events:none; box-shadow:0 0 20px rgba(255,152,0,0.4);">
+        <span>⚡ MEB Engelsiz CS 1.6: Ekrana tıklayarak doğrudan oynamaya başla!</span>
     </div>
 
     <!-- LOADING SCREEN -->
     <div id="cs-loader">
         <div class="cs-spinner"></div>
-        <h2 style="font-size:18px; letter-spacing:1px;">Counter-Strike 1.6 Sunucusuna Bağlanılıyor...</h2>
+        <h2 style="font-size:18px; letter-spacing:1px;">Counter-Strike 1.6 Web Motoru Yükleniyor...</h2>
         <p style="font-size:12px; color:#888;">WebAssembly motoru ve harita varlıkları yükleniyor. Doğrudan oyundasınız.</p>
     </div>
 
@@ -269,19 +267,17 @@
         <div class="cs-key-tip"><kbd>SOL TIK</kbd> Ateş</div>
         <div class="cs-key-tip"><kbd>SAĞ TIK</kbd> Dürbün / Susturucu</div>
         <div class="cs-key-tip"><kbd>R</kbd> Şarjör</div>
-        <div class="cs-key-tip"><kbd>B</kbd> Silah Satın Alma Menüsü</div>
+        <div class="cs-key-tip"><kbd>B</kbd> Silah Menüsü</div>
         <div class="cs-key-tip"><kbd>SPACE</kbd> Zıpla</div>
         <div class="cs-key-tip"><kbd>CTRL</kbd> Çömel</div>
-        <div class="cs-key-tip"><kbd>TAB</kbd> Skor Tablosu</div>
-        <div class="cs-key-tip"><kbd>ESC</kbd> Menü / Fareyi Çıkar</div>
+        <div class="cs-key-tip"><kbd>TAB</kbd> Skor</div>
+        <div class="cs-key-tip"><kbd>ESC</kbd> Menü / Fare Kilidi Aç</div>
     </footer>
 
     <script>
         const SERVERS = {
             csjs: 'https://csjs.live/',
-            private: 'https://play-cs.com/en/servers',
-            servers: 'https://play-cs.com/en/servers',
-            poki: 'https://combat.online/'
+            servers: 'https://play-cs.com/en/servers'
         };
 
         const frame = document.getElementById('cs-game-frame');
@@ -319,10 +315,6 @@
             if (loader) loader.style.display = 'flex';
             if (SERVERS[key]) {
                 frame.src = SERVERS[key];
-            }
-
-            if (key === 'private') {
-                alert('🎯 Özel Bilişim Arenası Odası:\nSunucu listesinden "Create Game" butonuna basıp oda adı ve şifre belirleyerek sadece sınıf/okul arkadaşlarınızla kafa kafaya oynayabilirsiniz!');
             }
         }
 
