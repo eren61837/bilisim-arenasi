@@ -1,3 +1,12 @@
+---
+title: Bilisim Arenasi
+emoji: 🎮
+colorFrom: blue
+colorTo: purple
+sdk: docker
+app_port: 7860
+---
+
 # 🎮 Bilişim Arenası (Arcade Game Hub)
 
 Modern, optimize edilmiş, MEB filtrelerine takılmayan çok oyunculu web oyun platformu.
