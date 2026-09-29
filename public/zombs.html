@@ -13,7 +13,7 @@
     <!-- TOP NAVIGATION BAR -->
     <header class="zombs-topbar">
         <div class="zombs-brand">
-            <a href="/" class="btn-zombs-nav">🏠 Portale Dön</a>
+            <a href="index.html" class="btn-zombs-nav">🏠 Portale Dön</a>
             <div class="zombs-title-text">
                 <span>🧟</span>
                 <span>ZOMBS.IO</span>
@@ -33,6 +33,7 @@
         </div>
 
         <div class="zombs-actions">
+            <button class="btn-zombs-nav" id="btn-toggle-music" title="Run From Your Demons Müziği">🎵 Müzik: Açık</button>
             <button class="btn-zombs-nav" id="btn-shop-open" style="background:#ffd700; color:#000;">🛒 Mağaza (B)</button>
             <button class="btn-zombs-nav" id="btn-fullscreen">⛶ Tam Ekran</button>
             <button class="btn-zombs-nav" id="btn-reload">🔄 Yeniden Başlat</button>
@@ -70,51 +71,94 @@
         </div>
     </div>
 
-    <!-- HOTBAR / BUILDING SELECTOR (BOTTOM CENTER) -->
-    <div class="zombs-hotbar">
+    <!-- TOOLS & WEAPONS HOTBAR (1, 2, 3, 4 tuşları) -->
+    <div class="zombs-tools-bar">
+        <div class="tool-slot active" data-tool="axe" id="tool-axe" title="Oduncu Baltası [1] - Ağaçları Hızlı Keser">
+            <span class="t-key">1</span>
+            <span class="t-icon">🪓</span>
+            <span class="t-name">Balta</span>
+        </div>
+        <div class="tool-slot" data-tool="pickaxe" id="tool-pickaxe" title="Madenci Kazması [2] - Taş ve Altın Kazıcı">
+            <span class="t-key">2</span>
+            <span class="t-icon">⛏️</span>
+            <span class="t-name">Kazma</span>
+        </div>
+        <div class="tool-slot" data-tool="spear" id="tool-spear" title="Savaş Mızrağı [3] - Zombilere Yüksek Hasar">
+            <span class="t-key">3</span>
+            <span class="t-icon">🗡️</span>
+            <span class="t-name">Mızrak</span>
+        </div>
+        <div class="tool-slot" data-tool="bow" id="tool-bow" title="Ok ve Yay [4] - Uzaktan Vuruş">
+            <span class="t-key">4</span>
+            <span class="t-icon">🏹</span>
+            <span class="t-name">Yay</span>
+        </div>
+        <button class="btn-toggle-build-mode" id="btn-toggle-build" title="İnşa Modunu Aç/Kapat [B veya 5]">
+            <span class="b-icon">🏗️</span>
+            <span class="b-text">İnşa Modu (B)</span>
+        </button>
+    </div>
+
+    <!-- BUILDING SELECTOR (İnşa Modu Aktifken Görünür) -->
+    <div class="zombs-hotbar hidden" id="zombs-build-hotbar">
         <div class="hotbar-slot active" data-building="stash">
-            <span class="slot-num">1</span>
+            <span class="slot-num">5</span>
             <span class="slot-icon">👑</span>
             <span class="slot-name">Altın Kasası</span>
             <span class="slot-cost">Ücretsiz</span>
         </div>
         <div class="hotbar-slot" data-building="wall">
-            <span class="slot-num">2</span>
+            <span class="slot-num">6</span>
             <span class="slot-icon">🧱</span>
             <span class="slot-name">Ahşap Duvar</span>
             <span class="slot-cost">15🌲</span>
         </div>
         <div class="hotbar-slot" data-building="stonewall">
-            <span class="slot-num">3</span>
+            <span class="slot-num">7</span>
             <span class="slot-icon">🏛️</span>
             <span class="slot-name">Taş Duvar</span>
             <span class="slot-cost">10🌲 20🪨</span>
         </div>
+        <div class="hotbar-slot" data-building="door">
+            <span class="slot-num">8</span>
+            <span class="slot-icon">🚪</span>
+            <span class="slot-name">Güvenli Kapı</span>
+            <span class="slot-cost">25🌲 10🪨</span>
+        </div>
         <div class="hotbar-slot" data-building="spike">
-            <span class="slot-num">4</span>
+            <span class="slot-num">9</span>
             <span class="slot-icon">🌵</span>
             <span class="slot-name">Dikenli Duvar</span>
             <span class="slot-cost">20🌲 10🪨</span>
         </div>
         <div class="hotbar-slot" data-building="arrow">
-            <span class="slot-num">5</span>
+            <span class="slot-num">0</span>
             <span class="slot-icon">🏹</span>
             <span class="slot-name">Ok Kulesi</span>
             <span class="slot-cost">30🌲 15🪨 10💰</span>
         </div>
         <div class="hotbar-slot" data-building="cannon">
-            <span class="slot-num">6</span>
+            <span class="slot-num">-</span>
             <span class="slot-icon">💣</span>
             <span class="slot-name">Top Kulesi</span>
             <span class="slot-cost">45🌲 40🪨 25💰</span>
         </div>
         <div class="hotbar-slot" data-building="goldmine">
-            <span class="slot-num">7</span>
+            <span class="slot-num">=</span>
             <span class="slot-icon">💰</span>
             <span class="slot-name">Altın Madeni</span>
             <span class="slot-cost">40🌲 25🪨</span>
         </div>
+        <div class="hotbar-slot" data-building="healer">
+            <span class="slot-num">H</span>
+            <span class="slot-icon">💖</span>
+            <span class="slot-name">Şifa Çadırı</span>
+            <span class="slot-cost">50🌲 50🪨 20💰</span>
+        </div>
     </div>
+
+    <!-- AUDIO FOR ZOMBS.IO (RUN FROM YOUR DEMONS) -->
+    <audio id="audio-zombs-music" src="music/run_from_your_demons.mp3" preload="auto" loop></audio>
 
     <!-- SHOP / UPGRADES MODAL (B KEY) -->
     <div id="modal-shop" class="zombs-modal-backdrop hidden">

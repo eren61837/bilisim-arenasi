@@ -792,6 +792,10 @@ exit
   else if (pathname === '/sumo') safePath = '/sumo.html';
   else if (pathname === '/stickwar') safePath = '/stickwar.html';
   else if (pathname === '/eaglercraft') safePath = '/eaglercraft.html';
+  else if (pathname === '/subway') safePath = '/subway.html';
+  else if (pathname === '/templerun') safePath = '/templerun.html';
+  else if (pathname === '/gartic') safePath = '/gartic.html';
+  else if (pathname === '/racing') safePath = '/racing.html';
   else if (safePath === '/' || safePath === '\\') safePath = '/index.html';
 
   // Check both PUBLIC_DIR and root (__dirname), pick whichever exists and is newer!
@@ -1500,6 +1504,26 @@ wss.on('connection', (ws, req) => {
 
     // MULTIPLAYER GAMES DISPATCHER (XOX, Agar.io, CS 1.6, PaperMap, Portal Chat)
     if (gamesManager && gamesManager.handleMessage(ws, data)) {
+      return;
+    }
+
+    // GLOBAL PLAYER JOIN / SET USERNAME ANNOUNCEMENT
+    if (data.type === 'set_username' || data.type === 'player_announce') {
+      const uName = String(data.username || '').trim();
+      if (uName && uName.length >= 2) {
+        ws.user = ws.user || {};
+        ws.user.username = uName;
+        const announcementMsg = JSON.stringify({
+          type: 'player_join_announcement',
+          username: uName,
+          text: `🎮 ${uName} az önce aramıza katıldı ve oyunlara başladı!`
+        });
+        for (const client of connectedClients) {
+          if (client.readyState === WebSocket.OPEN) {
+            client.send(announcementMsg);
+          }
+        }
+      }
       return;
     }
 

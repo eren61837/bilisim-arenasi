@@ -1840,6 +1840,7 @@
           screen.classList.add('fade-out');
           setTimeout(() => {
             if (screen.parentNode) screen.parentNode.removeChild(screen);
+            showMainMenu();
           }, 600);
         }, 500);
       } else {
@@ -1848,6 +1849,63 @@
       }
     }, 110);
   }
+
+  // RETRO ARCADE MAIN MENU CONTROLLER
+  const mainMenu = document.getElementById('sumo-main-menu');
+  function showMainMenu() {
+    if (mainMenu) mainMenu.classList.remove('hidden');
+  }
+  function hideMainMenu() {
+    if (mainMenu) mainMenu.classList.add('hidden');
+  }
+
+  document.getElementById('btn-open-main-menu')?.addEventListener('click', () => {
+    if (mainMenu && !mainMenu.classList.contains('hidden')) {
+      hideMainMenu();
+    } else {
+      showMainMenu();
+    }
+  });
+
+  document.getElementById('btn-menu-play-2p')?.addEventListener('click', () => {
+    gameSettings.vsAI = false;
+    document.querySelectorAll('.mode-tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('btn-mode-local')?.classList.add('active');
+    hideMainMenu();
+    maciSifirla();
+  });
+
+  document.getElementById('btn-menu-play-ai')?.addEventListener('click', () => {
+    gameSettings.vsAI = true;
+    document.querySelectorAll('.mode-tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('btn-mode-ai')?.classList.add('active');
+    hideMainMenu();
+    maciSifirla();
+  });
+
+  document.getElementById('btn-menu-customize')?.addEventListener('click', () => {
+    hideMainMenu();
+    openSettingsModal('char');
+  });
+
+  document.getElementById('btn-menu-maps')?.addEventListener('click', () => {
+    hideMainMenu();
+    openSettingsModal('maps');
+  });
+
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      const settingsModal = document.getElementById('settings-modal');
+      if (settingsModal && !settingsModal.classList.contains('hidden')) {
+        settingsModal.classList.add('hidden');
+        return;
+      }
+      if (mainMenu) {
+        if (mainMenu.classList.contains('hidden')) showMainMenu();
+        else hideMainMenu();
+      }
+    }
+  });
 
   // UI Olay Dinleyicileri
   document.getElementById('btn-next-round')?.addEventListener('click', sonrakiTur);

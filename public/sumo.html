@@ -29,10 +29,57 @@
     </div>
 </div>
 
+<!-- RETRO ARCADE START MAIN MENU (AHMET HAKAN: KUTU SUMO) -->
+<div id="sumo-main-menu" class="sumo-menu-backdrop">
+    <div class="sumo-menu-box">
+        <div class="sumo-menu-header">
+            <span class="sumo-menu-logo">🥊</span>
+            <h1 class="sumo-menu-title">AHMET HAKAN<br><span>KUTU SUMO</span></h1>
+            <p class="sumo-menu-subtitle">2 Kişilik Ragdoll Fizikli Piksel Dövüş Arenası</p>
+            <div class="sumo-menu-credits">👑 Yapımcılar: <b>Ahmet Baki ve Hakan Samet</b></div>
+        </div>
+
+        <div class="sumo-menu-options">
+            <button class="btn-sumo-menu primary" id="btn-menu-play-2p">
+                <span class="m-icon">🎮</span>
+                <div class="m-text">
+                    <strong>2 KİŞİLİK DÖVÜŞ (AYNI KLAVYE)</strong>
+                    <small>Oyuncu 1: W/A/S/D + SPACE | Oyuncu 2: Oklar + ENTER</small>
+                </div>
+            </button>
+            <button class="btn-sumo-menu" id="btn-menu-play-ai">
+                <span class="m-icon">🤖</span>
+                <div class="m-text">
+                    <strong>YAPAY ZEKAYA KARŞI (TEK OYUNCU)</strong>
+                    <small>Ahmet Hakan vs Zeki CPU Ragdoll Botu</small>
+                </div>
+            </button>
+            <button class="btn-sumo-menu" id="btn-menu-customize">
+                <span class="m-icon">🥋</span>
+                <div class="m-text">
+                    <strong>KARAKTER ÖZELLEŞTİR</strong>
+                    <small>8 Renk, 7 Şapka, 5 Yüz, 3 Gövde Tipi</small>
+                </div>
+            </button>
+            <button class="btn-sumo-menu" id="btn-menu-maps">
+                <span class="m-icon">🗺️</span>
+                <div class="m-text">
+                    <strong>ARENA SEÇ (7 EFSANE HARİTA)</strong>
+                    <small>CNN Türk, Buz Adası, İkiz Kule, Lav Gölü...</small>
+                </div>
+            </button>
+        </div>
+
+        <div class="sumo-menu-footer">
+            <span>💡 İpucu: Maç içindeyken <b>[ESC]</b> veya <b>[M]</b> ile menüye dönebilirsin.</span>
+        </div>
+    </div>
+</div>
+
     <!-- TOP NAVIGATION BAR -->
     <header class="sumo-topbar">
         <div class="sumo-brand">
-            <a href="/" class="btn-sumo-nav">🏠 Portale Dön</a>
+            <a href="index.html" class="btn-sumo-nav">🏠 Portale Dön</a>
             <div class="sumo-title-wrap">
                 <span class="sumo-title-icon">🥊</span>
                 <div>
@@ -60,6 +107,7 @@
 
         <!-- TOP ACTIONS & MODE SELECTOR -->
         <div class="sumo-actions">
+            <button class="btn-sumo-nav highlight" id="btn-open-main-menu">📋 Ana Menü</button>
             <div class="mode-tabs">
                 <button class="mode-tab-btn active" id="btn-mode-local">🎮 2 Kişilik</button>
                 <button class="mode-tab-btn" id="btn-mode-ai">🤖 vs Yapay Zeka</button>

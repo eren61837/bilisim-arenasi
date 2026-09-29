@@ -566,7 +566,13 @@
     toxiccloudTimer: 0,
     scytheTimer: 0,
     timestopTimer: 0,
-    shieldCurrentHp: 0
+    shieldCurrentHp: 0,
+    shieldBreakCooldown: 0,
+    shieldRechargeDelay: 0,
+    shieldBroken: false,
+    activeWeaponSlot: 0,
+    weaponCooldowns: [0, 0, 0, 0],
+    weaponMaxCooldowns: [0.50, 0.35, 0.95, 2.6]
   };
 
   // Entities
@@ -663,17 +669,183 @@
     if (state.running) state.paused = false;
   }
 
-  // Input Listeners
+  // Input Listeners & Mouse Tracking
+  let mouseWorldX = 0, mouseWorldY = 0, isMouseDown = false;
+
+  window.addEventListener('mousemove', e => {
+    mouseWorldX = e.clientX + camera.x;
+    mouseWorldY = e.clientY + camera.y;
+  });
+
+  window.addEventListener('mousedown', e => {
+    if (e.button === 0) {
+      isMouseDown = true;
+      triggerActiveWeapon();
+    }
+  });
+
+  window.addEventListener('mouseup', e => {
+    if (e.button === 0) isMouseDown = false;
+  });
+
+  function switchWeapon(slot) {
+    if (slot < 0 || slot > 3) return;
+    player.activeWeaponSlot = slot;
+    document.querySelectorAll('.hotbar-slot').forEach(s => s.classList.remove('active'));
+    document.getElementById('slot-' + slot)?.classList.add('active');
+    Sfx.slash();
+    const names = ['Kutsal Kılıç ⚔️', 'Sihir Asası 🪄', 'Cehennem Alevi 🔥', 'Kozmik Karadelik 🌌'];
+    addFloatText(player.x, player.y - 45, names[slot], '#ffd700', 16);
+  }
+
+  document.querySelectorAll('.hotbar-slot').forEach(slotEl => {
+    slotEl.addEventListener('click', () => {
+      const idx = parseInt(slotEl.dataset.slot);
+      switchWeapon(idx);
+    });
+  });
+
+  window.addEventListener('wheel', e => {
+    if (e.deltaY > 0) {
+      switchWeapon((player.activeWeaponSlot + 1) % 4);
+    } else if (e.deltaY < 0) {
+      switchWeapon((player.activeWeaponSlot - 1 + 4) % 4);
+    }
+  }, { passive: true });
+
   window.addEventListener('keydown', e => {
     state.keys[e.key.toLowerCase()] = true;
     if (e.code === 'Space' || e.key === ' ') {
       tryDash();
+    } else if (e.key === '1') {
+      switchWeapon(0);
+    } else if (e.key === '2') {
+      switchWeapon(1);
+    } else if (e.key === '3') {
+      switchWeapon(2);
+    } else if (e.key === '4') {
+      switchWeapon(3);
+    } else if (e.key.toLowerCase() === 'q') {
+      switchWeapon((player.activeWeaponSlot - 1 + 4) % 4);
+    } else if (e.key.toLowerCase() === 'e') {
+      switchWeapon((player.activeWeaponSlot + 1) % 4);
     }
   });
 
   window.addEventListener('keyup', e => {
     state.keys[e.key.toLowerCase()] = false;
   });
+
+  function triggerActiveWeapon() {
+    if (!state.running || state.paused || player.hp <= 0) return;
+    const slot = player.activeWeaponSlot;
+    if (player.weaponCooldowns[slot] > 0) return;
+
+    player.weaponCooldowns[slot] = player.weaponMaxCooldowns[slot];
+    const forgeDmgCfg = FORGE_CONFIG.find(c => c.id === 'baseDmg');
+    const baseDmgMult = (1 + (forgeRanks.baseDmg * (forgeDmgCfg ? forgeDmgCfg.valPerRank : 0.1))) * (1 + (player.skills.might || 0) * 0.2);
+
+    let targetX = mouseWorldX;
+    let targetY = mouseWorldY;
+    if (targetX === 0 && targetY === 0) {
+      const nearest = getNearestEnemy();
+      targetX = nearest ? nearest.x : player.x + (player.facingRight ? 200 : -200);
+      targetY = nearest ? nearest.y : player.y;
+    }
+
+    const dx = targetX - player.x;
+    const dy = targetY - player.y;
+    const dist = Math.hypot(dx, dy) || 1;
+    const dirX = dx / dist;
+    const dirY = dy / dist;
+
+    if (slot === 0) {
+      // 1. KUTSAL KILIÇ: Wide golden sweeping crescent
+      Sfx.slash();
+      state.screenShake = 4;
+      projectiles.push({
+        type: 'holy_slash',
+        x: player.x + dirX * 30,
+        y: player.y + dirY * 30,
+        vx: dirX * 11,
+        vy: dirY * 11,
+        radius: 36,
+        dmg: Math.round(95 * baseDmgMult),
+        life: 22,
+        maxLife: 22,
+        pierce: 99,
+        color: '#ffd700',
+        angle: Math.atan2(dirY, dirX)
+      });
+      for (let i = 0; i < 8; i++) {
+        particles.push({
+          x: player.x + dirX * 30 + (Math.random() - 0.5) * 20,
+          y: player.y + dirY * 30 + (Math.random() - 0.5) * 20,
+          vx: dirX * 6 + (Math.random() - 0.5) * 4,
+          vy: dirY * 6 + (Math.random() - 0.5) * 4,
+          life: 15,
+          color: '#ffd700',
+          size: 4
+        });
+      }
+    } else if (slot === 1) {
+      // 2. SİHİR ASASI: 3 rapid homing arcane bolts
+      Sfx.magic();
+      for (let i = -1; i <= 1; i++) {
+        const spreadAngle = Math.atan2(dirY, dirX) + i * 0.22;
+        projectiles.push({
+          type: 'arcane_bolt',
+          x: player.x,
+          y: player.y,
+          vx: Math.cos(spreadAngle) * 14,
+          vy: Math.sin(spreadAngle) * 14,
+          radius: 10,
+          dmg: Math.round(52 * baseDmgMult),
+          life: 55,
+          maxLife: 55,
+          pierce: 1,
+          color: '#00e5ff',
+          homing: true
+        });
+      }
+    } else if (slot === 2) {
+      // 3. CEHENNEM ATEŞİ: High-damage exploding fire projectile
+      Sfx.fire();
+      state.screenShake = 6;
+      projectiles.push({
+        type: 'inferno_bomb',
+        x: player.x,
+        y: player.y,
+        vx: dirX * 10,
+        vy: dirY * 10,
+        radius: 16,
+        dmg: Math.round(140 * baseDmgMult),
+        life: 35,
+        maxLife: 35,
+        pierce: 1,
+        color: '#ff3d00',
+        splashRadius: 90
+      });
+    } else if (slot === 3) {
+      // 4. KOZMİK KARADELİK: Pulls in and crushes enemies
+      Sfx.bossAlarm();
+      state.screenShake = 9;
+      projectiles.push({
+        type: 'cosmic_vortex',
+        x: player.x + dirX * 40,
+        y: player.y + dirY * 40,
+        vx: dirX * 3.5,
+        vy: dirY * 3.5,
+        radius: 40,
+        dmg: Math.round(65 * baseDmgMult),
+        life: 180,
+        maxLife: 180,
+        pierce: 999,
+        color: '#a855f7',
+        pullRadius: 220
+      });
+    }
+  }
 
   function tryDash() {
     if (player.dashCd <= 0 && state.running && !state.paused) {
@@ -1066,12 +1238,43 @@
       }
     }
 
-    // 13. İlahi Kalkan Şarjı
+    // 13. İlahi Kalkan Şarjı & Kırılma Mekaniği (Shield Fix)
     if (player.skills.shieldbubble > 0) {
       const maxShield = player.skills.shieldbubble * 75;
-      if (!player.shieldCurrentHp || player.shieldCurrentHp < maxShield) {
-        player.shieldCurrentHp = Math.min(maxShield, (player.shieldCurrentHp || 0) + 1);
+      if (player.shieldBreakCooldown > 0) {
+        player.shieldBreakCooldown -= 1 / 60;
+        if (player.shieldBreakCooldown <= 0) {
+          player.shieldBreakCooldown = 0;
+          player.shieldBroken = false;
+          player.shieldCurrentHp = Math.round(maxShield * 0.3);
+          addFloatText(player.x, player.y - 35, '🛡️ KALKAN YENİDEN OLUŞTU!', '#00e676', 16);
+          try { Sfx.magic(); } catch (_) {}
+        }
+      } else if (player.shieldRechargeDelay > 0) {
+        player.shieldRechargeDelay -= 1 / 60;
+      } else if (player.shieldCurrentHp < maxShield) {
+        player.shieldCurrentHp = Math.min(maxShield, player.shieldCurrentHp + (15 / 60));
       }
+    }
+
+    // 14. Aktif Silah Cooldown Güncellemesi & Otomatik Ateş
+    for (let s = 0; s < 4; s++) {
+      if (player.weaponCooldowns[s] > 0) {
+        player.weaponCooldowns[s] -= 1 / 60;
+        const cdElem = document.getElementById('slot-cd-' + s);
+        if (cdElem) {
+          const pct = Math.max(0, (player.weaponCooldowns[s] / player.weaponMaxCooldowns[s]) * 100);
+          cdElem.style.height = `${pct}%`;
+        }
+      } else {
+        const cdElem = document.getElementById('slot-cd-' + s);
+        if (cdElem) cdElem.style.height = '0%';
+      }
+    }
+
+    // Otomatik aktif silah atışı
+    if (player.weaponCooldowns[player.activeWeaponSlot] <= 0 && enemies.length > 0) {
+      triggerActiveWeapon();
     }
   }
 
@@ -1534,17 +1737,39 @@
 
     // İlahi Kalkan (Shield Bubble) hasar emilimi
     if (player.skills.shieldbubble > 0 && player.shieldCurrentHp > 0) {
+      player.shieldRechargeDelay = 4.0; // 4 saniye darbe gecikmesi
       if (player.shieldCurrentHp >= finalDmg) {
         player.shieldCurrentHp -= finalDmg;
-        addFloatText(player.x, player.y - 30, `🛡️ -${finalDmg} (Kalkan)`, '#00e5ff', 16);
+        addFloatText(player.x, player.y - 30, `🛡️ -${finalDmg} (Kalkan: ${Math.round(player.shieldCurrentHp)})`, '#00e5ff', 16);
+        Sfx.hit();
         return;
       } else {
         finalDmg -= player.shieldCurrentHp;
         player.shieldCurrentHp = 0;
-        addFloatText(player.x, player.y - 30, '🛡️ KALKAN KIRILDI!', '#ffea00', 18);
+        player.shieldBroken = true;
+        player.shieldBreakCooldown = 12.0; // 12 saniye kalkan bekleme süresi
+        addFloatText(player.x, player.y - 35, '💥 KALKAN PARÇALANDI!', '#ff3d00', 20);
+        state.screenShake = 12;
+        Sfx.bossAlarm();
+
+        // 25 kalkan cam patlama parçacığı
+        for (let k = 0; k < 25; k++) {
+          const a = Math.random() * Math.PI * 2;
+          const spd = Math.random() * 8 + 3;
+          particles.push({
+            x: player.x,
+            y: player.y,
+            vx: Math.cos(a) * spd,
+            vy: Math.sin(a) * spd,
+            life: 25,
+            color: Math.random() < 0.5 ? '#00e5ff' : '#ffffff',
+            size: Math.random() * 4 + 2
+          });
+        }
+
         enemies.forEach(e => {
-          if (Math.hypot(e.x - player.x, e.y - player.y) < 160) {
-            damageEnemy(e, 65, true);
+          if (Math.hypot(e.x - player.x, e.y - player.y) < 180) {
+            damageEnemy(e, 85, true);
           }
         });
       }
@@ -1774,7 +1999,105 @@
         const p = projectiles[i];
         p.life--;
 
-        if (p.type === 'scythe') {
+        if (p.type === 'holy_slash') {
+          p.x += p.vx;
+          p.y += p.vy;
+          enemies.forEach(e => {
+            if (Math.hypot(e.x - p.x, e.y - p.y) < e.radius + p.radius) {
+              damageEnemy(e, p.dmg, true);
+              e.x += p.vx * 0.7;
+              e.y += p.vy * 0.7;
+            }
+          });
+        } else if (p.type === 'arcane_bolt') {
+          if (p.homing && enemies.length > 0) {
+            const nearest = getNearestEnemy();
+            if (nearest) {
+              const hAngle = Math.atan2(nearest.y - p.y, nearest.x - p.x);
+              p.vx += Math.cos(hAngle) * 0.9;
+              p.vy += Math.sin(hAngle) * 0.9;
+              const spd = Math.hypot(p.vx, p.vy);
+              if (spd > 15) { p.vx = (p.vx / spd) * 15; p.vy = (p.vy / spd) * 15; }
+            }
+          }
+          p.x += p.vx;
+          p.y += p.vy;
+          for (let j = 0; j < enemies.length; j++) {
+            const e = enemies[j];
+            if (Math.hypot(e.x - p.x, e.y - p.y) < e.radius + p.radius) {
+              damageEnemy(e, p.dmg, false);
+              p.life = 0;
+              break;
+            }
+          }
+        } else if (p.type === 'inferno_bomb') {
+          p.x += p.vx;
+          p.y += p.vy;
+          let boom = false;
+          for (let j = 0; j < enemies.length; j++) {
+            const e = enemies[j];
+            if (Math.hypot(e.x - p.x, e.y - p.y) < e.radius + p.radius) {
+              boom = true;
+              break;
+            }
+          }
+          if (boom || p.life <= 1) {
+            p.life = 0;
+            state.screenShake = 6;
+            Sfx.fire();
+            enemies.forEach(target => {
+              if (Math.hypot(target.x - p.x, target.y - p.y) < (p.splashRadius || 85)) {
+                damageEnemy(target, p.dmg, true);
+              }
+            });
+            for (let k = 0; k < 18; k++) {
+              particles.push({
+                x: p.x,
+                y: p.y,
+                vx: (Math.random() - 0.5) * 10,
+                vy: (Math.random() - 0.5) * 10,
+                life: 25,
+                color: Math.random() < 0.6 ? '#ff3d00' : '#ffd700',
+                size: Math.random() * 5 + 3
+              });
+            }
+          }
+        } else if (p.type === 'cosmic_vortex') {
+          p.x += p.vx * 0.96;
+          p.y += p.vy * 0.96;
+          enemies.forEach(e => {
+            const d = Math.hypot(e.x - p.x, e.y - p.y);
+            if (d < p.pullRadius && d > 10) {
+              const pullAngle = Math.atan2(p.y - e.y, p.x - e.x);
+              e.x += Math.cos(pullAngle) * 4.0;
+              e.y += Math.sin(pullAngle) * 4.0;
+              if (p.life % 16 === 0) {
+                damageEnemy(e, p.dmg, false);
+                e.hitFlash = 3;
+              }
+            }
+          });
+          if (p.life === 1) {
+            state.screenShake = 10;
+            Sfx.bossAlarm();
+            enemies.forEach(e => {
+              if (Math.hypot(e.x - p.x, e.y - p.y) < p.pullRadius) {
+                damageEnemy(e, p.dmg * 2.2, true);
+              }
+            });
+            for (let k = 0; k < 30; k++) {
+              particles.push({
+                x: p.x,
+                y: p.y,
+                vx: (Math.random() - 0.5) * 14,
+                vy: (Math.random() - 0.5) * 14,
+                life: 30,
+                color: Math.random() < 0.5 ? '#d500f9' : '#00e5ff',
+                size: Math.random() * 6 + 3
+              });
+            }
+          }
+        } else if (p.type === 'scythe') {
           p.distance += 4.5;
           p.angle += 0.16;
           p.x = player.x + Math.cos(p.angle) * p.distance;
@@ -2275,6 +2598,41 @@
         ctx.lineWidth = 3;
         ctx.fill();
         ctx.stroke();
+      } else if (p.type === 'holy_slash') {
+        ctx.translate(p.x, p.y);
+        ctx.rotate(p.angle);
+        ctx.beginPath();
+        ctx.arc(0, 0, p.radius, -Math.PI / 3, Math.PI / 3, false);
+        ctx.lineWidth = 6;
+        ctx.strokeStyle = '#ffd700';
+        ctx.shadowColor = '#ffd700';
+        ctx.shadowBlur = 18;
+        ctx.stroke();
+      } else if (p.type === 'arcane_bolt') {
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+        ctx.fillStyle = '#00e5ff';
+        ctx.shadowColor = '#00e5ff';
+        ctx.shadowBlur = 14;
+        ctx.fill();
+      } else if (p.type === 'inferno_bomb') {
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+        ctx.fillStyle = '#ff3d00';
+        ctx.shadowColor = '#ff6d00';
+        ctx.shadowBlur = 18;
+        ctx.fill();
+      } else if (p.type === 'cosmic_vortex') {
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.radius * (1 + (180 - p.life) / 360), 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(124, 77, 255, 0.35)';
+        ctx.shadowColor = '#d500f9';
+        ctx.shadowBlur = 25;
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.radius * 0.6, 0, Math.PI * 2);
+        ctx.fillStyle = '#05020a';
+        ctx.fill();
       } else if (p.type === 'scythe') {
         // Crescent blade
         ctx.translate(p.x, p.y);
@@ -2306,18 +2664,31 @@
       ctx.restore();
     });
 
-    // Draw Shield Bubble around Player
+    // Draw Shield Bubble around Player (Kırılma ve Çatlak Görseli)
     if (player.skills.shieldbubble > 0 && player.shieldCurrentHp > 0) {
+      const maxShield = player.skills.shieldbubble * 75;
+      const hpRatio = player.shieldCurrentHp / maxShield;
       ctx.save();
       ctx.beginPath();
       ctx.arc(player.x, player.y, player.radius + 18, 0, Math.PI * 2);
-      ctx.strokeStyle = '#00e5ff';
-      ctx.lineWidth = 3;
-      ctx.shadowColor = '#00e5ff';
+      ctx.strokeStyle = hpRatio > 0.4 ? '#00e5ff' : '#ffea00';
+      ctx.lineWidth = hpRatio > 0.4 ? 3 : 2;
+      ctx.shadowColor = hpRatio > 0.4 ? '#00e5ff' : '#ff5252';
       ctx.shadowBlur = 16;
-      ctx.fillStyle = 'rgba(0, 229, 255, 0.12)';
+      ctx.fillStyle = hpRatio > 0.4 ? 'rgba(0, 229, 255, 0.12)' : 'rgba(255, 234, 0, 0.15)';
       ctx.fill();
       ctx.stroke();
+
+      // Çatlak çizgileri
+      if (hpRatio < 0.6) {
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(player.x - 12, player.y - 15);
+        ctx.lineTo(player.x - 4, player.y - 5);
+        ctx.lineTo(player.x + 8, player.y - 12);
+        ctx.stroke();
+      }
       ctx.restore();
     }
 

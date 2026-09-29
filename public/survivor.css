@@ -802,3 +802,88 @@ body {
   font-weight: 900;
 }
 
+/* =========================================================
+   ACTIVE WEAPON HOTBAR
+========================================================= */
+.weapon-hotbar {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 12px;
+  z-index: 120;
+  background: rgba(10, 15, 29, 0.92);
+  border: 2px solid rgba(0, 229, 255, 0.3);
+  border-radius: 16px;
+  padding: 8px 14px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.7), 0 0 20px rgba(0, 229, 255, 0.2);
+  backdrop-filter: blur(10px);
+}
+
+.hotbar-slot {
+  position: relative;
+  width: 70px;
+  height: 60px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 2px solid rgba(255, 255, 255, 0.15);
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  user-select: none;
+}
+
+.hotbar-slot:hover {
+  background: rgba(0, 229, 255, 0.12);
+  border-color: rgba(0, 229, 255, 0.5);
+  transform: translateY(-2px);
+}
+
+.hotbar-slot.active {
+  background: linear-gradient(135deg, rgba(0, 229, 255, 0.25) 0%, rgba(0, 119, 255, 0.2) 100%);
+  border-color: #00e5ff;
+  box-shadow: 0 0 18px rgba(0, 229, 255, 0.5);
+  transform: translateY(-4px) scale(1.05);
+}
+
+.hotbar-slot .slot-key {
+  position: absolute;
+  top: 3px;
+  left: 5px;
+  font-size: 10px;
+  font-weight: 900;
+  color: #ffd700;
+  background: rgba(0, 0, 0, 0.6);
+  padding: 1px 4px;
+  border-radius: 4px;
+}
+
+.hotbar-slot .slot-icon {
+  font-size: 24px;
+  margin-top: 4px;
+}
+
+.hotbar-slot .slot-name {
+  font-size: 10px;
+  font-weight: 800;
+  color: #e2e8f0;
+  margin-top: 2px;
+  white-space: nowrap;
+}
+
+.hotbar-slot .slot-cd {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  border-radius: 10px;
+  pointer-events: none;
+  height: 0%;
+  bottom: 0;
+  top: auto;
+  transition: height 0.05s linear;
+}
+

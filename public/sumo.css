@@ -771,3 +771,140 @@ body, html {
     font-family: monospace;
     font-weight: 700;
 }
+
+/* =========================================================
+   RETRO ARCADE START MAIN MENU
+========================================================= */
+.sumo-menu-backdrop {
+    position: fixed;
+    inset: 0;
+    background: radial-gradient(circle, rgba(14, 10, 18, 0.94) 0%, rgba(5, 3, 8, 0.98) 100%);
+    backdrop-filter: blur(8px);
+    z-index: 9998;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: fadeIn 0.3s ease-out;
+}
+.sumo-menu-backdrop.hidden {
+    display: none !important;
+}
+.sumo-menu-box {
+    background: linear-gradient(180deg, rgba(26, 20, 36, 0.98) 0%, rgba(14, 10, 20, 0.98) 100%);
+    border: 2px solid #ff3d00;
+    border-radius: 16px;
+    padding: 32px 36px;
+    max-width: 520px;
+    width: 90%;
+    text-align: center;
+    box-shadow: 0 0 50px rgba(255, 61, 0, 0.35), 0 20px 40px rgba(0, 0, 0, 0.8);
+    position: relative;
+}
+.sumo-menu-header {
+    margin-bottom: 24px;
+}
+.sumo-menu-logo {
+    font-size: 54px;
+    display: inline-block;
+    animation: bounceLogo 1.5s infinite ease-in-out;
+}
+@keyframes bounceLogo {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+}
+.sumo-menu-title {
+    font-size: 26px;
+    font-weight: 900;
+    color: #fff;
+    margin: 4px 0 6px;
+    line-height: 1.1;
+    letter-spacing: 1px;
+}
+.sumo-menu-title span {
+    color: #ff3d00;
+    text-shadow: 0 0 15px rgba(255, 61, 0, 0.8);
+}
+.sumo-menu-subtitle {
+    font-size: 13px;
+    color: #aaa;
+    margin-bottom: 10px;
+}
+.sumo-menu-credits {
+    display: inline-block;
+    background: rgba(255, 215, 0, 0.12);
+    border: 1px solid rgba(255, 215, 0, 0.4);
+    color: #ffd700;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+}
+.sumo-menu-options {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+.btn-sumo-menu {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 12px;
+    padding: 12px 18px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    cursor: pointer;
+    text-align: left;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    color: #fff;
+}
+.btn-sumo-menu:hover {
+    background: rgba(255, 61, 0, 0.18);
+    border-color: #ff3d00;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 20px rgba(255, 61, 0, 0.3);
+}
+.btn-sumo-menu.primary {
+    background: linear-gradient(135deg, rgba(255, 61, 0, 0.25) 0%, rgba(255, 145, 0, 0.15) 100%);
+    border-color: #ff3d00;
+    box-shadow: 0 0 15px rgba(255, 61, 0, 0.25);
+}
+.btn-sumo-menu.primary:hover {
+    background: linear-gradient(135deg, #ff3d00 0%, #ff9100 100%);
+    color: #000;
+}
+.btn-sumo-menu.primary:hover small {
+    color: #222;
+}
+.btn-sumo-menu .m-icon {
+    font-size: 26px;
+    flex-shrink: 0;
+}
+.btn-sumo-menu .m-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+.btn-sumo-menu .m-text strong {
+    font-size: 14px;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+}
+.btn-sumo-menu .m-text small {
+    font-size: 11px;
+    color: #888;
+}
+.sumo-menu-footer {
+    font-size: 11px;
+    color: #777;
+}
+.btn-sumo-nav.highlight {
+    background: rgba(255, 61, 0, 0.2);
+    border-color: #ff3d00;
+    color: #ff9100;
+    font-weight: 800;
+}
+.btn-sumo-nav.highlight:hover {
+    background: #ff3d00;
+    color: #000;
+}

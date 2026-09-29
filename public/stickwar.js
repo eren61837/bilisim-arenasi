@@ -380,11 +380,15 @@
             chaos: { x: 3720, archerY: GROUND_Y - 140, fireCd: 0 }
         },
 
-        // Gold Mines
+        currentChapter: 1,
+
+        // Gold Mines (2 per side + 1 central rich mine)
         goldMines: [
-            { id: 1, x: 500, capacity: 99999, name: 'Düzen Altın Madeni' },
-            { id: 2, x: 1900, capacity: 99999, name: 'Büyük Merkez Maden (Zengin!)', isRich: true },
-            { id: 3, x: 3300, capacity: 99999, name: 'Kaos Altın Madeni' }
+            { id: 1, x: 420, capacity: 99999, name: 'Düzen İç Maden' },
+            { id: 2, x: 800, capacity: 99999, name: 'Düzen Dış Maden' },
+            { id: 3, x: 1900, capacity: 99999, name: 'Büyük Merkez Maden (Zengin!)', isRich: true },
+            { id: 4, x: 3000, capacity: 99999, name: 'Kaos Dış Maden' },
+            { id: 5, x: 3380, capacity: 99999, name: 'Kaos İç Maden' }
         ],
 
         // Entities
@@ -490,6 +494,22 @@
                 });
             });
 
+            // Chapters Modal
+            const chModal = document.getElementById('modal-sw-chapters');
+            document.getElementById('btn-sw-chapters')?.addEventListener('click', () => {
+                if (chModal) chModal.classList.remove('hidden');
+            });
+            document.getElementById('btn-close-chapters')?.addEventListener('click', () => {
+                if (chModal) chModal.classList.add('hidden');
+            });
+            document.querySelectorAll('.btn-select-chapter').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const chId = btn.getAttribute('data-chapter');
+                    this.startChapter(chId);
+                });
+            });
+
             // Upgrades Modal
             const upgModal = document.getElementById('modal-upgrades');
             document.getElementById('btn-sw-upgrades').addEventListener('click', () => {
@@ -514,8 +534,8 @@
             });
 
             // Restart buttons
-            document.getElementById('btn-sw-restart').addEventListener('click', () => this.restartGame());
-            document.getElementById('btn-go-restart').addEventListener('click', () => this.restartGame());
+            document.getElementById('btn-sw-restart').addEventListener('click', () => this.resetMatch());
+            document.getElementById('btn-go-restart').addEventListener('click', () => this.resetMatch());
 
             // Fullscreen
             document.getElementById('btn-sw-fullscreen').addEventListener('click', () => {
@@ -1318,10 +1338,50 @@
             if (this.enemySpawnTimer > 3.0) {
                 this.enemySpawnTimer = 0;
 
-                // Always maintain at least 3 miners
+                // Maintain 4 miners (2 per mine)
                 const minerCount = this.units.filter(u => u.side === 'chaos' && u.type === 'miner').length;
-                if (minerCount < 3 && this.enemyGold >= UNIT_TYPES.miner.cost) {
+                if (minerCount < 4 && this.enemyGold >= UNIT_TYPES.miner.cost) {
                     this.purchaseUnit('chaos', 'miner');
+                } else if (this.currentChapter === 1) {
+                    // Chapter 1: Archidon Valley - Focus on Archidons
+                    if (this.enemyGold >= UNIT_TYPES.archer.cost) {
+                        this.purchaseUnit('chaos', 'archer');
+                    }
+                } else if (this.currentChapter === 2) {
+                    // Chapter 2: Swordwrath Highlands - Rapid Swords!
+                    if (this.enemyGold >= UNIT_TYPES.sword.cost) {
+                        this.purchaseUnit('chaos', 'sword');
+                    }
+                } else if (this.currentChapter === 3) {
+                    // Chapter 3: Spearton Desert - Heavy Spears & Shields!
+                    if (this.enemyGold >= UNIT_TYPES.spear.cost && Math.random() < 0.65) {
+                        this.purchaseUnit('chaos', 'spear');
+                    } else if (this.enemyGold >= UNIT_TYPES.sword.cost) {
+                        this.purchaseUnit('chaos', 'sword');
+                    }
+                } else if (this.currentChapter === 4) {
+                    // Chapter 4: Magikill Sanctuary - Mages & Skeletons!
+                    if (this.enemyGold >= UNIT_TYPES.mage.cost && Math.random() < 0.45) {
+                        this.purchaseUnit('chaos', 'mage');
+                    } else if (this.enemyGold >= UNIT_TYPES.spear.cost && Math.random() < 0.5) {
+                        this.purchaseUnit('chaos', 'spear');
+                    } else if (this.enemyGold >= UNIT_TYPES.archer.cost) {
+                        this.purchaseUnit('chaos', 'archer');
+                    }
+                } else if (this.currentChapter === 5) {
+                    // Chapter 5: Chaos Giant Lord & Final Army!
+                    const hasGiant = this.units.some(u => u.side === 'chaos' && u.type === 'giant' && u.hp > 0);
+                    if (!hasGiant && this.enemyGold >= UNIT_TYPES.giant.cost) {
+                        this.purchaseUnit('chaos', 'giant');
+                    } else if (this.enemyGold >= UNIT_TYPES.mage.cost && Math.random() < 0.3) {
+                        this.purchaseUnit('chaos', 'mage');
+                    } else if (this.enemyGold >= UNIT_TYPES.spear.cost && Math.random() < 0.4) {
+                        this.purchaseUnit('chaos', 'spear');
+                    } else if (this.enemyGold >= UNIT_TYPES.archer.cost && Math.random() < 0.5) {
+                        this.purchaseUnit('chaos', 'archer');
+                    } else if (this.enemyGold >= UNIT_TYPES.sword.cost) {
+                        this.purchaseUnit('chaos', 'sword');
+                    }
                 } else if (this.isStickWar2Mode) {
                     // Stick War 2 Chaos Empire Roster
                     const rnd = Math.random();
@@ -1337,6 +1397,7 @@
                         this.purchaseUnit('chaos', 'sword');
                     }
                 } else {
+                    // 1v1 / Free Sandbox
                     if (this.enemyGold >= UNIT_TYPES.giant.cost && Math.random() < 0.25) {
                         this.purchaseUnit('chaos', 'giant');
                     } else if (this.enemyGold >= UNIT_TYPES.mage.cost && Math.random() < 0.3) {
@@ -1793,10 +1854,11 @@
 
         getAssignedMine(miner, isOrder) {
             if (isOrder) {
-                // If attacking, consider rich center mine; otherwise stick to safe base mine
-                return this.orderMode === 'attack' ? this.goldMines[1] : this.goldMines[0];
+                if (this.orderMode === 'attack') return this.goldMines[2]; // Rich Center Mine!
+                return (miner.id % 2 === 0) ? this.goldMines[0] : this.goldMines[1];
             } else {
-                return this.enemyAIState === 'attack' ? this.goldMines[1] : this.goldMines[2];
+                if (this.enemyAIState === 'attack') return this.goldMines[2];
+                return (miner.id % 2 === 0) ? this.goldMines[4] : this.goldMines[3];
             }
         },
 
@@ -2494,8 +2556,72 @@
             if (timeEl) timeEl.textContent = timeStr;
         },
 
+        startChapter(id) {
+            this.currentChapter = parseInt(id, 10);
+            try { localStorage.setItem('sw_chapter', this.currentChapter.toString()); } catch(e){}
+
+            const chModal = document.getElementById('modal-sw-chapters');
+            if (chModal) chModal.classList.add('hidden');
+
+            document.querySelectorAll('.chapter-card').forEach(c => {
+                const isActive = c.getAttribute('data-chapter') === id.toString();
+                c.classList.toggle('active', isActive);
+                c.style.borderColor = isActive ? '#ff9800' : '#30363d';
+            });
+
+            this.resetMatch();
+
+            const chapterNames = {
+                1: '🏹 1. Bölüm: Archidon Vadisi',
+                2: '🗡️ 2. Bölüm: Swordwrath Dağları',
+                3: '🛡️ 3. Bölüm: Spearton Çölü',
+                4: '🧙 4. Bölüm: Magikill Tapınağı',
+                5: '👹 5. Bölüm: Kaos Lordu ve Devler Diyarı',
+                6: '⚡ 1v1 Özel Düello'
+            };
+            this.addFloatingText(chapterNames[this.currentChapter] || 'Bölüm Başladı!', 550, GROUND_Y - 140, '#ff9800');
+        },
+
+        resetMatch() {
+            this.units = [];
+            this.arrows = [];
+            this.particles = [];
+            this.floatingTexts = [];
+            this.magicSpells = [];
+            this.controlledUnit = null;
+
+            const hpTable = { 1: 2200, 2: 2600, 3: 3000, 4: 3500, 5: 4500, 6: 3000 };
+            const chaosHp = hpTable[this.currentChapter] || 3000;
+            this.statues.order.hp = this.statues.order.maxHp = 3000;
+            this.statues.chaos.hp = this.statues.chaos.maxHp = chaosHp;
+
+            this.gold = 500;
+            this.enemyGold = 500;
+            this.mana = 150;
+            this.isGameOver = false;
+            this.statsKills = 0;
+            this.statsGoldMined = 0;
+            this.gameStartTime = Date.now();
+
+            const goModal = document.getElementById('modal-gameover');
+            if (goModal) goModal.classList.add('hidden');
+
+            // Spawn initial units (2 miners + 1 combat unit per side)
+            this.spawnUnit('order', 'miner');
+            this.spawnUnit('order', 'miner');
+            this.spawnUnit('order', 'sword');
+
+            this.spawnUnit('chaos', 'miner');
+            this.spawnUnit('chaos', 'miner');
+            this.spawnUnit('chaos', 'sword');
+
+            this.updateResourceUI();
+            this.updateStatueUI();
+            SoundManager.playModeMusic('defend');
+        },
+
         restartGame() {
-            window.location.reload();
+            this.resetMatch();
         }
     };
 

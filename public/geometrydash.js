@@ -256,12 +256,29 @@
     const GRAVITY = 0.85;
     const JUMP_FORCE = -12.5;
     let selectedSkin = 'neon_cube';
-    let currentLevel = 1;
+    let currentLevel = 'demons'; // Default to the special Run From Your Demons mode
     let attempts = 1;
     let isPlaying = false;
     let isDead = false;
     let hasWon = false;
     let gameLoopId = null;
+
+    // Run From Your Demons Lyrics & Synced Timestamps
+    const DEMONS_LYRICS = [
+        { start: 0, end: 6, title: '🔥 RUN FROM YOUR DEMONS 🔥', sub: 'Ritim Parkuru Başladı!' },
+        { start: 6, end: 13, title: 'Shadows creeping in the dark...', sub: 'Karanlıkta adımlar yaklaşıyor...' },
+        { start: 13, end: 20, title: 'Hear the beating of your heart...', sub: 'Kalbinin ritmini hisset!' },
+        { start: 20, end: 27, title: 'No place to hide, nowhere to run...', sub: 'Kaçacak hiçbir yer yok!' },
+        { start: 27, end: 34, title: 'Until the rising of the sun...', sub: 'Şafak sökene kadar dayan!' },
+        { start: 34, end: 41, title: '⚡ THEY ARE COMING FOR YOUR SOUL! ⚡', sub: 'DİKKAT! DROP GELİYOR!' },
+        { start: 41, end: 48, title: '💥 RUN FROM YOUR DEMONS! 💥', sub: 'ZIPLA! ASLA DURMA!' },
+        { start: 48, end: 57, title: '⚡ DON\'T LOOK BACK, JUST RUN! ⚡', sub: 'Arkana bakma, devam et!' },
+        { start: 57, end: 65, title: '🔥 FACE THE FIRE, BREAK THE CHAIN! 🔥', sub: 'Ateşle yüzleş, zincirleri kır!' },
+        { start: 65, end: 74, title: '✨ RISE ABOVE THE FEAR AND PAIN! ✨', sub: 'Korkuyu yen ve zafere koş!' },
+        { start: 74, end: 84, title: '👑 THE NIGHT IS YOURS TO CONQUER! 👑', sub: 'Karanlığa meydan oku!' },
+        { start: 84, end: 95, title: '⚡ RUN! RUN! RUN! ⚡', sub: 'BÜYÜK FİNAL PARKURU!' },
+        { start: 95, end: 120, title: '🏆 VICTORY IS YOURS! 🏆', sub: 'Şeytanları alt ettin, efsanesin!' }
+    ];
 
     try {
         attempts = parseInt(localStorage.getItem('gd_attempts') || '1', 10);
@@ -300,9 +317,19 @@
     });
 
     levelSelect.addEventListener('change', () => {
-        currentLevel = parseInt(levelSelect.value, 10);
+        currentLevel = levelSelect.value;
         resetLevel();
     });
+
+    const btnQuickDemons = document.getElementById('btn-quick-demons');
+    if (btnQuickDemons) {
+        btnQuickDemons.addEventListener('click', () => {
+            currentLevel = 'demons';
+            levelSelect.value = 'demons';
+            resetLevel();
+            startGame();
+        });
+    }
 
     btnToggleMusic.addEventListener('click', () => {
         isMuted = !isMuted;
@@ -324,8 +351,13 @@
 
     btnNextLevel.addEventListener('click', () => {
         victoryOverlay.classList.add('hidden');
-        currentLevel = currentLevel < 3 ? currentLevel + 1 : 1;
-        levelSelect.value = currentLevel.toString();
+        if (currentLevel === 'demons') {
+            currentLevel = '1';
+        } else {
+            const num = parseInt(currentLevel, 10);
+            currentLevel = (num < 3 ? num + 1 : 1).toString();
+        }
+        levelSelect.value = currentLevel;
         resetLevel();
         startGame();
     });
@@ -353,7 +385,70 @@
         // Ground Platform base
         blocks.push({ x: -100, y: groundY, w: levelLength + 500, h: 200, type: 'ground' });
 
-        if (lvl === 1) {
+        if (lvl === 'demons') {
+            // Special Level: "Run From Your Demons" - Synced with the vocal track and rhythm!
+            levelLength = 9600;
+            const obstacles = [
+                // Intro: Shadows creeping in the dark (x: 500 - 1800)
+                { type: 'spike', x: 650 },
+                { type: 'spike', x: 1000 },
+                { type: 'block', x: 1300, y: groundY - 40, w: 60, h: 40 },
+                { type: 'spike', x: 1550 },
+                { type: 'pad_yellow', x: 1800, y: groundY - 10 },
+                { type: 'block', x: 1950, y: groundY - 110, w: 140, h: 30 },
+
+                // Verse 1: Hear the beating of your heart (x: 1800 - 3200)
+                { type: 'spike', x: 2300 },
+                { type: 'spike', x: 2340 },
+                { type: 'orb_yellow', x: 2600, y: groundY - 75 },
+                { type: 'spike', x: 2600 },
+                { type: 'block', x: 2850, y: groundY - 50, w: 100, h: 50 },
+                { type: 'pad_yellow', x: 3150, y: groundY - 10 },
+                { type: 'block', x: 3300, y: groundY - 130, w: 160, h: 30 },
+
+                // Buildup: They are coming for your soul! (x: 3400 - 4500)
+                { type: 'spike', x: 3650 },
+                { type: 'spike', x: 3690 },
+                { type: 'orb_yellow', x: 3950, y: groundY - 80 },
+                { type: 'orb_yellow', x: 4180, y: groundY - 110 },
+                { type: 'spike', x: 4180 },
+                { type: 'pad_yellow', x: 4420, y: groundY - 10 },
+                { type: 'block', x: 4560, y: groundY - 150, w: 200, h: 30 },
+                { type: 'spike', x: 4620, y: groundY - 180 },
+
+                // DROP 1: RUN FROM YOUR DEMONS! RUN! (x: 4800 - 6800)
+                { type: 'spike', x: 4950 },
+                { type: 'spike', x: 4990 },
+                { type: 'spike', x: 5030 }, // Triple spike on beat!
+                { type: 'pad_yellow', x: 5250, y: groundY - 10 },
+                { type: 'orb_yellow', x: 5500, y: groundY - 90 },
+                { type: 'spike', x: 5500 },
+                { type: 'block', x: 5750, y: groundY - 70, w: 80, h: 70 },
+                { type: 'spike', x: 5950 },
+                { type: 'spike', x: 5990 },
+                { type: 'pad_yellow', x: 6200, y: groundY - 10 },
+                { type: 'block', x: 6350, y: groundY - 140, w: 180, h: 30 },
+                { type: 'orb_yellow', x: 6700, y: groundY - 90 },
+
+                // Bridge: Face the fire, break the chain! (x: 6800 - 8000)
+                { type: 'spike', x: 7000 },
+                { type: 'spike', x: 7040 },
+                { type: 'pad_yellow', x: 7300, y: groundY - 10 },
+                { type: 'block', x: 7450, y: groundY - 120, w: 120, h: 30 },
+                { type: 'orb_yellow', x: 7750, y: groundY - 95 },
+                { type: 'spike', x: 7750 },
+
+                // Final Climax: RUN! RUN! RUN! Victory Arch (x: 8000 - 9500)
+                { type: 'spike', x: 8100 },
+                { type: 'spike', x: 8140 },
+                { type: 'spike', x: 8180 },
+                { type: 'pad_yellow', x: 8400, y: groundY - 10 },
+                { type: 'block', x: 8550, y: groundY - 160, w: 220, h: 30 },
+                { type: 'pad_yellow', x: 8900, y: groundY - 10 },
+                { type: 'block', x: 9050, y: groundY - 80, w: 450, h: 80 }
+            ];
+            loadObstacles(obstacles, groundY);
+        } else if (lvl == 1) {
             // Level 1: "Neon Overdrive" - Friendly pacing, rhythmic jumps
             const obstacles = [
                 { type: 'spike', x: 600 },
@@ -878,6 +973,43 @@
         }
 
         ctx.restore();
+
+        // --- Run From Your Demons Synced Lyrics Background / Overlay ---
+        if (currentLevel === 'demons') {
+            const songTime = bgmAudio && !bgmAudio.paused ? bgmAudio.currentTime : (player.x / 450);
+            const activeLyric = DEMONS_LYRICS.find(l => songTime >= l.start && songTime < l.end);
+            if (activeLyric) {
+                ctx.save();
+                ctx.textAlign = 'center';
+                const yOffset = Math.sin(Date.now() / 220) * 3;
+
+                // Cyberpunk glass badge
+                ctx.fillStyle = 'rgba(10, 5, 20, 0.72)';
+                ctx.beginPath();
+                ctx.roundRect(canvas.width / 2 - 270, 16 + yOffset, 540, 58, 12);
+                ctx.fill();
+                ctx.strokeStyle = 'rgba(255, 0, 127, 0.65)';
+                ctx.lineWidth = 2;
+                ctx.shadowColor = '#ff007f';
+                ctx.shadowBlur = 14;
+                ctx.stroke();
+
+                // Main English Lyrics
+                ctx.font = '900 20px "Segoe UI", sans-serif';
+                ctx.fillStyle = '#ffffff';
+                ctx.shadowColor = '#ff007f';
+                ctx.shadowBlur = 14;
+                ctx.fillText(activeLyric.title, canvas.width / 2, 40 + yOffset);
+
+                // Turkish Translation / Prompt
+                ctx.font = 'bold 12px sans-serif';
+                ctx.fillStyle = '#00f0ff';
+                ctx.shadowColor = '#00f0ff';
+                ctx.shadowBlur = 8;
+                ctx.fillText(activeLyric.sub, canvas.width / 2, 60 + yOffset);
+                ctx.restore();
+            }
+        }
     }
 
     function drawPlayerCube() {

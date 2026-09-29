@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>🏎️ Bilişim GP: Çok Oyunculu Yarış - Bilişim Arenası</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏎️</text></svg>">
+    <link rel="stylesheet" href="racing.css">
+</head>
+<body>
+    <!-- TOP NAVIGATION -->
+    <header class="racing-top-bar">
+        <div class="racing-brand">
+            <a href="/" class="btn-racing-nav">⬅ Arenaya Dön</a>
+            <span class="racing-title-text">🏎️ BİLİŞİM GP <span>ARENASI</span></span>
+        </div>
+        <div class="racing-user-info">
+            <span>👤 <strong id="racing-player-name">Oyuncu</strong></span>
+            <button class="btn-racing-nav" id="btn-toggle-sound" onclick="toggleAudio()">🔊 Ses: Açık</button>
+            <button class="btn-racing-nav" onclick="toggleFullscreen()">⛶ Tam Ekran</button>
+        </div>
+    </header>
+
+    <!-- MAIN MENU SCREEN -->
+    <div id="screen-menu" class="racing-screen active">
+        <div class="racing-menu-card">
+            <div class="menu-hero-badge">🔥 YENİ NESİL ÇOK OYUNCULU</div>
+            <h1 class="menu-heading">🏎️ BİLİŞİM GRAND PRIX</h1>
+            <p class="menu-sub">Drift yap, nitroyu kökle, 1v1 veya 2v2 rakiplerini toz içinde bırak!</p>
+
+            <!-- CAR COLOR SELECTOR -->
+            <div class="setting-row">
+                <label>Araba Rengin:</label>
+                <div class="car-colors-palette" id="car-colors">
+                    <button class="color-dot active" style="--c:#00dbff" data-color="#00dbff" title="Cyber Cyan"></button>
+                    <button class="color-dot" style="--c:#ff2a5f" data-color="#ff2a5f" title="Crimson Red"></button>
+                    <button class="color-dot" style="--c:#00e676" data-color="#00e676" title="Neon Lime"></button>
+                    <button class="color-dot" style="--c:#ffd700" data-color="#ffd700" title="Gold Thunder"></button>
+                    <button class="color-dot" style="--c:#b5179e" data-color="#b5179e" title="Hyper Violet"></button>
+                </div>
+            </div>
+
+            <!-- MODE SELECTOR -->
+            <div class="mode-grid">
+                <button class="btn-mode active" data-mode="ai" onclick="selectMode('ai')">
+                    <span class="mode-icon">🤖</span>
+                    <span class="mode-title">AI Botlara Karşı</span>
+                    <span class="mode-desc">3 Akıllı yapay zeka botu ile tek oyunculu yarış</span>
+                </button>
+                <button class="btn-mode" data-mode="1v1" onclick="selectMode('1v1')">
+                    <span class="mode-icon">⚡</span>
+                    <span class="mode-title">1v1 Düello</span>
+                    <span class="mode-desc">Arkadaşınla kafa kafaya 2 kişilik hız kapışması</span>
+                </button>
+                <button class="btn-mode" data-mode="2v2" onclick="selectMode('2v2')">
+                    <span class="mode-icon">🛡️</span>
+                    <span class="mode-title">2v2 Takım Savaşı</span>
+                    <span class="mode-desc">Kırmızı Takım vs Mavi Takım taktiksel yarış</span>
+                </button>
+                <button class="btn-mode" data-mode="quick" onclick="selectMode('quick')">
+                    <span class="mode-icon">🌐</span>
+                    <span class="mode-title">4P Hızlı Çok Oyunculu</span>
+                    <span class="mode-desc">Rastgele 4 oyuncuyla kıyasıya açık lobi</span>
+                </button>
+            </div>
+
+            <!-- OPTIONS ROW -->
+            <div class="options-flex">
+                <div class="setting-item">
+                    <label>Tur Sayısı:</label>
+                    <select id="select-laps" class="racing-select">
+                        <option value="2">2 Tur (Hızlı)</option>
+                        <option value="3" selected>3 Tur (Standart)</option>
+                        <option value="5">5 Tur (Maraton)</option>
+                    </select>
+                </div>
+                <div class="setting-item" id="ai-diff-wrapper">
+                    <label>Bot Zorluğu:</label>
+                    <select id="select-diff" class="racing-select">
+                        <option value="easy">Acemi Sürücü</option>
+                        <option value="medium" selected>Usta Pilot</option>
+                        <option value="hard">Bilişim Canavarı 🔥</option>
+                    </select>
+                </div>
+                <div class="setting-item" id="room-code-wrapper" style="display:none;">
+                    <label>Oda Kodu (İsteğe Bağlı):</label>
+                    <input type="text" id="input-room-code" class="racing-input" placeholder="örn: gp77" maxlength="8">
+                </div>
+            </div>
+
+            <!-- START BUTTON -->
+            <button class="btn-start-race" id="btn-start-race" onclick="startSelectedGame()">
+                GAZA BAS VE BAŞLA! 🏁
+            </button>
+        </div>
+    </div>
+
+    <!-- LOBBY / WAITING SCREEN -->
+    <div id="screen-lobby" class="racing-screen">
+        <div class="racing-menu-card lobby-card">
+            <h2>🏎️ YARIŞ LOBİSİ</h2>
+            <div class="room-id-box">
+                Oda Kodu: <strong id="lobby-room-code">----</strong>
+                <button class="btn-copy" onclick="copyRoomCode()">📋 Kopyala</button>
+            </div>
+            <p class="lobby-sub">Diğer oyuncuların katılması bekleniyor... (<span id="lobby-count">1</span>/4)</p>
+            <div class="lobby-slots" id="lobby-slots">
+                <!-- Slots generated via JS -->
+            </div>
+            <div class="lobby-actions">
+                <button class="btn-racing-nav" onclick="leaveLobby()">⬅ Vazgeç & Menüye Dön</button>
+                <button class="btn-start-race" id="btn-force-start" onclick="forceStartRace()">Hemen Başlat (Botlarla Doldur) 🚀</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- GAME CANVAS CONTAINER -->
+    <div id="screen-game" class="racing-screen">
+        <canvas id="race-canvas"></canvas>
+
+        <!-- SPEED & NITRO HUD -->
+        <div class="hud-top-left">
+            <div class="pos-badge"><span id="hud-pos">1</span><small>/4</small></div>
+            <div class="lap-badge">TUR <strong id="hud-lap">1/3</strong></div>
+        </div>
+
+        <div class="hud-top-right">
+            <div class="time-card">
+                <div class="time-label">ŞU ANKİ TUR</div>
+                <div class="time-val" id="hud-current-time">00:00.0</div>
+            </div>
+            <div class="time-card">
+                <div class="time-label">EN İYİ TUR</div>
+                <div class="time-val gold" id="hud-best-time">--:--.-</div>
+            </div>
+        </div>
+
+        <!-- MINIMAP -->
+        <div class="minimap-container">
+            <canvas id="minimap-canvas" width="160" height="110"></canvas>
+        </div>
+
+        <!-- SPEEDOMETER & NITRO GAUGE -->
+        <div class="hud-speed-gauge">
+            <div class="speed-number"><span id="hud-speed">0</span> <small>KM/H</small></div>
+            <div class="nitro-bar-wrap">
+                <div class="nitro-bar-fill" id="hud-nitro-bar" style="width:100%;"></div>
+            </div>
+            <div class="nitro-label">⚡ NİTRO [SHIFT]</div>
+        </div>
+
+        <!-- DRIFT NOTIFICATION -->
+        <div id="hud-drift-notice" class="drift-notice">🔥 +150 DRIFT!</div>
+
+        <!-- COUNTDOWN OVERLAY -->
+        <div id="hud-countdown" class="hud-countdown">
+            <span id="countdown-text">3</span>
+        </div>
+
+        <!-- CONTROLS RIBBON -->
+        <footer class="racing-bottom-bar">
+            <div class="key-tip"><kbd>W</kbd> / <kbd>↑</kbd> Gaz</div>
+            <div class="key-tip"><kbd>S</kbd> / <kbd>↓</kbd> Fren / Geri</div>
+            <div class="key-tip"><kbd>A</kbd> <kbd>D</kbd> / <kbd>←</kbd> <kbd>→</kbd> Direksiyon</div>
+            <div class="key-tip"><kbd>SPACE</kbd> Drift & El Freni</div>
+            <div class="key-tip"><kbd>SHIFT</kbd> Nitro Boost 🚀</div>
+            <div class="key-tip"><kbd>R</kbd> Piste Geri Dön</div>
+        </footer>
+    </div>
+
+    <!-- PODIUM / FINISH SCREEN -->
+    <div id="screen-podium" class="racing-screen">
+        <div class="racing-menu-card podium-card">
+            <div class="podium-trophy">🏆</div>
+            <h1 id="podium-title">DAMALI BAYRAK!</h1>
+            <p id="podium-subtitle">Tebrikler! Yarış tamamlandı.</p>
+            <div class="podium-list" id="podium-list">
+                <!-- Filled dynamically -->
+            </div>
+            <div class="podium-buttons">
+                <button class="btn-start-race" onclick="restartRace()">🔄 Tekrar Yarış</button>
+                <button class="btn-racing-nav" onclick="returnToMenu()">🏠 Menüye Dön</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="racing.js"></script>
+</body>
+</html>

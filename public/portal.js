@@ -408,9 +408,17 @@
           updateCount('count-dino', data.games.dino);
           updateCount('count-sumo', data.games.sumo);
           updateCount('count-stickwar', data.games.stickwar);
+          updateCount('count-racing', data.games.racing);
+          updateCount('count-subway', data.games.subway);
+          updateCount('count-temple', data.games.templerun);
+          updateCount('count-gartic', data.games.gartic);
 
           // 👑 DYNAMIC POPULARITY SORTING (Seçkin oyunlar)
           const gameEntries = [
+            { id: 'count-racing', count: data.games.racing || 0, name: 'Bilişim GP Yarış' },
+            { id: 'count-subway', count: data.games.subway || 0, name: 'Subway Surfers' },
+            { id: 'count-temple', count: data.games.templerun || 0, name: 'Temple Run 2' },
+            { id: 'count-gartic', count: data.games.gartic || 0, name: 'Gartic.io & Çizim' },
             { id: 'count-cs16', count: data.games.cs16 || 0, name: 'Counter-Strike 1.6' },
             { id: 'count-stickwar', count: data.games.stickwar || 0, name: 'Stick War: Legacy' },
             { id: 'count-minecraft', count: (data.games.minecraft || data.games.eaglercraft || 0), name: 'Minecraft 3D & Eagler' },
@@ -701,6 +709,9 @@
     ws.onopen = () => {
       ws.send(JSON.stringify({ type: 'join', room: 'lobby' }));
       ws.send(JSON.stringify({ type: 'portal_get_chat' }));
+      if (state.username) {
+        ws.send(JSON.stringify({ type: 'player_announce', username: state.username }));
+      }
       if (state.isAdmin) {
         ws.send(JSON.stringify({ type: 'admin_auth', password: 'erencix201124' }));
       }
@@ -710,7 +721,10 @@
       if (typeof ev.data !== 'string') return;
       let data; try { data = JSON.parse(ev.data); } catch (_) { return; }
 
-      if (data.type === 'portal_chat' || data.type === 'portal_chat_msg') {
+      if (data.type === 'player_join_announcement') {
+        showPlayerJoinBanner(data.text || (`🎮 ${data.username} az önce aramıza katıldı ve oyunlara başladı!`));
+      }
+      else if (data.type === 'portal_chat' || data.type === 'portal_chat_msg') {
         const item = data.item || data;
         const author = item.username || item.u || data.u || 'Misafir';
         const msg = item.message || item.msg || data.msg || '';
@@ -743,6 +757,25 @@
     };
 
     ws.onclose = () => setTimeout(initWS, 2500);
+  }
+
+  function showPlayerJoinBanner(text) {
+    let container = document.getElementById('player-join-toast-container');
+    if (!container) {
+      container = document.createElement('div');
+      container.id = 'player-join-toast-container';
+      container.className = 'player-join-toast-container';
+      document.body.appendChild(container);
+    }
+    const toast = document.createElement('div');
+    toast.className = 'player-join-toast';
+    toast.innerHTML = `<span class="toast-pulse">🟢</span> <span class="toast-text">${esc(text)}</span>`;
+    container.appendChild(toast);
+    try { AudioEngine.playDing(); } catch (_) {}
+    setTimeout(() => {
+      toast.classList.add('hide');
+      setTimeout(() => { if (toast.parentNode) toast.remove(); }, 400);
+    }, 4500);
   }
 
   function appendChatMessage(author, text, time) {

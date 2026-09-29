@@ -507,10 +507,10 @@
     const botGun = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.12, 0.7), darkArmor);
     botGun.position.set(0.45, 0.95, 0.3); group.add(botGun);
 
-    // Initial position
+    // Initial position on ground level
     const rx = (Math.random() - 0.5) * 160;
     const rz = (Math.random() - 0.5) * 160;
-    group.position.set(rx, 2, rz);
+    group.position.set(rx, 0, rz);
     scene.add(group);
 
     return {
@@ -520,9 +520,10 @@
       hp: 100,
       maxHp: 100,
       kills: 0,
-      targetPos: new THREE.Vector3(rx, 2, rz),
+      targetPos: new THREE.Vector3(rx, 0, rz),
       moveTimer: 0,
       shootTimer: 0,
+      velY: 0,
       isDead: false
     };
   }
@@ -829,8 +830,8 @@
     if (state.grapple.active) {
       state.grapple.active = false;
       grappleLine.visible = false;
-      // Slingshot momentum boost
-      state.vel.multiplyScalar(1.15);
+      // Slingshot momentum boost (preserve and multiply velocity for epic air swings)
+      state.vel.multiplyScalar(1.30);
     }
   }
 
@@ -1013,14 +1014,16 @@
         RMAudio.init();
       }
 
-      // 2. Grapple Pull Physics
+      // 2. Grapple Pull Physics (Elastic spring pull with momentum)
       if (state.grapple.active) {
         const pullDir = state.grapple.point.clone().sub(state.pos);
         const dist = pullDir.length();
         pullDir.normalize();
 
-        const pullForce = Math.min(dist * 1.6, 38);
+        const pullForce = Math.min(Math.max(dist * 2.8, 30), 62);
         state.vel.addScaledVector(pullDir, pullForce * dt);
+        // Counter gravity while grappling to allow soaring arcs
+        state.vel.y += 18 * dt;
 
         // Update 3D Cable line
         const gunTip = camera.position.clone().add(new THREE.Vector3(0.2, -0.2, -0.4).applyEuler(camera.rotation));
@@ -1043,13 +1046,56 @@
         }
       });
 
-      // 4. Position Update & Collisions
+      // 4. Position Update & Strict AABB Collisions against Arena Buildings
+      const pRad = 0.55;
+
+      // X Axis Movement & Collision
       state.pos.x += state.vel.x * dt;
-      state.pos.y += state.vel.y * dt;
+      for (const col of colliders) {
+        if (state.pos.x + pRad > col.min.x && state.pos.x - pRad < col.max.x &&
+            state.pos.z + pRad > col.min.z && state.pos.z - pRad < col.max.z &&
+            state.pos.y > col.min.y && state.pos.y - 1.5 < col.max.y) {
+          if (state.vel.x > 0) state.pos.x = col.min.x - pRad;
+          else if (state.vel.x < 0) state.pos.x = col.max.x + pRad;
+          state.vel.x = 0;
+        }
+      }
+
+      // Z Axis Movement & Collision
       state.pos.z += state.vel.z * dt;
+      for (const col of colliders) {
+        if (state.pos.x + pRad > col.min.x && state.pos.x - pRad < col.max.x &&
+            state.pos.z + pRad > col.min.z && state.pos.z - pRad < col.max.z &&
+            state.pos.y > col.min.y && state.pos.y - 1.5 < col.max.y) {
+          if (state.vel.z > 0) state.pos.z = col.min.z - pRad;
+          else if (state.vel.z < 0) state.pos.z = col.max.z + pRad;
+          state.vel.z = 0;
+        }
+      }
+
+      // Y Axis Movement & Rooftop Landing
+      state.pos.y += state.vel.y * dt;
+      let onColRoof = false;
+      for (const col of colliders) {
+        if (state.pos.x + pRad > col.min.x && state.pos.x - pRad < col.max.x &&
+            state.pos.z + pRad > col.min.z && state.pos.z - pRad < col.max.z) {
+          // Landing on roof
+          if (state.vel.y <= 0 && state.pos.y - 1.6 <= col.max.y && state.pos.y - 1.6 >= col.max.y - 1.2) {
+            state.pos.y = col.max.y + 1.6;
+            state.vel.y = 0;
+            state.onGround = true;
+            onColRoof = true;
+            break;
+          } else if (state.vel.y > 0 && state.pos.y >= col.min.y && state.pos.y - 1.6 < col.min.y) {
+            // Hitting ceiling / underside
+            state.pos.y = col.min.y - 0.05;
+            state.vel.y = 0;
+          }
+        }
+      }
 
       // Ground limit
-      if (state.pos.y <= 1.6) {
+      if (!onColRoof && state.pos.y <= 1.6) {
         state.pos.y = 1.6;
         state.vel.y = 0;
         state.onGround = true;
@@ -1085,21 +1131,62 @@
       if (cabPrompt) cabPrompt.style.display = nearCab ? 'flex' : 'none';
     }
 
-    // 5. Update Bots AI
+    // 5. Update Bots AI with Gravity, Floor Snapping & Wall Collision
     bots.forEach(bot => {
       if (bot.isDead) return;
+
+      // Gravity and floor height calculation for bot
+      bot.velY = (bot.velY || 0) - 34 * dt;
+      bot.group.position.y += bot.velY * dt;
+
+      // Check highest roof under bot
+      let floorY = 0;
+      for (const col of colliders) {
+        if (bot.group.position.x >= col.min.x - 0.4 && bot.group.position.x <= col.max.x + 0.4 &&
+            bot.group.position.z >= col.min.z - 0.4 && bot.group.position.z <= col.max.z + 0.4) {
+          if (col.max.y > floorY && col.max.y <= bot.group.position.y + 1.2) {
+            floorY = col.max.y;
+          }
+        }
+      }
+
+      if (bot.group.position.y <= floorY) {
+        bot.group.position.y = floorY;
+        bot.velY = 0;
+      }
+
       // Roam
       bot.moveTimer -= dt;
       if (bot.moveTimer <= 0) {
-        bot.moveTimer = 2 + Math.random() * 3;
-        bot.targetPos.set((Math.random() - 0.5) * 150, 1.0, (Math.random() - 0.5) * 150);
+        bot.moveTimer = 2.5 + Math.random() * 3;
+        bot.targetPos.set((Math.random() - 0.5) * 150, 0, (Math.random() - 0.5) * 150);
       }
       const dir = bot.targetPos.clone().sub(bot.group.position);
       dir.y = 0;
       if (dir.length() > 1) {
         dir.normalize();
-        bot.group.position.addScaledVector(dir, 9 * dt);
-        bot.group.rotation.y = Math.atan2(dir.x, dir.z);
+
+        // Check building obstruction before moving
+        const nextX = bot.group.position.x + dir.x * 9 * dt;
+        const nextZ = bot.group.position.z + dir.z * 9 * dt;
+        let blocked = false;
+
+        for (const col of colliders) {
+          if (nextX >= col.min.x - 0.5 && nextX <= col.max.x + 0.5 &&
+              nextZ >= col.min.z - 0.5 && nextZ <= col.max.z + 0.5 &&
+              bot.group.position.y + 0.9 >= col.min.y && bot.group.position.y <= col.max.y - 0.2) {
+            blocked = true;
+            break;
+          }
+        }
+
+        if (!blocked) {
+          bot.group.position.x = nextX;
+          bot.group.position.z = nextZ;
+          bot.group.rotation.y = Math.atan2(dir.x, dir.z);
+        } else {
+          bot.moveTimer = 0; // Pick new direction if blocked
+        }
       }
 
       // Bot shoots at player if nearby

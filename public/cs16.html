@@ -243,21 +243,16 @@
         </div>
     </header>
 
-    <!-- CLICK TO FOCUS / PLAY OVERLAY -->
-    <div id="cs-click-overlay" onclick="startDirectGame()">
-        <div class="cs-play-card">
-            <div style="font-size:42px; margin-bottom:8px;">🎯</div>
-            <h2 style="font-size:22px; font-weight:900; color:#ff9800; margin-bottom:6px;">OYUNU BAŞLAT &amp; FAREYİ KİLİTLE</h2>
-            <p style="font-size:13px; color:#ddd; margin-bottom:12px;">Doğrudan sunucuya bağlanmak ve fareyi kontrol etmek için tıkla!</p>
-            <span style="background:#ff9800; color:#000; font-weight:900; padding:8px 18px; border-radius:8px; font-size:13px; display:inline-block;">BAŞLA (CLICK TO PLAY) 🚀</span>
-        </div>
+    <!-- DIRECT PLAY NOTIFICATION (NON-BLOCKING) -->
+    <div id="cs-direct-hint" style="position:fixed; top:54px; right:16px; background:rgba(0,0,0,0.85); border:1px solid #ff9800; border-radius:8px; padding:6px 14px; font-size:12px; color:#ff9800; z-index:1500; display:flex; align-items:center; gap:8px; pointer-events:none; box-shadow:0 0 15px rgba(255,152,0,0.3);">
+        <span>⚡ Doğrudan Oyna Aktif: Ekrana tıklayarak hemen oynamaya başla!</span>
     </div>
 
     <!-- LOADING SCREEN -->
     <div id="cs-loader">
         <div class="cs-spinner"></div>
         <h2 style="font-size:18px; letter-spacing:1px;">Counter-Strike 1.6 Sunucusuna Bağlanılıyor...</h2>
-        <p style="font-size:12px; color:#888;">WebAssembly motoru ve harita varlıkları yükleniyor. Hazır olunca doğrudan oyuna girersiniz.</p>
+        <p style="font-size:12px; color:#888;">WebAssembly motoru ve harita varlıkları yükleniyor. Doğrudan oyundasınız.</p>
     </div>
 
     <!-- AUTHENTIC CS 1.6 WEB ENGINE IFRAME -->
@@ -289,18 +284,21 @@
 
         const frame = document.getElementById('cs-game-frame');
         const loader = document.getElementById('cs-loader');
-        const overlay = document.getElementById('cs-click-overlay');
+        const hint = document.getElementById('cs-direct-hint');
 
         frame.onload = function() {
             setTimeout(() => {
                 if (loader) loader.style.display = 'none';
+                frame.focus();
+                try {
+                    if (frame.contentWindow) frame.contentWindow.focus();
+                } catch(_) {}
             }, 600);
+            setTimeout(() => {
+                if (hint) hint.style.opacity = '0';
+                setTimeout(() => { if (hint) hint.remove(); }, 500);
+            }, 5000);
         };
-
-        function startDirectGame() {
-            if (overlay) overlay.classList.add('hidden');
-            lockGamePointer();
-        }
 
         function lockGamePointer() {
             try {
@@ -317,7 +315,6 @@
             if (targetBtn) targetBtn.classList.add('active');
 
             if (loader) loader.style.display = 'flex';
-            if (overlay) overlay.classList.remove('hidden');
             if (SERVERS[key]) {
                 frame.src = SERVERS[key];
             }
@@ -325,7 +322,6 @@
 
         function reloadGame() {
             if (loader) loader.style.display = 'flex';
-            if (overlay) overlay.classList.remove('hidden');
             frame.src = frame.src;
         }
 
@@ -336,6 +332,13 @@
                 document.exitFullscreen().catch(() => {});
             }
         }
+
+        // Direct auto-focus on load
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                lockGamePointer();
+            }, 800);
+        });
     </script>
 </body>
 </html>

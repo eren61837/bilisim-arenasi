@@ -87,11 +87,14 @@
     stone: 40,
     gold: 50,
     stashPlaced: false,
-    selectedBuilding: 'stash', // 'stash', 'wall', 'spike', 'arrow', 'cannon', 'goldmine'
+    selectedTool: 'axe', // 'axe', 'pickaxe', 'spear', 'bow'
+    buildMode: false,
+    selectedBuilding: 'stash', // 'stash', 'wall', 'stonewall', 'door', 'spike', 'arrow', 'cannon', 'goldmine', 'healer'
     keys: { w: false, a: false, s: false, d: false, space: false },
     mouse: { x: width / 2, y: height / 2, worldX: 0, worldY: 0, down: false },
     isDead: false,
-    isShopOpen: false
+    isShopOpen: false,
+    musicPlaying: true
   };
 
   // Player Object
@@ -117,10 +120,12 @@
     stash: { name: 'Altın Kasası', icon: '👑', cost: { wood: 0, stone: 0, gold: 0 }, hp: 800, maxHp: 800, range: 0, color: '#ffd700' },
     wall: { name: 'Ahşap Duvar', icon: '🧱', cost: { wood: 15, stone: 0, gold: 0 }, hp: 250, maxHp: 250, range: 0, color: '#8d6e63' },
     stonewall: { name: 'Taş Duvar', icon: '🏛️', cost: { wood: 10, stone: 20, gold: 0 }, hp: 550, maxHp: 550, range: 0, color: '#9e9e9e' },
+    door: { name: 'Güvenli Kapı', icon: '🚪', cost: { wood: 25, stone: 10, gold: 0 }, hp: 400, maxHp: 400, isDoor: true, color: '#a1887f' },
     spike: { name: 'Dikenli Duvar', icon: '🌵', cost: { wood: 20, stone: 10, gold: 0 }, hp: 300, maxHp: 300, damage: 15, color: '#e65100' },
     arrow: { name: 'Ok Kulesi', icon: '🏹', cost: { wood: 30, stone: 15, gold: 10 }, hp: 280, maxHp: 280, range: 240, rate: 650, lastFire: 0, color: '#00e5ff' },
     cannon: { name: 'Top Kulesi', icon: '💣', cost: { wood: 45, stone: 40, gold: 25 }, hp: 400, maxHp: 400, range: 280, rate: 1300, lastFire: 0, color: '#ff1744' },
-    goldmine: { name: 'Altın Madeni', icon: '💰', cost: { wood: 40, stone: 25, gold: 0 }, hp: 220, maxHp: 220, genRate: 2, lastGen: 0, color: '#ffb300' }
+    goldmine: { name: 'Altın Madeni', icon: '💰', cost: { wood: 40, stone: 25, gold: 0 }, hp: 220, maxHp: 220, genRate: 2, lastGen: 0, color: '#ffb300' },
+    healer: { name: 'Şifa Çadırı', icon: '💖', cost: { wood: 50, stone: 50, gold: 20 }, hp: 350, maxHp: 350, range: 180, rate: 1000, lastHeal: 0, color: '#e91e63' }
   };
 
   // Entities
@@ -154,8 +159,93 @@
   }
   initResources();
 
+  // --- AUDIO & MUSIC (Run From Your Demons) ---
+  const musicAudio = document.getElementById('audio-zombs-music');
+  const btnToggleMusic = document.getElementById('btn-toggle-music');
+  let musicStarted = false;
+
+  function initMusic() {
+    if (musicAudio && !musicStarted) {
+      musicStarted = true;
+      musicAudio.volume = state.isNight ? 0.65 : 0.4;
+      musicAudio.play().then(() => {
+        if (btnToggleMusic) {
+          btnToggleMusic.textContent = '🎵 Müzik: Açık';
+          btnToggleMusic.style.borderColor = '#00e676';
+        }
+      }).catch(() => {});
+    }
+  }
+
+  if (btnToggleMusic) {
+    btnToggleMusic.addEventListener('click', () => {
+      if (!musicAudio) return;
+      if (musicAudio.paused) {
+        musicAudio.play().then(() => {
+          btnToggleMusic.textContent = '🎵 Müzik: Açık';
+          btnToggleMusic.style.borderColor = '#00e676';
+        }).catch(() => {});
+      } else {
+        musicAudio.pause();
+        btnToggleMusic.textContent = '🔇 Müzik: Kapalı';
+        btnToggleMusic.style.borderColor = '#ff5252';
+      }
+    });
+  }
+
+  // --- TOOL & BUILD MODE SYSTEM ---
+  function selectTool(toolName) {
+    state.selectedTool = toolName;
+    state.buildMode = false;
+    const buildHotbar = document.getElementById('zombs-build-hotbar');
+    if (buildHotbar) buildHotbar.classList.add('hidden');
+    document.querySelectorAll('.tool-slot').forEach(el => {
+      el.classList.toggle('active', el.getAttribute('data-tool') === toolName);
+    });
+    const btnBuild = document.getElementById('btn-toggle-build');
+    if (btnBuild) btnBuild.classList.remove('active');
+    AudioEngine.playTone(360, 'sine', 0.05, 0.1);
+  }
+
+  function toggleBuildMode(force) {
+    state.buildMode = (typeof force === 'boolean') ? force : !state.buildMode;
+    const buildHotbar = document.getElementById('zombs-build-hotbar');
+    const btnBuild = document.getElementById('btn-toggle-build');
+    if (state.buildMode) {
+      if (buildHotbar) buildHotbar.classList.remove('hidden');
+      if (btnBuild) btnBuild.classList.add('active');
+      document.querySelectorAll('.tool-slot').forEach(el => el.classList.remove('active'));
+      selectBuilding(state.selectedBuilding || 'stash');
+      AudioEngine.playTone(520, 'sine', 0.06, 0.15);
+    } else {
+      if (buildHotbar) buildHotbar.classList.add('hidden');
+      if (btnBuild) btnBuild.classList.remove('active');
+      selectTool(state.selectedTool || 'axe');
+    }
+  }
+
+  // Bind Tool Slots
+  document.querySelectorAll('.tool-slot').forEach(slot => {
+    slot.addEventListener('click', (e) => {
+      e.stopPropagation();
+      initMusic();
+      const t = slot.getAttribute('data-tool');
+      selectTool(t);
+    });
+  });
+
+  const btnToggleBuild = document.getElementById('btn-toggle-build');
+  if (btnToggleBuild) {
+    btnToggleBuild.addEventListener('click', (e) => {
+      e.stopPropagation();
+      initMusic();
+      toggleBuildMode();
+    });
+  }
+
   // --- CONTROLS & INPUT LISTENERS ---
   window.addEventListener('keydown', (e) => {
+    initMusic();
     const code = e.code;
     if (code === 'KeyW' || code === 'ArrowUp') state.keys.w = true;
     if (code === 'KeyA' || code === 'ArrowLeft') state.keys.a = true;
@@ -163,18 +253,31 @@
     if (code === 'KeyD' || code === 'ArrowRight') state.keys.d = true;
     if (code === 'Space') state.keys.space = true;
 
-    // Building Hotkeys (1-7)
-    if (code === 'Digit1') selectBuilding('stash');
-    if (code === 'Digit2') selectBuilding('wall');
-    if (code === 'Digit3') selectBuilding('stonewall');
-    if (code === 'Digit4') selectBuilding('spike');
-    if (code === 'Digit5') selectBuilding('arrow');
-    if (code === 'Digit6') selectBuilding('cannon');
-    if (code === 'Digit7') selectBuilding('goldmine');
+    // Tool Hotkeys (1-4)
+    if (code === 'Digit1') selectTool('axe');
+    if (code === 'Digit2') selectTool('pickaxe');
+    if (code === 'Digit3') selectTool('spear');
+    if (code === 'Digit4') selectTool('bow');
 
-    // Shop Key (B)
-    if (code === 'KeyB') toggleShop();
-    if (code === 'Escape') closeModals();
+    // Build Mode Hotkeys (B or 5 toggles build mode)
+    if (code === 'KeyB') toggleBuildMode();
+
+    if (state.buildMode) {
+      if (code === 'Digit5') selectBuilding('stash');
+      if (code === 'Digit6') selectBuilding('wall');
+      if (code === 'Digit7') selectBuilding('stonewall');
+      if (code === 'Digit8') selectBuilding('door');
+      if (code === 'Digit9') selectBuilding('spike');
+      if (code === 'Digit0') selectBuilding('arrow');
+      if (code === 'Minus') selectBuilding('cannon');
+      if (code === 'Equal') selectBuilding('goldmine');
+      if (code === 'KeyH') selectBuilding('healer');
+    }
+
+    if (code === 'Escape') {
+      if (state.buildMode) toggleBuildMode(false);
+      closeModals();
+    }
   });
 
   window.addEventListener('keyup', (e) => {
@@ -193,12 +296,26 @@
   });
 
   canvas.addEventListener('mousedown', (e) => {
+    initMusic();
+    AudioEngine.init();
     if (e.button === 0) {
-      AudioEngine.init();
       state.mouse.down = true;
-      tryPlaceBuilding();
+      if (state.buildMode) {
+        tryPlaceBuilding();
+      } else {
+        if (state.selectedTool === 'bow') {
+          playerShootBow();
+        } else {
+          playerAttack();
+        }
+      }
+    } else if (e.button === 2) {
+      // Right click cancels build mode
+      if (state.buildMode) toggleBuildMode(false);
     }
   });
+
+  canvas.addEventListener('contextmenu', (e) => e.preventDefault());
 
   window.addEventListener('mouseup', (e) => {
     if (e.button === 0) state.mouse.down = false;
@@ -207,6 +324,7 @@
   // Touch Support for Mobile / Tablet
   let touchStartX = 0, touchStartY = 0;
   canvas.addEventListener('touchstart', (e) => {
+    initMusic();
     AudioEngine.init();
     if (e.touches.length > 0) {
       const t = e.touches[0];
@@ -214,7 +332,15 @@
       state.mouse.x = t.clientX - rect.left;
       state.mouse.y = t.clientY - rect.top;
       state.mouse.down = true;
-      tryPlaceBuilding();
+      if (state.buildMode) {
+        tryPlaceBuilding();
+      } else {
+        if (state.selectedTool === 'bow') {
+          playerShootBow();
+        } else {
+          playerAttack();
+        }
+      }
       touchStartX = t.clientX;
       touchStartY = t.clientY;
     }
@@ -244,6 +370,7 @@
   document.querySelectorAll('.hotbar-slot').forEach(slot => {
     slot.addEventListener('click', (e) => {
       e.stopPropagation();
+      initMusic();
       const bType = slot.getAttribute('data-building');
       selectBuilding(bType);
     });
@@ -384,37 +511,73 @@
   }
 
   // --- COMBAT & HARVESTING ---
+  function playerShootBow() {
+    const now = Date.now();
+    if (now - player.lastAttackTime < 320) return;
+    player.lastAttackTime = now;
+    player.isSwinging = true;
+    player.swingTimer = 0.22;
+    AudioEngine.shoot();
+
+    const bowDmg = 36 + (player.swordLevel * 10);
+    projectiles.push({
+      x: player.x + Math.cos(player.angle) * 22,
+      y: player.y + Math.sin(player.angle) * 22,
+      vx: Math.cos(player.angle) * 12.5,
+      vy: Math.sin(player.angle) * 12.5,
+      damage: bowDmg,
+      range: 420,
+      traveled: 0,
+      type: 'player_arrow'
+    });
+  }
+
   function playerAttack() {
     const now = Date.now();
-    if (now - player.lastAttackTime < 240) return;
+    const isSpear = state.selectedTool === 'spear';
+    const isAxe = state.selectedTool === 'axe';
+    const isPickaxe = state.selectedTool === 'pickaxe';
+
+    const attackCooldown = isAxe ? 180 : (isSpear ? 300 : 220);
+    if (now - player.lastAttackTime < attackCooldown) return;
     player.lastAttackTime = now;
     player.isSwinging = true;
     player.swingTimer = 0.2;
     AudioEngine.swing();
 
     // Weapon hit area
-    const hitDistance = 45;
+    const hitDistance = isSpear ? 65 : 45;
+    const hitRadius = isSpear ? 24 : 18;
     const hitX = player.x + Math.cos(player.angle) * hitDistance;
     const hitY = player.y + Math.sin(player.angle) * hitDistance;
 
     // 1. Harvest Resource Nodes
     for (let i = resourceNodes.length - 1; i >= 0; i--) {
       const node = resourceNodes[i];
-      if (Math.hypot(node.x - hitX, node.y - hitY) < node.radius + 18) {
-        const dmg = player.pickaxePower;
-        node.hp -= dmg;
+      if (Math.hypot(node.x - hitX, node.y - hitY) < node.radius + hitRadius) {
+        let dmg = player.pickaxePower;
         if (node.type === 'tree') {
-          const gain = Math.floor(dmg * 0.8) + 2;
+          // Axe gives 3.5x wood yield
+          if (isAxe) dmg = Math.floor(dmg * 2.5) + 8;
+          node.hp -= dmg;
+          const gain = isAxe ? Math.floor(dmg * 1.5) + 5 : Math.floor(dmg * 0.8) + 2;
           state.wood += gain;
           state.score += gain;
           spawnFloatingText(`+${gain} 🌲`, node.x, node.y, '#8d6e63');
           AudioEngine.chop();
           spawnParticles(node.x, node.y, '#795548', 6);
         } else {
-          const gain = Math.floor(dmg * 0.6) + 2;
+          // Pickaxe gives 3.5x stone yield + chance of gold
+          if (isPickaxe) dmg = Math.floor(dmg * 2.5) + 8;
+          node.hp -= dmg;
+          const gain = isPickaxe ? Math.floor(dmg * 1.3) + 5 : Math.floor(dmg * 0.6) + 2;
           state.stone += gain;
           state.score += gain * 2;
           spawnFloatingText(`+${gain} 🪨`, node.x, node.y, '#9e9e9e');
+          if (isPickaxe && Math.random() > 0.4) {
+            state.gold += 2;
+            spawnFloatingText('+2 💰', node.x, node.y - 12, '#ffd700');
+          }
           AudioEngine.mine();
           spawnParticles(node.x, node.y, '#9e9e9e', 6);
         }
@@ -422,7 +585,6 @@
 
         if (node.hp <= 0) {
           resourceNodes.splice(i, 1);
-          // Respawn after 25s
           setTimeout(() => {
             const isTree = Math.random() > 0.4;
             resourceNodes.push({
@@ -441,19 +603,30 @@
     }
 
     // 2. Attack Zombies
-    const swordDmg = player.swordLevel > 0 ? player.swordDamage : player.pickaxePower;
+    let attackDamage = player.pickaxePower;
+    if (isSpear) {
+      attackDamage = 55 + (player.swordLevel * 18);
+    } else if (isAxe) {
+      attackDamage = 32 + (player.swordLevel * 10);
+    } else if (isPickaxe) {
+      attackDamage = 28 + (player.pickaxeLevel * 8);
+    } else if (player.swordLevel > 0) {
+      attackDamage = player.swordDamage;
+    }
+
     for (let i = zombies.length - 1; i >= 0; i--) {
       const z = zombies[i];
-      if (Math.hypot(z.x - hitX, z.y - hitY) < z.radius + 24) {
-        z.hp -= swordDmg;
+      if (Math.hypot(z.x - hitX, z.y - hitY) < z.radius + hitRadius + 6) {
+        z.hp -= attackDamage;
         AudioEngine.zombieHit();
         spawnParticles(z.x, z.y, '#ff1744', 8);
-        spawnFloatingText(`-${swordDmg}`, z.x, z.y - 12, '#ff5252');
+        spawnFloatingText(`-${attackDamage}`, z.x, z.y - 12, '#ff5252');
 
-        // Knockback
+        // Knockback (spear has strong knockback)
         const kbAng = Math.atan2(z.y - player.y, z.x - player.x);
-        z.x += Math.cos(kbAng) * 16;
-        z.y += Math.sin(kbAng) * 16;
+        const kbDist = isSpear ? 34 : 16;
+        z.x += Math.cos(kbAng) * kbDist;
+        z.y += Math.sin(kbAng) * kbDist;
 
         if (z.hp <= 0) {
           killZombie(z, i);
@@ -547,6 +720,9 @@
       state.cycleTimer = state.cycleDuration;
       if (state.isNight) {
         spawnZombieWave();
+        if (musicAudio && !musicAudio.paused) {
+          musicAudio.volume = 0.72; // Intense bass during night!
+        }
       } else {
         state.wave++;
         showToast(`☀️ GÜNDÜZ OLDU! Dalga ${state.wave - 1} Tamamlandı!`);
@@ -554,6 +730,9 @@
         // Wave clear gold bonus
         state.gold += 20 + state.wave * 5;
         updateHUD();
+        if (musicAudio && !musicAudio.paused) {
+          musicAudio.volume = 0.42;
+        }
       }
     }
 
@@ -566,7 +745,7 @@
       cycleEl.style.color = state.isNight ? '#ff5252' : '#00e5ff';
     }
 
-    // 2. Player Movement
+    // 2. Player Movement with Wall Collision (Doors allow passage)
     let vx = 0, vy = 0;
     if (state.keys.w) vy -= 1;
     if (state.keys.s) vy += 1;
@@ -577,8 +756,23 @@
       vy *= 0.7071;
     }
 
-    player.x += vx * player.speed;
-    player.y += vy * player.speed;
+    const nextX = player.x + vx * player.speed;
+    const nextY = player.y + vy * player.speed;
+    let canMoveX = true;
+    let canMoveY = true;
+
+    for (const b of buildings) {
+      if (b.type === 'door') continue; // Player walks freely through safe doors!
+      if (Math.hypot(b.x - nextX, b.y - player.y) < b.radius + player.radius - 4) {
+        canMoveX = false;
+      }
+      if (Math.hypot(b.x - player.x, b.y - nextY) < b.radius + player.radius - 4) {
+        canMoveY = false;
+      }
+    }
+
+    if (canMoveX) player.x = nextX;
+    if (canMoveY) player.y = nextY;
 
     // World Bounds
     player.x = Math.max(player.radius, Math.min(WORLD_SIZE - player.radius, player.x));
@@ -589,14 +783,20 @@
     state.mouse.worldY = player.y + (state.mouse.y - height / 2);
     player.angle = Math.atan2(state.mouse.worldY - player.y, state.mouse.worldX - player.x);
 
-    // Auto / Click Attack
+    // Auto / Click Attack (Disabled in build mode to avoid accidental firing)
     if (state.mouse.down || state.keys.space) {
-      playerAttack();
+      if (!state.buildMode) {
+        if (state.selectedTool === 'bow') {
+          playerShootBow();
+        } else {
+          playerAttack();
+        }
+      }
     }
 
     if (player.swingTimer > 0) player.swingTimer -= dt;
 
-    // 3. Buildings Simulation (Turrets fire, Gold Mines generate)
+    // 3. Buildings Simulation (Turrets, Gold Mines, Healers)
     const stash = buildings.find(b => b.type === 'stash');
     const targetBaseX = stash ? stash.x : player.x;
     const targetBaseY = stash ? stash.y : player.y;
@@ -613,10 +813,24 @@
         }
       }
 
+      // Healer Tent: heals player when inside 180px radius
+      if (b.type === 'healer') {
+        if (now - (b.lastHeal || 0) > 1100) {
+          b.lastHeal = now;
+          const dToPlayer = Math.hypot(player.x - b.x, player.y - b.y);
+          if (dToPlayer < 180 && player.hp < player.maxHp) {
+            player.hp = Math.min(player.maxHp, player.hp + 12);
+            updateHUD();
+            spawnFloatingText('+12 💖', player.x, player.y - 14, '#e91e63');
+            spawnParticles(player.x, player.y, '#e91e63', 6, 2);
+            AudioEngine.playTone(660, 'sine', 0.08, 0.08);
+          }
+        }
+      }
+
       // Arrow Turret
       if (b.type === 'arrow') {
         if (now - b.lastFire > 650) {
-          // Find closest zombie in range
           let closestZ = null, minDist = 250;
           zombies.forEach(z => {
             const d = Math.hypot(z.x - b.x, z.y - b.y);
@@ -689,6 +903,14 @@
                 if (tz.hp <= 0) killZombie(tz, zIndex);
               }
             });
+          } else if (p.type === 'player_arrow') {
+            z.hp -= p.damage;
+            spawnParticles(p.x, p.y, '#ffd700', 6);
+            spawnFloatingText(`-${p.damage}`, z.x, z.y - 12, '#ffd700');
+            const kb = Math.atan2(p.vy, p.vx);
+            z.x += Math.cos(kb) * 16;
+            z.y += Math.sin(kb) * 16;
+            if (z.hp <= 0) killZombie(z, j);
           } else {
             z.hp -= p.damage;
             spawnParticles(p.x, p.y, '#00e5ff', 5);
@@ -865,6 +1087,26 @@
         ctx.fillStyle = b.type === 'stonewall' ? '#9e9e9e' : '#8d6e63';
         ctx.fillRect(-20, -20, 40, 40);
         ctx.strokeStyle = '#000'; ctx.lineWidth = 2; ctx.strokeRect(-20, -20, 40, 40);
+      } else if (b.type === 'door') {
+        ctx.fillStyle = '#8d6e63';
+        ctx.fillRect(-20, -20, 40, 40);
+        ctx.strokeStyle = '#4e342e'; ctx.lineWidth = 3; ctx.strokeRect(-20, -20, 40, 40);
+        ctx.beginPath();
+        ctx.moveTo(-6, -18); ctx.lineTo(-6, 18);
+        ctx.moveTo(6, -18); ctx.lineTo(6, 18);
+        ctx.stroke();
+        ctx.fillStyle = '#ffd700';
+        ctx.beginPath(); ctx.arc(10, 0, 3.5, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#fff'; ctx.font = '14px sans-serif'; ctx.textAlign = 'center'; ctx.fillText('🚪', 0, 5);
+      } else if (b.type === 'healer') {
+        ctx.fillStyle = '#eceff1';
+        ctx.beginPath(); ctx.arc(0, 0, 22, 0, Math.PI * 2); ctx.fill();
+        ctx.strokeStyle = '#e91e63'; ctx.lineWidth = 2.5; ctx.stroke();
+        ctx.fillStyle = '#e91e63';
+        ctx.fillRect(-4, -12, 8, 24);
+        ctx.fillRect(-12, -4, 24, 8);
+        ctx.strokeStyle = 'rgba(233, 30, 99, 0.25)'; ctx.lineWidth = 1.5;
+        ctx.beginPath(); ctx.arc(0, 0, 180, 0, Math.PI * 2); ctx.stroke();
       } else if (b.type === 'spike') {
         ctx.fillStyle = '#e65100';
         ctx.fillRect(-20, -20, 40, 40);
@@ -896,8 +1138,8 @@
       ctx.restore();
     });
 
-    // 4. Building Placement Preview (Ghost Grid Snap)
-    if (!state.isDead && !state.isShopOpen) {
+    // 4. Building Placement Preview (Ghost Grid Snap - only shown in build mode!)
+    if (!state.isDead && !state.isShopOpen && state.buildMode) {
       const gx = Math.floor(state.mouse.worldX / GRID_SIZE) * GRID_SIZE + GRID_SIZE / 2;
       const gy = Math.floor(state.mouse.worldY / GRID_SIZE) * GRID_SIZE + GRID_SIZE / 2;
       ctx.save();
@@ -913,11 +1155,19 @@
     // 5. Projectiles
     projectiles.forEach(p => {
       ctx.save();
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, p.type === 'cannonball' ? 6 : 3.5, 0, Math.PI * 2);
-      ctx.fillStyle = p.type === 'cannonball' ? '#ff3d00' : '#00e5ff';
-      ctx.shadowBlur = 8; ctx.shadowColor = ctx.fillStyle;
-      ctx.fill();
+      if (p.type === 'player_arrow') {
+        ctx.fillStyle = '#ffd700';
+        ctx.shadowBlur = 10; ctx.shadowColor = '#ffd700';
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 4, 0, Math.PI * 2);
+        ctx.fill();
+      } else {
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.type === 'cannonball' ? 6 : 3.5, 0, Math.PI * 2);
+        ctx.fillStyle = p.type === 'cannonball' ? '#ff3d00' : '#00e5ff';
+        ctx.shadowBlur = 8; ctx.shadowColor = ctx.fillStyle;
+        ctx.fill();
+      }
       ctx.restore();
     });
 
@@ -952,19 +1202,55 @@
       ctx.restore();
     });
 
-    // 7. Player Character
+    // 7. Player Character & Authentic Equipped Weapon
     ctx.save();
     ctx.translate(player.x, player.y);
     ctx.rotate(player.angle);
 
-    // Hands & Pickaxe / Sword
-    const swingOffset = player.isSwinging ? Math.sin((0.2 - player.swingTimer) * Math.PI * 5) * 0.8 : 0;
+    // Hands & Tool Swing Animation
+    const swingOffset = player.isSwinging ? Math.sin((0.2 - player.swingTimer) * Math.PI * 5) * 0.85 : 0;
     ctx.save();
     ctx.rotate(swingOffset);
 
-    // Weapon
-    ctx.fillStyle = player.swordLevel > 0 ? '#00e5ff' : '#ffd700';
-    ctx.fillRect(16, -3, 20, 6);
+    // Render Equipped Weapon/Tool
+    const tool = state.selectedTool;
+    if (tool === 'axe') {
+      ctx.fillStyle = '#795548'; // Handle
+      ctx.fillRect(14, -2, 18, 4);
+      ctx.fillStyle = '#cfd8dc'; // Axe head
+      ctx.beginPath();
+      ctx.arc(28, -4, 7, -Math.PI / 2, Math.PI / 2);
+      ctx.fill();
+    } else if (tool === 'pickaxe') {
+      ctx.fillStyle = '#37474f'; // Handle
+      ctx.fillRect(14, -2, 18, 4);
+      ctx.strokeStyle = '#00e5ff'; // Cyan pick head
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.arc(30, 0, 9, -Math.PI * 0.5, Math.PI * 0.5);
+      ctx.stroke();
+    } else if (tool === 'spear') {
+      ctx.fillStyle = '#a1887f'; // Long Shaft
+      ctx.fillRect(12, -2, 36, 4);
+      ctx.fillStyle = '#ffd700'; // Spear tip
+      ctx.beginPath();
+      ctx.moveTo(48, -6); ctx.lineTo(62, 0); ctx.lineTo(48, 6); ctx.closePath();
+      ctx.fill();
+    } else if (tool === 'bow') {
+      ctx.strokeStyle = '#8d6e63'; // Bow curve
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.arc(22, 0, 14, -Math.PI / 2, Math.PI / 2);
+      ctx.stroke();
+      ctx.strokeStyle = '#fff'; // Bowstring
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(22, -14); ctx.lineTo(22, 14);
+      ctx.stroke();
+    } else {
+      ctx.fillStyle = player.swordLevel > 0 ? '#00e5ff' : '#ffd700';
+      ctx.fillRect(16, -3, 20, 6);
+    }
     ctx.restore();
 
     // Body

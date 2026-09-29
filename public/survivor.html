@@ -11,6 +11,34 @@
     <!-- GAME CANVAS -->
     <canvas id="game-canvas"></canvas>
 
+    <!-- ACTIVE WEAPONS HOTBAR (1, 2, 3, 4 tuşları veya Q/E ile Silah Değiştir) -->
+    <div class="weapon-hotbar" id="weapon-hotbar">
+        <div class="hotbar-slot active" data-slot="0" id="slot-0" title="Kutsal Kılıç [1]">
+            <span class="slot-key">1</span>
+            <span class="slot-icon">⚔️</span>
+            <span class="slot-name">Kılıç</span>
+            <div class="slot-cd" id="slot-cd-0"></div>
+        </div>
+        <div class="hotbar-slot" data-slot="1" id="slot-1" title="Sihirbaz Asası [2]">
+            <span class="slot-key">2</span>
+            <span class="slot-icon">🪄</span>
+            <span class="slot-name">Asa</span>
+            <div class="slot-cd" id="slot-cd-1"></div>
+        </div>
+        <div class="hotbar-slot" data-slot="2" id="slot-2" title="Cehennem Alevi [3]">
+            <span class="slot-key">3</span>
+            <span class="slot-icon">🔥</span>
+            <span class="slot-name">Ateş</span>
+            <div class="slot-cd" id="slot-cd-2"></div>
+        </div>
+        <div class="hotbar-slot" data-slot="3" id="slot-3" title="Kozmik Karadelik [4]">
+            <span class="slot-key">4</span>
+            <span class="slot-icon">🌌</span>
+            <span class="slot-name">Karadelik</span>
+            <div class="slot-cd" id="slot-cd-3"></div>
+        </div>
+    </div>
+
     <!-- TOP HUD -->
     <header class="top-hud">
         <div class="hud-left">
