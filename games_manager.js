@@ -1896,7 +1896,7 @@ function initGamesManager(wss, db) {
   return {
     getLanIp,
     getStats() {
-      let csCount = 0, diepCount = 0, mcCount = 0, survivorCount = 0, gdCount = 0, pixelCount = 0, sosCount = 0, kafatopuCount = 0, zombsCount = 0, redmatchCount = 0, dinoCount = 0;
+      let csCount = 0, diepCount = 0, mcCount = 0, survivorCount = 0, gdCount = 0, pixelCount = 0, sosCount = 0, kafatopuCount = 0, zombsCount = 0, redmatchCount = 0, dinoCount = 0, sumoCount = 0;
       let realHumanTotal = 0;
       wss.clients.forEach(c => {
         if (c.readyState === WebSocket.OPEN && !c.isBot) {
@@ -1911,6 +1911,7 @@ function initGamesManager(wss, db) {
           else if (c.room === 'zombs') zombsCount++;
           else if (c.room === 'redmatch') redmatchCount++;
           else if (c.room === 'dino') dinoCount++;
+          else if (c.room === 'sumo') sumoCount++;
           else if (c.room === 'world' || c.room === 'turkey' || c.room === 'pixelplace') pixelCount++;
         }
       });
@@ -1928,12 +1929,23 @@ function initGamesManager(wss, db) {
           kafatopu: kafatopuCount,
           zombs: zombsCount,
           redmatch: redmatchCount,
-          dino: dinoCount
+          dino: dinoCount,
+          sumo: sumoCount
         }
       };
     },
     handleMessage(ws, data) {
       if (!data || !data.type) return false;
+
+      // Sumo Multiplayer Relay
+      if (data.type.startsWith('sumo_')) {
+        wss.clients.forEach(c => {
+          if (c !== ws && c.readyState === WebSocket.OPEN && c.room === 'sumo') {
+            c.send(JSON.stringify(data));
+          }
+        });
+        return true;
+      }
 
       // Portal Chat
       if (data.type === 'portal_chat') { broadcastPortalChat(data.username || ws.user?.username || 'Misafir_' + Math.floor(100+Math.random()*900), data.msg); return true; }

@@ -406,11 +406,13 @@
           updateCount('count-zombs', data.games.zombs);
           updateCount('count-redmatch', data.games.redmatch);
           updateCount('count-dino', data.games.dino);
+          updateCount('count-sumo', data.games.sumo);
 
-          // 👑 DYNAMIC POPULARITY SORTING (Sadece bu 11 seçkin oyun)
+          // 👑 DYNAMIC POPULARITY SORTING (Seçkin oyunlar)
           const gameEntries = [
             { id: 'count-cs16', count: data.games.cs16 || 0, name: 'Counter-Strike 1.6' },
             { id: 'count-minecraft', count: (data.games.minecraft || data.games.eaglercraft || 0), name: 'Minecraft 3D & Eagler' },
+            { id: 'count-sumo', count: data.games.sumo || 0, name: 'Ahmet Hakan: Kutu Sumo' },
             { id: 'count-kafatopu', count: data.games.kafatopu || 0, name: 'Kafa Topu: Beyaz Saray' },
             { id: 'count-pixelplace', count: data.games.pixelplace || 0, name: 'Beyaz Saray (PixelPlace)' },
             { id: 'count-sos', count: data.games.sos || 0, name: 'SOS Arenası (10x10 & 25x24)' },
@@ -629,7 +631,8 @@
         { path: '/diep', name: 'DIEP.IO' },
         { path: '/zombs', name: 'ZOMBS.IO' },
         { path: '/redmatch', name: 'REDMATCH 3D' },
-        { path: '/dino', name: 'CHROME DINO HD' }
+        { path: '/dino', name: 'CHROME DINO HD' },
+        { path: '/sumo', name: 'AHMET HAKAN SUMO' }
       ];
       btnRandom.textContent = '🎲 SEÇİLİYOR...';
       let count = 0;

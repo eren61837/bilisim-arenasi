@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>🥊 AHMET HAKAN: Kutu Sumo Ragdoll Arenası - Bilişim Arenası</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🥊</text></svg>">
+    <link rel="stylesheet" href="sumo.css">
+    <link rel="stylesheet" href="bgm.css">
+</head>
+<body>
+
+    <!-- TOP NAVIGATION BAR -->
+    <header class="sumo-topbar">
+        <div class="sumo-brand">
+            <a href="/" class="btn-sumo-nav">🏠 Portale Dön</a>
+            <div class="sumo-title-wrap">
+                <span class="sumo-title-icon">🥊</span>
+                <div>
+                    <h1 class="sumo-title-text">AHMET HAKAN: KUTU SUMO</h1>
+                    <span class="sumo-subtext">2 Kişilik &amp; AI Ragdoll Fizik Arenası</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- SCORE & ROUND BAR -->
+        <div class="sumo-scoreboard">
+            <div class="p1-score-box">
+                <span class="p-name" id="p1-display-name">AHMET HAKAN</span>
+                <span class="p-score-badge" id="p1-score">0</span>
+            </div>
+            <div class="match-info-center">
+                <span class="round-pill" id="round-indicator">TUR 1</span>
+                <span class="map-pill" id="current-map-name">📺 CNN TÜRK STÜDYOSU</span>
+            </div>
+            <div class="p2-score-box">
+                <span class="p-score-badge" id="p2-score">0</span>
+                <span class="p-name" id="p2-display-name">KUTU SUMO</span>
+            </div>
+        </div>
+
+        <!-- TOP ACTIONS & MODE SELECTOR -->
+        <div class="sumo-actions">
+            <div class="mode-tabs">
+                <button class="mode-tab-btn active" id="btn-mode-local">🎮 2 Kişilik</button>
+                <button class="mode-tab-btn" id="btn-mode-ai">🤖 vs Yapay Zeka</button>
+                <button class="mode-tab-btn" id="btn-mode-online">🌐 Online 1v1</button>
+            </div>
+            <button class="btn-sumo-nav" id="btn-open-settings">⚙️ Ayarlar</button>
+            <button class="btn-sumo-nav" id="btn-fullscreen">⛶ Tam Ekran</button>
+        </div>
+    </header>
+
+    <!-- MAIN GAME CANVAS VIEWPORT -->
+    <div class="sumo-canvas-wrap">
+        <canvas id="sumo-canvas"></canvas>
+
+        <!-- COMIC DRAMATIC BANNERS & SPEECH BUBBLE OVERLAYS -->
+        <div id="meme-banner" class="meme-banner hidden">
+            <div class="meme-text" id="meme-text">SON DAKİKA!</div>
+        </div>
+
+        <!-- SUPER POWER ENERGY BARS (HUD) -->
+        <div class="super-hud-left">
+            <div class="avatar-box p1-avatar">
+                <span class="avatar-icon">👓</span>
+                <span class="avatar-tag">AHMET HAKAN</span>
+            </div>
+            <div class="super-meter-wrap">
+                <div class="super-label">SÜPER GÜÇ: <span id="p1-super-name">TARAFSIZ BÖLGE ŞOKU (Q)</span></div>
+                <div class="super-bar-bg">
+                    <div id="p1-super-fill" class="super-bar-fill"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="super-hud-right">
+            <div class="super-meter-wrap text-right">
+                <div class="super-label">SÜPER GÜÇ: <span id="p2-super-name">GÖBEK FIRLATMASI (SHIFT)</span></div>
+                <div class="super-bar-bg">
+                    <div id="p2-super-fill" class="super-bar-fill p2-fill"></div>
+                </div>
+            </div>
+            <div class="avatar-box p2-avatar">
+                <span class="avatar-icon">🐲</span>
+                <span class="avatar-tag">KUTU SUMO</span>
+            </div>
+        </div>
+
+        <!-- COUNTDOWN OVERLAY -->
+        <div id="countdown-wrap" class="countdown-wrap hidden">
+            <span id="countdown-num">3</span>
+        </div>
+
+        <!-- KO ROUND WINNER MODAL -->
+        <div id="ko-modal" class="ko-modal hidden">
+            <div class="ko-content">
+                <div class="ko-title" id="ko-title">💥 NAKAVT!</div>
+                <p class="ko-subtitle" id="ko-subtitle">AHMET HAKAN RAKİBİNİ YAYINDAN UÇURDU!</p>
+                <div class="ko-actions">
+                    <button class="btn-ko-act primary" id="btn-next-round">▶ SONRAKİ TUR (ENTER)</button>
+                    <button class="btn-ko-act" id="btn-restart-match">🔄 MAÇI YENİLE (R)</button>
+                    <button class="btn-ko-act" id="btn-choose-map">🗺️ HARİTA DEĞİŞTİR (M)</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- MOBILE ON-SCREEN CONTROLS -->
+        <div class="touch-controls" id="touch-controls">
+            <div class="touch-left">
+                <button class="btn-touch touch-dir" id="touch-left">◀</button>
+                <button class="btn-touch touch-dir" id="touch-right">▶</button>
+            </div>
+            <div class="touch-right">
+                <button class="btn-touch touch-act btn-jump" id="touch-jump">⬆</button>
+                <button class="btn-touch touch-act btn-brace" id="touch-block">🛡️</button>
+                <button class="btn-touch touch-act btn-punch" id="touch-punch">🥊</button>
+                <button class="btn-touch touch-act btn-super" id="touch-super">⚡</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SETTINGS & MAP CHOOSER MODAL -->
+    <div id="settings-modal" class="settings-modal-backdrop hidden">
+        <div class="settings-modal">
+            <div class="modal-header">
+                <h2>⚙️ OYUN VE HARİTA AYARLARI</h2>
+                <button id="btn-close-settings" class="btn-modal-close">✕</button>
+            </div>
+
+            <!-- MAP SELECTOR -->
+            <div class="setting-group">
+                <label class="setting-title">🗺️ DÖVÜŞ HARİTASI SEÇ</label>
+                <div class="maps-grid-selector">
+                    <div class="map-card active" data-map="tv">
+                        <span class="map-icon">📺</span>
+                        <div class="map-info">
+                            <strong>CNN Türk Stüdyosu</strong>
+                            <small>Ahmet Hakan canlı yayın masası, kameralar &amp; son dakika!</small>
+                        </div>
+                    </div>
+                    <div class="map-card" data-map="klasik">
+                        <span class="map-icon">⛩️</span>
+                        <div class="map-info">
+                            <strong>Klasik Dohyo Ringi</strong>
+                            <small>Geleneksel Japon sumo platformu, fenerler &amp; tezahürat</small>
+                        </div>
+                    </div>
+                    <div class="map-card" data-map="buz">
+                        <span class="map-icon">❄️</span>
+                        <div class="map-info">
+                            <strong>Buzul Zirvesi</strong>
+                            <small>Aşırı kaygan zemin! Duruş hakimiyeti zorlaşır</small>
+                        </div>
+                    </div>
+                    <div class="map-card" data-map="asansor">
+                        <span class="map-icon">🛗</span>
+                        <div class="map-info">
+                            <strong>Gökdelen Asansörü</strong>
+                            <small>Hareketli asansör platformu, aşağı düşen elenir</small>
+                        </div>
+                    </div>
+                    <div class="map-card" data-map="ruzgar">
+                        <span class="map-icon">🌪️</span>
+                        <div class="map-info">
+                            <strong>Rüzgarlı Siber Tepe</strong>
+                            <small>Şiddetli rüzgar dalgaları dövüşçüleri savurur</small>
+                        </div>
+                    </div>
+                    <div class="map-card" data-map="lav">
+                        <span class="map-icon">🌋</span>
+                        <div class="map-info">
+                            <strong>Lav Krateri</strong>
+                            <small>Düşen alev alır ve göğe fırlar!</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- GRAVITY & RULES -->
+            <div class="setting-row">
+                <div>
+                    <label class="setting-title">🌍 YER ÇEKİMİ</label>
+                    <select id="sel-gravity" class="sumo-select">
+                        <option value="AY">🌙 Ay (Hafif &amp; Uzun Zıplama)</option>
+                        <option value="NORMAL" selected>⚖️ Normal Fizik</option>
+                        <option value="AGIR">🏋️ Ağır (Sert &amp; Hızlı Kavga)</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="setting-title">🏆 KAZANMA SKORU</label>
+                    <select id="sel-rounds" class="sumo-select">
+                        <option value="1">1 Tur (Ani Ölüm)</option>
+                        <option value="3" selected>3 Tur Kazanan</option>
+                        <option value="5">5 Tur Kazanan (Büyük Final)</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="setting-title">🤖 AI ZORLUK SEVİYESİ</label>
+                    <select id="sel-ai-diff" class="sumo-select">
+                        <option value="KOLAY">Acemi Çaylak</option>
+                        <option value="NORMAL" selected>Normal Ahmet Hakan</option>
+                        <option value="ZOR">🔥 Efsane Sumo Ustası</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button id="btn-save-settings" class="btn-save-settings">AYARLARI UYGULA &amp; BAŞLA 🥊</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- CONTROLS GUIDE (BOTTOM CORNER) -->
+    <div class="sumo-controls-guide">
+        <div class="cg-p1">
+            <strong>🔴 P1 (Ahmet Hakan):</strong>
+            <span>[A / D] Yürü</span>
+            <span>[W] Zıpla</span>
+            <span>[S] Blok</span>
+            <span>[BOŞLUK] Yumruk (Basılı tut: ŞARJ)</span>
+            <span>[Q / E] SÜPER ŞOK</span>
+        </div>
+        <div class="cg-p2">
+            <strong>🔵 P2 (Rakip / AI):</strong>
+            <span>[← / →] Yürü</span>
+            <span>[↑] Zıpla</span>
+            <span>[↓] Blok</span>
+            <span>[ENTER] Yumruk (Basılı tut: ŞARJ)</span>
+            <span>[SHIFT] SÜPER FIRLATMA</span>
+        </div>
+    </div>
+
+    <script src="sumo.js"></script>
+</body>
+</html>

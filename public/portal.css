@@ -651,6 +651,7 @@ body {
 .card-sos { --card-color: #00dbff; --card-glow: rgba(0, 219, 255, 0.4); }
 .card-gd { --card-color: #00f0ff; --card-glow: rgba(0, 240, 255, 0.5); }
 .card-dino { --card-color: #00ff88; --card-glow: rgba(0, 255, 136, 0.5); }
+.card-sumo { --card-color: #ff3d00; --card-glow: rgba(255, 61, 0, 0.5); }
 
 /* =====================================================
    GLOBAL CLASSROOM CHAT SECTION
