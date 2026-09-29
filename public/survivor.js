@@ -1999,6 +1999,20 @@
     });
   }
 
+  function getNearestEnemy() {
+    let nearest = null;
+    let minDist = Infinity;
+    for (let i = 0; i < enemies.length; i++) {
+      const e = enemies[i];
+      const dist = Math.hypot(e.x - player.x, e.y - player.y);
+      if (dist < minDist) {
+        minDist = dist;
+        nearest = e;
+      }
+    }
+    return nearest;
+  }
+
   function addFloatText(x, y, text, color = '#ffffff', size = 16) {
     floatTexts.push({
       x, y,
