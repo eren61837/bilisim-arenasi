@@ -1,0 +1,333 @@
+/* tetris.css - Neon Cyber Tetris Styling */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+body {
+    background: #080c16;
+    color: #fff;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.tetris-topbar {
+    height: 52px;
+    background: linear-gradient(180deg, #101626 0%, #0a0e1a 100%);
+    border-bottom: 2px solid #00f0ff;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 16px;
+    box-shadow: 0 4px 20px rgba(0, 240, 255, 0.2);
+    z-index: 10;
+}
+
+.tetris-brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.btn-tetris-nav {
+    background: rgba(0, 240, 255, 0.12);
+    border: 1px solid #00f0ff;
+    color: #00f0ff;
+    padding: 6px 14px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-tetris-nav:hover {
+    background: #00f0ff;
+    color: #000;
+}
+
+.tetris-title span {
+    font-size: 16px;
+    font-weight: 900;
+    color: #00f0ff;
+    letter-spacing: 1px;
+}
+
+.tetris-title small {
+    display: block;
+    font-size: 11px;
+    color: #8b9bb4;
+}
+
+.tetris-actions {
+    display: flex;
+    gap: 8px;
+}
+
+/* LAYOUT */
+.tetris-layout {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    padding: 12px;
+}
+
+.tetris-side-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    width: 120px;
+}
+
+.panel-box {
+    background: rgba(16, 22, 38, 0.8);
+    border: 1.5px solid rgba(0, 240, 255, 0.3);
+    border-radius: 12px;
+    padding: 12px;
+    text-align: center;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+}
+
+.box-title {
+    display: block;
+    font-size: 11px;
+    font-weight: 800;
+    color: #00f0ff;
+    letter-spacing: 1px;
+    margin-bottom: 8px;
+}
+
+.stat-number {
+    font-size: 24px;
+    font-weight: 900;
+    font-family: monospace;
+    color: #fff;
+}
+
+.stat-number.gold { color: #ffd700; text-shadow: 0 0 10px rgba(255, 215, 0, 0.6); }
+.stat-number.cyan { color: #00f0ff; text-shadow: 0 0 10px rgba(0, 240, 255, 0.6); }
+
+/* MAIN BOARD */
+.tetris-main-board {
+    position: relative;
+    border: 3px solid #00f0ff;
+    border-radius: 14px;
+    background: #04060c;
+    box-shadow: 0 0 30px rgba(0, 240, 255, 0.35), inset 0 0 20px rgba(0, 0, 0, 0.8);
+    overflow: hidden;
+}
+
+#tetris-canvas {
+    display: block;
+}
+
+/* OVERLAYS */
+.tetris-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(4, 6, 12, 0.88);
+    backdrop-filter: blur(6px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 50;
+    transition: opacity 0.2s;
+}
+
+.tetris-overlay.hidden {
+    display: none !important;
+}
+
+.tetris-modal-card {
+    background: #11172a;
+    border: 2px solid #00f0ff;
+    border-radius: 16px;
+    padding: 24px 28px;
+    text-align: center;
+    max-width: 280px;
+    width: 90%;
+    box-shadow: 0 0 40px rgba(0, 240, 255, 0.4);
+}
+
+.modal-icon {
+    font-size: 32px;
+    margin-bottom: 8px;
+}
+
+.tetris-modal-card h1 {
+    font-size: 22px;
+    font-weight: 900;
+    color: #00f0ff;
+    margin-bottom: 6px;
+}
+
+.tetris-modal-card p {
+    font-size: 12px;
+    color: #8b9bb4;
+    line-height: 1.4;
+    margin-bottom: 16px;
+}
+
+.btn-start-tetris {
+    width: 100%;
+    background: linear-gradient(135deg, #00f0ff 0%, #0088ff 100%);
+    color: #000;
+    font-size: 15px;
+    font-weight: 900;
+    padding: 12px;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(0, 240, 255, 0.4);
+    transition: all 0.15s;
+}
+
+.btn-start-tetris:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 25px rgba(0, 240, 255, 0.7);
+}
+
+.hints-box {
+    margin-top: 14px;
+    font-size: 11px;
+    color: #94a3b8;
+    text-align: left;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.hints-box kbd {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+    padding: 1px 5px;
+    color: #ffd700;
+    font-family: monospace;
+}
+
+.go-stats {
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 16px;
+    text-align: left;
+    font-size: 13px;
+    color: #8b9bb4;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.go-stats b {
+    color: #fff;
+    float: right;
+}
+
+/* MOBILE CONTROLS */
+.tetris-mobile-controls {
+    display: none;
+    background: #090e1a;
+    border-top: 1px solid rgba(0, 240, 255, 0.2);
+    padding: 8px 12px;
+    gap: 8px;
+    justify-content: center;
+}
+
+.m-btn {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(0, 240, 255, 0.3);
+    color: #fff;
+    border-radius: 8px;
+    padding: 12px 16px;
+    font-size: 16px;
+    font-weight: 900;
+    cursor: pointer;
+    touch-action: manipulation;
+}
+
+.m-btn:active {
+    background: #00f0ff;
+    color: #000;
+}
+
+.drop-btn {
+    background: rgba(255, 61, 0, 0.2);
+    border-color: #ff3d00;
+    color: #ff3d00;
+}
+
+.hold-btn {
+    background: rgba(255, 215, 0, 0.2);
+    border-color: #ffd700;
+    color: #ffd700;
+}
+
+@media (max-width: 600px) {
+    .tetris-mobile-controls {
+        display: flex;
+        flex-wrap: wrap;
+    }
+    .tetris-side-panel {
+        width: 80px;
+    }
+    #tetris-canvas {
+        width: 220px;
+        height: 440px;
+    }
+}
+
+/* EXIT RATING MODAL */
+.tetris-modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.9);
+    z-index: 999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.tetris-modal-backdrop.hidden {
+    display: none !important;
+}
+
+.tetris-rating-box {
+    background: #111728;
+    border: 2px solid #ffd700;
+    border-radius: 18px;
+    padding: 28px 32px;
+    text-align: center;
+    max-width: 400px;
+    width: 90%;
+    box-shadow: 0 0 50px rgba(255, 215, 0, 0.4);
+}
+
+.rating-stars {
+    font-size: 36px;
+    color: #555;
+    cursor: pointer;
+    margin: 14px 0;
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+}
+
+.rating-stars span {
+    transition: color 0.15s, transform 0.15s;
+}
+
+.rating-stars span:hover, .rating-stars span.active {
+    color: #ffd700;
+    transform: scale(1.2);
+    filter: drop-shadow(0 0 8px #ffd700);
+}

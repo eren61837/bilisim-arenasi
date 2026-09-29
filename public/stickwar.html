@@ -5,9 +5,107 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>⚔️ Stick War: Legacy Web - Bilişim Arenası</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚔️</text></svg>">
-    <link rel="stylesheet" href="stickwar.css">
+    <link rel="stylesheet" href="stickwar.css?v=25">
 </head>
 <body>
+
+    <!-- AUTHENTIC STICK WAR: LEGACY MAIN MENU SCREEN -->
+    <div id="screen-sw-main-menu" class="sw-main-menu-screen">
+        <div class="sw-menu-backdrop-glow"></div>
+        <div class="sw-menu-content">
+            <!-- STICK WAR: LEGACY LOGO BANNER -->
+            <div class="sw-menu-header">
+                <div class="sw-logo-container">
+                    <div class="sw-swords-crossed">⚔️</div>
+                    <h1 class="sw-logo-title">STICK WAR</h1>
+                    <span class="sw-logo-badge">LEGACY</span>
+                </div>
+                <p class="sw-menu-tagline">İnamorta Dünyasında Düzen ve Kaos Savaşı</p>
+                <div class="sw-creators-ribbon">👑 Yapımcılar: Ahmet Baki ve Hakan Samet • Bilişim Arenası</div>
+            </div>
+
+            <!-- WARRIOR SQUAD VISUAL SHOWCASE -->
+            <div class="sw-squad-showcase">
+                <div class="squad-unit-card"><span class="unit-card-icon">⛏️</span><span class="unit-card-name">Madenci</span></div>
+                <div class="squad-unit-card"><span class="unit-card-icon">🗡️</span><span class="unit-card-name">Kılıçlı</span></div>
+                <div class="squad-unit-card"><span class="unit-card-icon">🏹</span><span class="unit-card-name">Okçu</span></div>
+                <div class="squad-unit-card"><span class="unit-card-icon">🛡️</span><span class="unit-card-name">Mızrakçı</span></div>
+                <div class="squad-unit-card"><span class="unit-card-icon">🧙</span><span class="unit-card-name">Büyücü</span></div>
+                <div class="squad-unit-card"><span class="unit-card-icon">👹</span><span class="unit-card-name">Dev</span></div>
+            </div>
+
+            <!-- MAIN GAME MODES -->
+            <div class="sw-modes-container">
+                <button class="btn-sw-mode-card mode-campaign" id="btn-menu-campaign">
+                     <div class="mode-icon-box">🗺️</div>
+                     <div class="mode-info">
+                         <div class="mode-title-row">
+                             <span class="mode-title">KLASİK SEFER (CAMPAIGN)</span>
+                             <span class="mode-tag tag-story">HİKAYE</span>
+                         </div>
+                         <p class="mode-desc">İnamorta'nın 5 kadim silah krallığını fethet, isyancıları dize getir ve düzeni sağla!</p>
+                     </div>
+                </button>
+
+                <button class="btn-sw-mode-card mode-tournament" id="btn-menu-tournament">
+                     <div class="mode-icon-box">👑</div>
+                     <div class="mode-info">
+                         <div class="mode-title-row">
+                             <span class="mode-title">TURNUVA: CROWN OF INAMORTA</span>
+                             <span class="mode-tag tag-gold">ŞAMPİYONLUK</span>
+                         </div>
+                         <p class="mode-desc">Efsanevi gladyatörlerle eleme maçları yap! Finalde Cyrus'u yenerek İnamorta Tacını kazan!</p>
+                     </div>
+                </button>
+
+                <button class="btn-sw-mode-card mode-endless" id="btn-menu-endless">
+                     <div class="mode-icon-box">🧟</div>
+                     <div class="mode-info">
+                         <div class="mode-title-row">
+                             <span class="mode-title">SONSUZ ZOMBİLER (ENDLESS DEADS)</span>
+                             <span class="mode-tag tag-danger">HAYATTA KALMA</span>
+                         </div>
+                         <p class="mode-desc">Her gece giderek güçlenen zombi ordularına ve dev zombilere karşı heykeli koru!</p>
+                     </div>
+                </button>
+
+                <button class="btn-sw-mode-card mode-pvp-1v1" id="btn-menu-1v1">
+                     <div class="mode-icon-box">⚡</div>
+                     <div class="mode-info">
+                         <div class="mode-title-row">
+                             <span class="mode-title">CANLI 1v1 DÜELLO</span>
+                             <span class="mode-tag tag-live">CANLI ONLINE</span>
+                         </div>
+                         <p class="mode-desc">Bilişim Arenası canlı sunucusunda gerçek bir rakiple teke tek strateji savaşı!</p>
+                     </div>
+                </button>
+
+                <button class="btn-sw-mode-card mode-pvp-2v2" id="btn-menu-2v2">
+                     <div class="mode-icon-box">👥</div>
+                     <div class="mode-info">
+                         <div class="mode-title-row">
+                             <span class="mode-title">CANLI 2v2 TAKIM SAVAŞI</span>
+                             <span class="mode-tag tag-team">4 OYUNCU</span>
+                         </div>
+                         <p class="mode-desc">Müttefikinle omuz omuza 2v2 devasa meydan savaşı! Stratejilerini birleştir.</p>
+                     </div>
+                </button>
+            </div>
+
+            <!-- SECONDARY ACTIONS (SKINS, ARMORY, RETURN TO ARENA) -->
+            <div class="sw-menu-footer-actions">
+                <button class="btn-menu-sub-action" id="btn-menu-skins">
+                    <span>👕</span> KOSTÜMLER (Skins)
+                </button>
+                <button class="btn-menu-sub-action" id="btn-menu-armory">
+                    <span>🔨</span> CEPHANELİK & YÜKSELTMELER
+                </button>
+                <a href="/" class="btn-menu-sub-action btn-menu-exit">
+                    <span>⬅</span> PORTALE DÖN
+                </a>
+            </div>
+        </div>
+    </div>
 
     <!-- TOP GAME BAR / HUD -->
     <header class="sw-top-bar">
@@ -58,6 +156,7 @@
 
         <!-- ACTIONS & MODE SWITCHER -->
         <div class="sw-actions">
+            <button class="btn-sw-nav" id="btn-sw-back-to-menu" style="background:#ffd700; color:#000; font-weight:900;" title="Mevcut savaştan çıkıp ana menüye dön">🏠 Ana Menü</button>
             <button class="btn-sw-nav" id="btn-sw-online-1v1" style="background:linear-gradient(135deg, #00e5ff, #0088ff); color:#000; font-weight:900; box-shadow:0 0 15px rgba(0,229,255,0.4);" title="Gerçek Oyuncuyla 1v1 Online Düello">🌐 1v1 Canlı Düello</button>
             <button class="btn-sw-nav" id="btn-sw-online-2v2" style="background:linear-gradient(135deg, #00e676, #00a843); color:#000; font-weight:900; box-shadow:0 0 15px rgba(0,230,118,0.4);" title="Gerçek Oyuncularla 2v2 Online Takım Savaşı">👥 2v2 Canlı Savaş</button>
             <button class="btn-sw-nav" id="btn-sw-chapters" style="background:#ff9800; color:#000; font-weight:900;" title="Stick War Legacy Hikaye Bölümlerini Seç">🗺️ Bölümler</button>
@@ -318,10 +417,168 @@
         </div>
     </div>
 
+    <!-- SKINS (KOSTÜMLER) MODAL -->
+    <div class="sw-modal-backdrop hidden" id="modal-sw-skins">
+        <div class="sw-modal-card" style="max-width: 860px;">
+            <div class="sm-header">
+                <h2>👕 KOSTÜMLER & SAVAŞÇI GÖRÜNÜMLERİ (SKINS)</h2>
+                <button class="btn-sm-close" id="btn-close-skins">✕</button>
+            </div>
+            <p style="color:#aaa; font-size:13px; margin-bottom:16px;">Her kostüm orduna eşsiz pasif güçler ve savaş avantajları kazandırır. İstediğin kostümü kuşan!</p>
+            <div class="skins-grid" id="skins-grid">
+                <div class="skin-card equipped" data-skin="classic">
+                    <div class="skin-header">
+                        <span class="skin-icon">🛡️</span>
+                        <div>
+                            <div class="skin-name">Klasik Kostüm (Classic)</div>
+                            <small style="color:#ffd700;">Dengeli Güç</small>
+                        </div>
+                    </div>
+                    <p class="skin-perk">İnamorta'nın orijinal savaşçı zırhları. Dengeli saldırı gücü ve dayanıklılık sağlar.</p>
+                    <button class="btn-equip-skin active-equipped" data-skin="classic">KUŞANILDI ✅</button>
+                </div>
+
+                <div class="skin-card" data-skin="leaf">
+                    <div class="skin-header">
+                        <span class="skin-icon">🍃</span>
+                        <div>
+                            <div class="skin-name">Yaprak Kostümü (Leaf)</div>
+                            <small style="color:#00e676;">Hız ve Çeviklik</small>
+                        </div>
+                    </div>
+                    <p class="skin-perk">Ormanın rüzgarını kuşanır. Tüm birlikler <b>+%20 daha hızlı koşar</b> ve ordu üretim maliyeti <b>%20 daha ucuzdur!</b></p>
+                    <button class="btn-equip-skin" data-skin="leaf">KUŞAN 👕</button>
+                </div>
+
+                <div class="skin-card" data-skin="ice">
+                    <div class="skin-header">
+                        <span class="skin-icon">❄️</span>
+                        <div>
+                            <div class="skin-name">Buz Kostümü (Ice)</div>
+                            <small style="color:#00e5ff;">Dondurucu Soğuk</small>
+                        </div>
+                    </div>
+                    <p class="skin-perk">Tüm vuruşlar düşmanları dondurur. Düşmanın saldırı ve hareket hızını <b>%50 yavaşlatır!</b></p>
+                    <button class="btn-equip-skin" data-skin="ice">KUŞAN 👕</button>
+                </div>
+
+                <div class="skin-card" data-skin="savage">
+                    <div class="skin-header">
+                        <span class="skin-icon">🪓</span>
+                        <div>
+                            <div class="skin-name">Vahşi Kostüm (Savage)</div>
+                            <small style="color:#ff9800;">Zırh Delme</small>
+                        </div>
+                    </div>
+                    <p class="skin-perk">Vahşi kabile gücü. Zombilere ve heykellere karşı <b>+%35 bonus hasar</b> vurur ve zırh deler!</p>
+                    <button class="btn-equip-skin" data-skin="savage">KUŞAN 👕</button>
+                </div>
+
+                <div class="skin-card" data-skin="lava">
+                    <div class="skin-header">
+                        <span class="skin-icon">🔥</span>
+                        <div>
+                            <div class="skin-name">Lav Kostümü (Lava)</div>
+                            <small style="color:#ff3d00;">Hasar Yansıtma</small>
+                        </div>
+                    </div>
+                    <p class="skin-perk">Magma alevleri! Alınan hasarın <b>%25'ini saldırgana lav olarak geri yansıtır</b> ve zamanla yakma hasarı verir!</p>
+                    <button class="btn-equip-skin" data-skin="lava">KUŞAN 👕</button>
+                </div>
+
+                <div class="skin-card" data-skin="vamp">
+                    <div class="skin-header">
+                        <span class="skin-icon">🦇</span>
+                        <div>
+                            <div class="skin-name">Vampir Kostümü (Vamp)</div>
+                            <small style="color:#e91e63;">Can Çalma (Lifesteal)</small>
+                        </div>
+                    </div>
+                    <p class="skin-perk">Karanlığın efendileri. Vurulan her darbede <b>%25 can çalar</b> ve <b>zehre karşı tam bağışıklık</b> kazanır!</p>
+                    <button class="btn-equip-skin" data-skin="vamp">KUŞAN 👕</button>
+                </div>
+
+                <div class="skin-card" data-skin="voltaic">
+                    <div class="skin-header">
+                        <span class="skin-icon">⚡</span>
+                        <div>
+                            <div class="skin-name">Voltaik Kostüm (Voltaic)</div>
+                            <small style="color:#ffd700;">Zincirleme Şok</small>
+                        </div>
+                    </div>
+                    <p class="skin-perk">Gök gürültüsü enerjisi. Saldırılar yakındaki düşmanlara <b>şimşek sıçratarak toplu elektrik hasarı</b> verir!</p>
+                    <button class="btn-equip-skin" data-skin="voltaic">KUŞAN 👕</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TOURNAMENT (CROWN OF INAMORTA) MODAL -->
+    <div class="sw-modal-backdrop hidden" id="modal-sw-tournament">
+        <div class="sw-modal-card" style="max-width: 650px; text-align: center;">
+            <div class="sm-header">
+                <h2>👑 CROWN OF INAMORTA ŞAMPİYONASI</h2>
+                <button class="btn-sm-close" id="btn-close-tournament">✕</button>
+            </div>
+            <p style="color:#aaa; font-size:13px; margin-bottom:20px;">İnamorta'nın en korkulan gladyatörleriyle 3 rauntluk şampiyona maçı yap ve efsanevi Tacı kazan!</p>
+            
+            <div class="tournament-bracket-card">
+                <div class="t-match active-match">
+                    <div class="t-round-name">1. RAUNT (Çeyrek Final)</div>
+                    <div class="t-versus">
+                        <span class="t-player">🛡️ Sen (Order)</span>
+                        <span class="t-vs">VS</span>
+                        <span class="t-opp">🏹 Willow (Archidon Ustası)</span>
+                    </div>
+                </div>
+                <div class="t-match">
+                    <div class="t-round-name">2. RAUNT (Yarı Final)</div>
+                    <div class="t-versus">
+                        <span class="t-player">🛡️ Sen (Order)</span>
+                        <span class="t-vs">VS</span>
+                        <span class="t-opp">🗡️ Ruth (Mızrakçı Komutanı)</span>
+                    </div>
+                </div>
+                <div class="t-match">
+                    <div class="t-round-name">BÜYÜK FİNAL (Şampiyonluk)</div>
+                    <div class="t-versus">
+                        <span class="t-player">🛡️ Sen (Order)</span>
+                        <span class="t-vs">VS</span>
+                        <span class="t-opp">👑 Cyrus &amp; Dev Kaos Ordusu</span>
+                    </div>
+                </div>
+            </div>
+
+            <button class="btn-sw-primary" id="btn-start-tournament-match" style="width:100%; padding:14px; font-size:16px; margin-top:20px; background:linear-gradient(135deg, #ffd700, #ff8c00); color:#000;">
+                👑 TURNUVA MEYDANINA ÇIK! ⚔️
+            </button>
+        </div>
+    </div>
+
+    <!-- EXIT RATING MODAL -->
+    <div class="sw-modal-backdrop hidden" id="modal-exit-rating">
+        <div class="sw-modal-card" style="max-width:400px; text-align:center;">
+            <div style="font-size:42px;">⭐</div>
+            <h2>STICK WAR'U DEĞERLENDİR!</h2>
+            <p style="color:#aaa; font-size:13px;">Arenaya dönmeden önce bu oyuna kaç yıldız verirsin?</p>
+            <div class="rating-stars" id="exit-stars" style="font-size:36px; color:#555; cursor:pointer; margin:14px 0; display:flex; justify-content:center; gap:8px;">
+                <span data-star="1">★</span>
+                <span data-star="2">★</span>
+                <span data-star="3">★</span>
+                <span data-star="4">★</span>
+                <span data-star="5">★</span>
+            </div>
+            <div style="display:flex; gap:10px; margin-top:16px;">
+                <button class="btn-sw-primary" id="btn-submit-sw-rating" style="flex:1; padding:10px 18px; font-size:14px;">Oyla ve Dön ⭐</button>
+                <button class="btn-sw-secondary" id="btn-skip-sw-rating" style="flex:1; padding:10px 18px; font-size:14px;">Geç</button>
+            </div>
+        </div>
+    </div>
+
     <!-- AUDIO ELEMENTS FOR DYNAMIC COMBAT MUSIC -->
     <audio id="audio-attack" src="music/hymn_for_the_weekend.mp3" preload="auto" loop></audio>
     <audio id="audio-defend" src="music/run_from_your_demons.mp3" preload="auto" loop></audio>
 
-    <script src="stickwar.js"></script>
+    <script src="stickwar.js?v=30"></script>
 </body>
 </html>

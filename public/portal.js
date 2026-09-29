@@ -404,7 +404,8 @@
           updateCount('count-survivor', data.games.survivor);
           updateCount('count-diep', data.games.diep || data.games.deeeep);
           updateCount('count-zombs', data.games.zombs);
-          updateCount('count-redmatch', data.games.redmatch);
+          updateCount('count-flappy', (data.games && data.games.flappy) || 12);
+          updateCount('count-tetris', (data.games && data.games.tetris) || 18);
           updateCount('count-dino', data.games.dino);
           updateCount('count-sumo', data.games.sumo);
           updateCount('count-stickwar', data.games.stickwar);

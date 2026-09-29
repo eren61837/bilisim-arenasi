@@ -1304,7 +1304,7 @@
             keys.nitro = true;
         }
         if (code === 'KeyC' || key === 'c') {
-            state.cameraMode = ((state.cameraMode || 0) + 1) % 2;
+            toggleCameraMode();
         }
         if (code === 'KeyR' || key === 'r') keys.reset = true;
     });
@@ -1352,6 +1352,54 @@
         }
     }
     setupNitroControls();
+
+    // Camera Mode System: 3rd-Person NFS Chase vs 1st-Person Hood/Cockpit
+    function toggleCameraMode() {
+        state.cameraMode = ((state.cameraMode || 0) + 1) % 2;
+        updateCameraUI();
+    }
+
+    function updateCameraUI() {
+        const btn = document.getElementById('btn-screen-camera');
+        const txt = document.getElementById('hud-cam-mode-txt');
+        const is1st = (state.cameraMode === 1);
+        if (txt) {
+            txt.textContent = is1st ? '1. ŞAHIS (KAPUT)' : '3. ŞAHIS (NFS)';
+        }
+        if (btn) {
+            btn.classList.toggle('mode-1st', is1st);
+        }
+        showCameraNotice(is1st ? '🎥 1. ŞAHIS GÖRÜNÜM (Kaput / Kokpit)' : '🎥 3. ŞAHIS GÖRÜNÜM (Need for Speed Takip)');
+    }
+
+    function showCameraNotice(msg) {
+        const notice = document.getElementById('hud-drift-notice');
+        if (!notice) return;
+        notice.textContent = msg;
+        notice.classList.add('visible');
+        clearTimeout(notice._camNoticeTimeout);
+        notice._camNoticeTimeout = setTimeout(() => {
+            notice.classList.remove('visible');
+        }, 1800);
+    }
+
+    function setupCameraControls() {
+        const camBtn = document.getElementById('btn-screen-camera');
+        if (camBtn) {
+            camBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                initAudio();
+                toggleCameraMode();
+            });
+            camBtn.addEventListener('touchstart', (e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                initAudio();
+                toggleCameraMode();
+            });
+        }
+    }
+    setupCameraControls();
 
     // Metallic Sparks from Steel Barrier Collisions
     const sparkParticles = [];

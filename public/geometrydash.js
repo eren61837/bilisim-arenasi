@@ -30,6 +30,30 @@
         };
     }
 
+    // Safe rounded rect helper that never throws on any browser
+    function safeRoundRect(c, x, y, w, h, r) {
+        if (!r) r = 0;
+        if (typeof r === 'number') {
+            if (w < 2 * r) r = w / 2;
+            if (h < 2 * r) r = h / 2;
+        } else {
+            r = 0;
+        }
+        try {
+            if (typeof c.roundRect === 'function') {
+                c.roundRect(x, y, w, h, r);
+                return;
+            }
+        } catch (_) {}
+        c.beginPath();
+        c.moveTo(x + r, y);
+        c.arcTo(x + w, y, x + w, y + h, r);
+        c.arcTo(x + w, y + h, x, y + h, r);
+        c.arcTo(x, y + h, x, y, r);
+        c.arcTo(x, y, x + w, y, r);
+        c.closePath();
+    }
+
     // --- DOM Elements ---
     const canvas = document.getElementById('gd-canvas');
     const ctx = canvas.getContext('2d');
@@ -370,9 +394,17 @@
         }
     });
 
-    btnPlayGame.addEventListener('click', () => {
+    btnPlayGame.addEventListener('click', (e) => {
+        if (e) e.stopPropagation();
         startGame();
     });
+
+    if (startOverlay) {
+        startOverlay.addEventListener('click', (e) => {
+            if (e.target.closest('#skins-row') || e.target.closest('.skin-selector')) return;
+            startGame();
+        });
+    }
 
     btnNextLevel.addEventListener('click', () => {
         victoryOverlay.classList.add('hidden');
@@ -931,8 +963,7 @@
             ctx.fillStyle = pad.color;
             ctx.shadowColor = pad.color;
             ctx.shadowBlur = 12;
-            ctx.beginPath();
-            ctx.roundRect(pad.x, pad.y, pad.w, pad.h, 6);
+            safeRoundRect(ctx, pad.x, pad.y, pad.w, pad.h, 6);
             ctx.fill();
             ctx.shadowBlur = 0;
         }
@@ -1021,8 +1052,7 @@
 
                 // Cyberpunk glass badge
                 ctx.fillStyle = 'rgba(10, 5, 20, 0.72)';
-                ctx.beginPath();
-                ctx.roundRect(canvas.width / 2 - 270, 16 + yOffset, 540, 58, 12);
+                safeRoundRect(ctx, canvas.width / 2 - 270, 16 + yOffset, 540, 58, 12);
                 ctx.fill();
                 ctx.strokeStyle = 'rgba(255, 0, 127, 0.65)';
                 ctx.lineWidth = 2;

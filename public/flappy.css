@@ -1,0 +1,382 @@
+/* flappy.css - Cyber Flappy Bird Styling */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+body {
+    background: #060913;
+    color: #fff;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.flappy-topbar {
+    height: 52px;
+    background: linear-gradient(180deg, #101524 0%, #0a0d17 100%);
+    border-bottom: 2px solid #00f0ff;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 16px;
+    z-index: 100;
+    box-shadow: 0 4px 20px rgba(0, 240, 255, 0.2);
+}
+
+.flappy-brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.btn-flappy-back {
+    background: rgba(0, 240, 255, 0.12);
+    border: 1px solid #00f0ff;
+    color: #00f0ff;
+    padding: 6px 14px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-flappy-back:hover {
+    background: #00f0ff;
+    color: #000;
+    transform: translateY(-1px);
+}
+
+.flappy-title span {
+    font-size: 15px;
+    font-weight: 900;
+    letter-spacing: 1px;
+    color: #00f0ff;
+}
+
+.flappy-title small {
+    display: block;
+    font-size: 11px;
+    color: #8b9bb4;
+}
+
+.flappy-stats-hud {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.stat-badge {
+    background: rgba(255, 215, 0, 0.12);
+    border: 1px solid rgba(255, 215, 0, 0.4);
+    color: #ffd700;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 800;
+}
+
+.btn-sound-toggle {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #fff;
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 12px;
+    cursor: pointer;
+}
+
+.flappy-container {
+    flex: 1;
+    position: relative;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #060913;
+}
+
+#flappy-canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+.flappy-live-score {
+    position: absolute;
+    top: 24px;
+    font-size: 52px;
+    font-weight: 900;
+    color: #fff;
+    text-shadow: 0 0 20px rgba(0, 240, 255, 0.8), 0 4px 10px rgba(0,0,0,0.8);
+    z-index: 10;
+    pointer-events: none;
+    font-family: monospace;
+}
+
+.flappy-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(6, 9, 19, 0.85);
+    backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 50;
+    transition: opacity 0.25s ease;
+}
+
+.flappy-overlay.hidden {
+    display: none !important;
+}
+
+.flappy-card {
+    background: linear-gradient(135deg, #101628 0%, #161f38 100%);
+    border: 2px solid #00f0ff;
+    border-radius: 20px;
+    padding: 32px 36px;
+    max-width: 440px;
+    width: 90%;
+    text-align: center;
+    box-shadow: 0 0 50px rgba(0, 240, 255, 0.35);
+    animation: cardPop 0.35s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+}
+
+@keyframes cardPop {
+    from { transform: scale(0.85) translateY(20px); opacity: 0; }
+    to { transform: scale(1) translateY(0); opacity: 1; }
+}
+
+.card-hero-icon {
+    font-size: 40px;
+    margin-bottom: 8px;
+    filter: drop-shadow(0 0 15px #00f0ff);
+}
+
+.flappy-card h1 {
+    font-size: 26px;
+    font-weight: 900;
+    letter-spacing: 2px;
+    color: #00f0ff;
+    margin-bottom: 4px;
+}
+
+.card-subtitle {
+    font-size: 13px;
+    color: #8b9bb4;
+    margin-bottom: 20px;
+}
+
+.skin-picker {
+    margin-bottom: 20px;
+}
+
+.picker-label {
+    display: block;
+    font-size: 12px;
+    color: #ffd700;
+    font-weight: 800;
+    margin-bottom: 8px;
+}
+
+.skins-flex {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+}
+
+.skin-btn {
+    background: rgba(255, 255, 255, 0.06);
+    border: 1.5px solid rgba(255, 255, 255, 0.2);
+    border-radius: 10px;
+    padding: 8px 12px;
+    color: #fff;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    transition: all 0.2s;
+}
+
+.skin-btn:hover {
+    border-color: #00f0ff;
+    transform: translateY(-2px);
+}
+
+.skin-btn.active {
+    background: rgba(0, 240, 255, 0.2);
+    border-color: #00f0ff;
+    color: #00f0ff;
+    box-shadow: 0 0 15px rgba(0, 240, 255, 0.5);
+}
+
+.btn-flappy-play {
+    width: 100%;
+    background: linear-gradient(135deg, #00f0ff 0%, #0088ff 100%);
+    color: #000;
+    font-size: 16px;
+    font-weight: 900;
+    padding: 14px;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    letter-spacing: 1px;
+    box-shadow: 0 4px 20px rgba(0, 240, 255, 0.4);
+    transition: all 0.2s;
+}
+
+.btn-flappy-play:hover {
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: 0 8px 30px rgba(0, 240, 255, 0.7);
+}
+
+.control-hints {
+    font-size: 12px;
+    color: #8b9bb4;
+    margin-top: 14px;
+}
+
+/* GAMEOVER */
+.gameover-card {
+    border-color: #ff3d00;
+    box-shadow: 0 0 50px rgba(255, 61, 0, 0.4);
+}
+
+.gameover-title {
+    font-size: 26px;
+    font-weight: 900;
+    color: #ff3d00;
+    margin-bottom: 16px;
+}
+
+.score-board {
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 14px;
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    margin-bottom: 20px;
+}
+
+.medal-slot {
+    text-align: center;
+}
+
+.medal-label {
+    display: block;
+    font-size: 11px;
+    color: #ffd700;
+    font-weight: 800;
+    margin-bottom: 4px;
+}
+
+.medal-icon {
+    font-size: 38px;
+    filter: drop-shadow(0 0 10px rgba(255, 215, 0, 0.6));
+}
+
+.score-slot {
+    text-align: left;
+}
+
+.score-row {
+    font-size: 14px;
+    color: #8b9bb4;
+    margin: 6px 0;
+}
+
+.score-row b {
+    font-size: 20px;
+    color: #fff;
+    margin-left: 6px;
+}
+
+.gameover-buttons {
+    display: flex;
+    gap: 10px;
+}
+
+.btn-flappy-portal {
+    flex: 1;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #fff;
+    font-size: 14px;
+    font-weight: 800;
+    padding: 12px;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-flappy-portal:hover {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: #fff;
+}
+
+.flappy-footer {
+    height: 32px;
+    background: #080b14;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    color: #64748b;
+}
+
+/* EXIT RATING MODAL */
+.flappy-modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.9);
+    z-index: 999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.flappy-modal-backdrop.hidden {
+    display: none !important;
+}
+
+.flappy-rating-box {
+    background: #111728;
+    border: 2px solid #ffd700;
+    border-radius: 18px;
+    padding: 28px 32px;
+    text-align: center;
+    max-width: 400px;
+    width: 90%;
+    box-shadow: 0 0 50px rgba(255, 215, 0, 0.4);
+}
+
+.rating-stars {
+    font-size: 36px;
+    color: #555;
+    cursor: pointer;
+    margin: 14px 0;
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+}
+
+.rating-stars span {
+    transition: color 0.15s, transform 0.15s;
+}
+
+.rating-stars span:hover, .rating-stars span.active {
+    color: #ffd700;
+    transform: scale(1.2);
+    filter: drop-shadow(0 0 8px #ffd700);
+}

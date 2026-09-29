@@ -517,23 +517,72 @@
             SoundManager.init();
             this.initOnlineMultiplayer();
 
-            // Spawn initial units
-            this.spawnUnit('order', 'miner');
-            this.spawnUnit('order', 'miner');
-            this.spawnUnit('order', 'sword');
-
-            this.spawnUnit('chaos', 'miner');
-            this.spawnUnit('chaos', 'miner');
-            this.spawnUnit('chaos', 'sword');
+            this.inMainMenu = true;
+            this.selectedSkin = localStorage.getItem('sw_skin') || 'classic';
 
             this.bindEvents();
             this.initMinimap();
+            this.updateSkinsUI();
 
-            // Set default music to Defend (Run From Your Demons)
+            // Set music for menu
             SoundManager.playModeMusic('defend');
 
-            // Start Animation Loop
+            // Start Animation Loop (keeps background alive while in menu)
             requestAnimationFrame((ts) => this.loop(ts));
+        },
+
+        startMode(mode) {
+            this.hideMainMenu();
+            this.inMainMenu = false;
+
+            if (mode === 'campaign') {
+                this.startChapter(1);
+            } else if (mode === 'tournament') {
+                this.startChapter(8);
+            } else if (mode === 'endless') {
+                this.startChapter(9);
+            } else if (mode === '1v1') {
+                this.startChapter(6);
+            } else if (mode === '2v2') {
+                this.startChapter(7);
+            }
+        },
+
+        showMainMenu() {
+            this.inMainMenu = true;
+            const menuScreen = document.getElementById('screen-sw-main-menu');
+            if (menuScreen) menuScreen.classList.remove('hidden');
+            SoundManager.playModeMusic('defend');
+        },
+
+        hideMainMenu() {
+            const menuScreen = document.getElementById('screen-sw-main-menu');
+            if (menuScreen) menuScreen.classList.add('hidden');
+        },
+
+        openSkinsModal() {
+            const m = document.getElementById('modal-sw-skins');
+            if (m) m.classList.remove('hidden');
+            this.updateSkinsUI();
+        },
+
+        openTournamentModal() {
+            const m = document.getElementById('modal-sw-tournament');
+            if (m) m.classList.remove('hidden');
+        },
+
+        updateSkinsUI() {
+            const skin = this.selectedSkin || 'classic';
+            document.querySelectorAll('.skin-card').forEach(card => {
+                const s = card.getAttribute('data-skin');
+                const isEquipped = (s === skin);
+                card.classList.toggle('equipped', isEquipped);
+                const btn = card.querySelector('.btn-equip-skin');
+                if (btn) {
+                    btn.classList.toggle('active-equipped', isEquipped);
+                    btn.textContent = isEquipped ? 'KUŞANILDI ✅' : 'KUŞAN 👕';
+                }
+            });
         },
 
         initOnlineMultiplayer() {
@@ -658,6 +707,83 @@
         },
 
         bindEvents() {
+            // Main Menu Buttons
+            document.getElementById('btn-menu-campaign')?.addEventListener('click', () => this.startMode('campaign'));
+            document.getElementById('btn-menu-tournament')?.addEventListener('click', () => this.openTournamentModal());
+            document.getElementById('btn-menu-endless')?.addEventListener('click', () => this.startMode('endless'));
+            document.getElementById('btn-menu-1v1')?.addEventListener('click', () => this.startOnlineMatchmaking('1v1'));
+            document.getElementById('btn-menu-2v2')?.addEventListener('click', () => this.startOnlineMatchmaking('2v2'));
+            document.getElementById('btn-menu-skins')?.addEventListener('click', () => this.openSkinsModal());
+            document.getElementById('btn-menu-armory')?.addEventListener('click', () => {
+                document.getElementById('modal-upgrades')?.classList.remove('hidden');
+                this.updateUpgradeButtons();
+            });
+
+            // In-Game Top Bar Return to Menu
+            document.getElementById('btn-sw-back-to-menu')?.addEventListener('click', () => this.showMainMenu());
+
+            // Modal Close Buttons
+            document.getElementById('btn-close-skins')?.addEventListener('click', () => {
+                document.getElementById('modal-sw-skins')?.classList.add('hidden');
+            });
+            document.getElementById('btn-close-tournament')?.addEventListener('click', () => {
+                document.getElementById('modal-sw-tournament')?.classList.add('hidden');
+            });
+            document.getElementById('btn-start-tournament-match')?.addEventListener('click', () => {
+                document.getElementById('modal-sw-tournament')?.classList.add('hidden');
+                this.startMode('tournament');
+            });
+
+            // Equip Skin Buttons
+            document.querySelectorAll('.btn-equip-skin').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const card = btn.closest('.skin-card');
+                    const skin = card ? card.getAttribute('data-skin') : btn.getAttribute('data-skin');
+                    if (skin) {
+                        this.selectedSkin = skin;
+                        try { localStorage.setItem('sw_skin', skin); } catch(_) {}
+                        this.updateSkinsUI();
+                        this.addFloatingText(this.camX + this.width / 2, 200, `👕 Kostüm Kuşanıldı: ${skin.toUpperCase()}`, '#ffd700');
+                    }
+                });
+            });
+
+            // Exit Rating Modal (Portale Giderken Puanlama)
+            let swRating = 5;
+            const starEls = document.querySelectorAll('#modal-exit-rating #exit-stars span');
+            starEls.forEach(star => {
+                star.addEventListener('click', () => {
+                    swRating = parseInt(star.getAttribute('data-star'), 10);
+                    starEls.forEach(s => {
+                        const val = parseInt(s.getAttribute('data-star'), 10);
+                        s.style.color = val <= swRating ? '#ffd700' : '#555';
+                    });
+                });
+            });
+
+            document.getElementById('btn-submit-sw-rating')?.addEventListener('click', () => {
+                try {
+                    fetch('/api/ratings', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ game: 'stickwar', stars: swRating })
+                    }).catch(() => {});
+                } catch (_) {}
+                window.location.href = '/';
+            });
+
+            document.getElementById('btn-skip-sw-rating')?.addEventListener('click', () => {
+                window.location.href = '/';
+            });
+
+            document.querySelectorAll('a[href="/"]').forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    document.getElementById('modal-exit-rating')?.classList.remove('hidden');
+                });
+            });
+
             // Formation buttons
             const btnDefend = document.getElementById('btn-order-defend');
             const btnAttack = document.getElementById('btn-order-attack');
@@ -864,7 +990,10 @@
             if (!cfg) return;
 
             if (side === 'order') {
-                if (this.gold < cfg.cost) {
+                const isLeaf = (this.selectedSkin === 'leaf');
+                const finalCost = isLeaf ? Math.round(cfg.cost * 0.8) : cfg.cost;
+
+                if (this.gold < finalCost) {
                     this.addFloatingText(this.camX + this.width / 2, 200, 'Yetersiz Altın!', '#ff5252');
                     return;
                 }
@@ -876,7 +1005,7 @@
                     this.addFloatingText(this.camX + this.width / 2, 200, `Nüfus Sınırı Dolu! (${this.pop}/${this.maxPop})`, '#ff5252');
                     return;
                 }
-                this.gold -= cfg.cost;
+                this.gold -= finalCost;
                 if (cfg.mana) this.mana -= cfg.mana;
                 this.spawnUnit('order', unitTypeKey);
                 SoundManager.playVoice(unitTypeKey);
@@ -1062,8 +1191,15 @@
                 summonCd: 0
             };
 
-            // Apply Upgrades for Order
+            // Apply Upgrades and Skin Perks for Order
+            unit.freezeTimer = 0;
+            unit.burnTimer = 0;
+
             if (isOrder) {
+                unit.skin = this.selectedSkin || 'classic';
+                if (unit.skin === 'leaf') {
+                    unit.speed = Number((unit.speed * 1.20).toFixed(2));
+                }
                 if (type === 'sword' && this.upgrades.swordDamage) {
                     unit.damage = Math.round(unit.damage * 1.35);
                     unit.speed += 0.5;
@@ -1072,6 +1208,8 @@
                     unit.hp += 80;
                     unit.maxHp += 80;
                 }
+            } else {
+                unit.skin = 'classic';
             }
 
             this.units.push(unit);
@@ -1172,12 +1310,17 @@
             } else if (unit.type === 'meric') {
                 this.performMericHeal(unit);
             } else if (unit.type === 'miner') {
-                // If near gold mine, mine it; else slash
+                // If near gold mine, double-speed rapid strike (+15 gold per strike)
                 const mine = this.getNearestMine(unit.x);
-                if (mine && Math.abs(unit.x - mine.x) < 70) {
-                    unit.miningTimer = 2.5;
-                    unit.animAction = 'mine';
+                if (mine && Math.abs(unit.x - mine.x) < 95) {
+                    unit.animAction = 'attack';
+                    unit.animTimer = 0.25;
                     SoundManager.playSfx('mine');
+                    this.addHitSparks(mine.x, GROUND_Y - 25, '#ffd700');
+                    this.gold += 15;
+                    this.statsGoldMined += 15;
+                    this.updateResourceUI();
+                    this.addFloatingText(unit.x, unit.y - 65, '+15 🟡 HIZLI KAZI!', '#ffd700');
                 } else {
                     this.performMeleeAttack(unit);
                 }
@@ -1508,6 +1651,28 @@
 
             let finalDmg = dmg;
 
+            // Active Skin Perks when Order is dealing damage:
+            const attackerSkin = (attacker && attacker.side === 'order') ? (attacker.skin || this.selectedSkin) : null;
+            if (attackerSkin === 'savage') {
+                finalDmg = Math.round(finalDmg * 1.35); // +35% Savage Bonus
+            }
+
+            // Target taking damage: Lava reflection (25% reflected to attacker with burn)
+            const targetSkin = (target.side === 'order') ? (target.skin || this.selectedSkin) : null;
+            if (targetSkin === 'lava' && attacker && attacker.hp > 0 && !target._isReflecting) {
+                target._isReflecting = true;
+                const reflectDmg = Math.max(1, Math.round(finalDmg * 0.25));
+                attacker.hp -= reflectDmg;
+                attacker.burnTimer = 2.5;
+                this.addFloatingText(attacker.x, attacker.y - 60, `🔥 -${reflectDmg} LAV!`, '#ff3d00');
+                this.addHitSparks(attacker.x, attacker.y - 30, '#ff5722');
+                if (attacker.hp <= 0) {
+                    attacker.hp = 0;
+                    this.onUnitKilled(attacker, target);
+                }
+                target._isReflecting = false;
+            }
+
             // Spearton Shield Wall Block
             if (target.type === 'spear') {
                 const facingAttacker = (target.x < (attacker ? attacker.x : target.x) && target.facing === 1) ||
@@ -1518,6 +1683,33 @@
                     SoundManager.playSfx('shieldBlock');
                     this.addFloatingText(target.x, target.y - 60, 'ENGEL! 🛡️', '#00e5ff');
                     this.addHitSparks(target.x, target.y - 40, '#00e5ff');
+                }
+            }
+
+            // Attacker dealing damage: Vamp lifesteal (25% heal)
+            if (attackerSkin === 'vamp' && attacker && attacker.hp > 0) {
+                const healAmt = Math.max(1, Math.round(finalDmg * 0.25));
+                attacker.hp = Math.min(attacker.maxHp, attacker.hp + healAmt);
+                this.addFloatingText(attacker.x, attacker.y - 75, `+${healAmt} 🩸`, '#ff1744');
+            }
+
+            // Attacker dealing damage: Ice freeze (50% slow for 2.5s)
+            if (attackerSkin === 'ice' && target && target.hp > 0) {
+                target.freezeTimer = 2.5;
+                this.addFloatingText(target.x, target.y - 70, '❄️ DONDU!', '#00e5ff');
+            }
+
+            // Attacker dealing damage: Voltaic chain lightning (shock jump 15 dmg)
+            if (attackerSkin === 'voltaic' && target && target.hp > 0) {
+                const jumpTarget = this.units.find(u => u.side === target.side && u.id !== target.id && u.hp > 0 && Math.abs(u.x - target.x) <= 180);
+                if (jumpTarget) {
+                    jumpTarget.hp -= 15;
+                    this.addFloatingText(jumpTarget.x, jumpTarget.y - 65, '⚡ -15 ŞOK!', '#ffd700');
+                    this.addHitSparks(jumpTarget.x, jumpTarget.y - 30, '#00e5ff');
+                    if (jumpTarget.hp <= 0) {
+                        jumpTarget.hp = 0;
+                        this.onUnitKilled(jumpTarget, attacker);
+                    }
                 }
             }
 
@@ -1537,11 +1729,16 @@
             const st = this.statues[side];
             if (!st || st.hp <= 0) return;
 
-            st.hp = Math.max(0, st.hp - dmg);
+            let finalDmg = dmg;
+            if (side === 'chaos' && this.selectedSkin === 'savage') {
+                finalDmg = Math.round(finalDmg * 1.35); // Savage bonus damage to statues!
+            }
+
+            st.hp = Math.max(0, st.hp - finalDmg);
             SoundManager.playSfx('slash');
             this.screenShake = 6;
 
-            this.addFloatingText(st.x, GROUND_Y - 140, `-${dmg} HEYKEL!`, side === 'order' ? '#ff3d00' : '#00e5ff');
+            this.addFloatingText(st.x, GROUND_Y - 140, `-${finalDmg} HEYKEL!`, side === 'order' ? '#ff3d00' : '#00e5ff');
             this.addHitSparks(st.x, GROUND_Y - 100, '#ffd700');
 
             this.updateStatueUI();
@@ -1724,6 +1921,38 @@
                     } else if (this.enemyGold >= UNIT_TYPES.sword.cost) {
                         this.purchaseUnit('chaos', 'sword');
                     }
+                } else if (this.currentChapter === 8) {
+                    // Chapter 8: Crown of Inamorta Tournament
+                    const round = this.tournamentRound || 1;
+                    if (round === 1) {
+                        // Round 1: Willow (Archidon Queen) - heavy archer volleys!
+                        if (this.enemyGold >= UNIT_TYPES.archer.cost && Math.random() < 0.7) {
+                            this.purchaseUnit('chaos', 'archer');
+                        } else if (this.enemyGold >= UNIT_TYPES.sword.cost) {
+                            this.purchaseUnit('chaos', 'sword');
+                        }
+                    } else if (round === 2) {
+                        // Round 2: Ruth (Spearton Commander) - heavy spear phalanx!
+                        if (this.enemyGold >= UNIT_TYPES.spear.cost && Math.random() < 0.65) {
+                            this.purchaseUnit('chaos', 'spear');
+                        } else if (this.enemyGold >= UNIT_TYPES.archer.cost && Math.random() < 0.5) {
+                            this.purchaseUnit('chaos', 'archer');
+                        } else if (this.enemyGold >= UNIT_TYPES.sword.cost) {
+                            this.purchaseUnit('chaos', 'sword');
+                        }
+                    } else {
+                        // Round 3: Cyrus (Arch-Sorcerer) - Magikill summons & Giant!
+                        const hasGiant = this.units.some(u => u.side === 'chaos' && u.type === 'giant' && u.hp > 0);
+                        if (!hasGiant && this.enemyGold >= UNIT_TYPES.giant.cost && Math.random() < 0.4) {
+                            this.purchaseUnit('chaos', 'giant');
+                        } else if (this.enemyGold >= UNIT_TYPES.mage.cost && Math.random() < 0.5) {
+                            this.purchaseUnit('chaos', 'mage');
+                        } else if (this.enemyGold >= UNIT_TYPES.spear.cost) {
+                            this.purchaseUnit('chaos', 'spear');
+                        }
+                    }
+                } else if (this.currentChapter === 9) {
+                    // Endless Deads handled by zombie wave manager below!
                 } else {
                     // 1v1 / Free Sandbox
                     if (this.enemyGold >= UNIT_TYPES.giant.cost && Math.random() < 0.25) {
@@ -1738,6 +1967,63 @@
                         this.purchaseUnit('chaos', 'sword');
                     }
                 }
+            }
+
+            // Endless Deads (Chapter 9) Wave Manager
+            if (this.currentChapter === 9) {
+                if (!this.endlessWave) this.endlessWave = 1;
+                if (!this.endlessState) this.endlessState = 'day';
+                if (typeof this.endlessTimer !== 'number') this.endlessTimer = 0;
+                if (typeof this.endlessSpawnInterval !== 'number') this.endlessSpawnInterval = 0;
+
+                this.endlessTimer += dt;
+
+                if (this.endlessState === 'day') {
+                    const timeLeft = Math.max(0, Math.ceil(12 - this.endlessTimer));
+                    const waveHUD = document.getElementById('sw-chapter-name');
+                    if (waveHUD) waveHUD.textContent = `☀️ Gündüz (Hazırlık): ${timeLeft}s | Dalga: ${this.endlessWave}`;
+
+                    if (this.endlessTimer >= 12) {
+                        this.endlessState = 'night';
+                        this.endlessTimer = 0;
+                        this.endlessSpawnsLeft = 4 + this.endlessWave * 3;
+                        this.enemyAIState = 'attack';
+                        SoundManager.playVoice('giant');
+                        this.addFloatingText(1900, GROUND_Y - 220, `🩸 KANLI AY ÇIKTI! DALGA ${this.endlessWave} BAŞLADI!`, '#ff1744');
+                        this.screenShake = 8;
+                    }
+                } else if (this.endlessState === 'night') {
+                    const waveHUD = document.getElementById('sw-chapter-name');
+                    if (waveHUD) waveHUD.textContent = `🩸 Gece (Saldırı): Dalga ${this.endlessWave} | Kalan Zombi: ${this.endlessSpawnsLeft}`;
+
+                    this.endlessSpawnInterval += dt;
+                    if (this.endlessSpawnsLeft > 0 && this.endlessSpawnInterval >= 2.0) {
+                        this.endlessSpawnInterval = 0;
+                        this.endlessSpawnsLeft--;
+
+                        const zType = this.endlessWave >= 6 && Math.random() < 0.25 ? 'giant' :
+                                     (this.endlessWave >= 4 && Math.random() < 0.35 ? 'spear' :
+                                     (this.endlessWave >= 2 && Math.random() < 0.45 ? 'sword' : 'crawler'));
+                        const z = this.spawnUnit('chaos', zType);
+                        if (z) {
+                            z.isZombie = true;
+                            z.hp = Math.round(z.hp * (1 + this.endlessWave * 0.1));
+                            z.maxHp = z.hp;
+                        }
+                    }
+
+                    const aliveZombies = this.units.filter(u => u.side === 'chaos' && u.hp > 0).length;
+                    if (this.endlessSpawnsLeft <= 0 && aliveZombies === 0) {
+                        this.endlessState = 'day';
+                        this.endlessTimer = 0;
+                        const goldReward = 200 + this.endlessWave * 80;
+                        this.gold += goldReward;
+                        this.endlessWave++;
+                        this.addFloatingText(600, GROUND_Y - 160, `🌅 ŞAFAK SÖKTÜ! DALGA GEÇİLDİ! +${goldReward} 🟡`, '#ffd700');
+                        SoundManager.playOrderFanfare('attack');
+                    }
+                }
+                return;
             }
 
             // Tactical Wave State Machine
@@ -1846,6 +2132,33 @@
                 if (u.hp <= 0) {
                     this.units.splice(i, 1);
                     continue;
+                }
+
+                // Freeze and burn status effects
+                if (u.freezeTimer > 0) {
+                    u.freezeTimer = Math.max(0, u.freezeTimer - dt);
+                }
+                if (u.burnTimer > 0) {
+                    u.burnTimer = Math.max(0, u.burnTimer - dt);
+                    u.hp -= 12 * dt;
+                    if (Math.random() < 0.25) {
+                        this.particles.push({
+                            x: u.x + (Math.random() - 0.5) * 16,
+                            y: u.y - 30 + (Math.random() - 0.5) * 20,
+                            vx: (Math.random() - 0.5) * 20,
+                            vy: -40,
+                            color: '#ff5722',
+                            size: 2.5,
+                            life: 0.4,
+                            maxLife: 0.4
+                        });
+                    }
+                    if (u.hp <= 0) {
+                        u.hp = 0;
+                        this.onUnitKilled(u, null);
+                        this.units.splice(i, 1);
+                        continue;
+                    }
                 }
 
                 // If manually controlled
@@ -2399,7 +2712,10 @@
 
         /* VISUAL EFFECTS */
         addFloatingText(x, y, text, color) {
-            this.floatingTexts.push({ x, y, text, color, life: 1.0 });
+            if (typeof x === 'string') {
+                const t = x; x = y; y = text; text = t;
+            }
+            this.floatingTexts.push({ x: Number(x) || 0, y: Number(y) || 0, text: String(text || ''), color: color || '#ffd700', life: 1.0 });
         },
 
         addHitSparks(x, y, color) {
@@ -2461,23 +2777,49 @@
         },
 
         renderSky(ctx) {
-            // Sky gradient
-            const skyGrad = ctx.createLinearGradient(0, 0, 0, GROUND_Y);
-            skyGrad.addColorStop(0, '#0a0d14');
-            skyGrad.addColorStop(0.5, '#192231');
-            skyGrad.addColorStop(1, '#2c1e1e');
-            ctx.fillStyle = skyGrad;
-            ctx.fillRect(this.camX, 0, this.width, GROUND_Y);
+            if (this.currentChapter === 9) {
+                // Endless Deads Blood Moon Night Sky
+                const skyGrad = ctx.createLinearGradient(0, 0, 0, GROUND_Y);
+                skyGrad.addColorStop(0, '#040206');
+                skyGrad.addColorStop(0.5, '#1e050b');
+                skyGrad.addColorStop(1, '#3b0d18');
+                ctx.fillStyle = skyGrad;
+                ctx.fillRect(this.camX, 0, this.width, GROUND_Y);
 
-            // Blood Sun / Eclipse
-            ctx.save();
-            ctx.beginPath();
-            ctx.arc(1900, 160, 60, 0, Math.PI * 2);
-            ctx.fillStyle = '#ff5722';
-            ctx.shadowColor = '#ff3d00';
-            ctx.shadowBlur = 40;
-            ctx.fill();
-            ctx.restore();
+                // Giant Glowing Blood Moon
+                ctx.save();
+                ctx.beginPath();
+                ctx.arc(1900, 150, 75, 0, Math.PI * 2);
+                ctx.fillStyle = '#ff1744';
+                ctx.shadowColor = '#d50000';
+                ctx.shadowBlur = 60;
+                ctx.fill();
+                ctx.fillStyle = 'rgba(60, 0, 10, 0.4)';
+                ctx.beginPath();
+                ctx.arc(1880, 135, 16, 0, Math.PI * 2);
+                ctx.arc(1915, 160, 20, 0, Math.PI * 2);
+                ctx.arc(1895, 175, 12, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            } else {
+                // Sky gradient
+                const skyGrad = ctx.createLinearGradient(0, 0, 0, GROUND_Y);
+                skyGrad.addColorStop(0, '#0a0d14');
+                skyGrad.addColorStop(0.5, '#192231');
+                skyGrad.addColorStop(1, '#2c1e1e');
+                ctx.fillStyle = skyGrad;
+                ctx.fillRect(this.camX, 0, this.width, GROUND_Y);
+
+                // Blood Sun / Eclipse
+                ctx.save();
+                ctx.beginPath();
+                ctx.arc(1900, 160, 60, 0, Math.PI * 2);
+                ctx.fillStyle = '#ff5722';
+                ctx.shadowColor = '#ff3d00';
+                ctx.shadowBlur = 40;
+                ctx.fill();
+                ctx.restore();
+            }
 
             // Distant Mountains
             ctx.fillStyle = '#111722';
@@ -2887,9 +3229,31 @@
                 ctx.translate(u.x, u.y);
 
                 const isOrder = u.side === 'order';
-                const mainColor = isOrder ? '#00e5ff' : '#ff3d00';
+                let mainColor = isOrder ? '#00e5ff' : '#ff3d00';
                 const bodyColor = '#0a0a0a'; // Iconic Stick War solid black silhouette
-                const eyeColor = isOrder ? '#00e5ff' : '#ff1744';
+                let eyeColor = isOrder ? '#00e5ff' : '#ff1744';
+
+                // Skin Eye & Main Colors
+                if (isOrder) {
+                    const skin = u.skin || this.selectedSkin;
+                    if (skin === 'leaf') { eyeColor = '#34d399'; mainColor = '#10b981'; }
+                    else if (skin === 'ice') { eyeColor = '#a5f3fc'; mainColor = '#38bdf8'; }
+                    else if (skin === 'savage') { eyeColor = '#fbbf24'; mainColor = '#f59e0b'; }
+                    else if (skin === 'lava') { eyeColor = '#ff5722'; mainColor = '#f97316'; }
+                    else if (skin === 'vamp') { eyeColor = '#f43f5e'; mainColor = '#e11d48'; }
+                    else if (skin === 'voltaic') { eyeColor = '#fef08a'; mainColor = '#eab308'; }
+                }
+
+                // Freeze status effect visual tint
+                if (u.freezeTimer > 0) {
+                    eyeColor = '#a5f3fc';
+                    ctx.shadowColor = '#38bdf8';
+                    ctx.shadowBlur = 8;
+                } else if (u.burnTimer > 0) {
+                    eyeColor = '#ff4500';
+                    ctx.shadowColor = '#ff5722';
+                    ctx.shadowBlur = 8;
+                }
 
                 // Ally Unit Indicator Tag
                 if (u.isAlly && u.hp > 0) {
@@ -3545,9 +3909,32 @@
             const s = durationSec % 60;
             const timeStr = `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
 
-            if (playerWon) {
+            if (this.currentChapter === 8) {
+                // Tournament
+                if (playerWon) {
+                    if (this.tournamentRound === 1) {
+                        this.tournamentRound = 2;
+                        if (title) title.textContent = '🏹 1. RAUNT KAZANILDI!';
+                        if (desc) desc.textContent = 'Willow dize getirildi! Yarı Finalde rakibin Ruth (Mızrakçı Komutanı)!';
+                    } else if (this.tournamentRound === 2) {
+                        this.tournamentRound = 3;
+                        if (title) title.textContent = '🛡️ YARI FİNAL KAZANILDI!';
+                        if (desc) desc.textContent = 'Ruth mağlup edildi! BÜYÜK FİNALDE rakibin Cyrus & Dev Kaos Ordusu!';
+                    } else {
+                        if (title) title.textContent = '👑 CROWN OF INAMORTA ŞAMPİYONU!';
+                        if (desc) desc.textContent = 'Tebrikler! Cyrus ve Kaos ordusunu ezerek İnamorta Şampiyonluk Tacını kazandın!';
+                    }
+                } else {
+                    if (title) { title.textContent = '💀 TURNUVADAN ELENDİN!'; title.style.color = '#ff5252'; }
+                    if (desc) desc.textContent = 'Gladyatörler arenasında yenildin. Yeniden denemek için maçı başlat.';
+                }
+            } else if (this.currentChapter === 9) {
+                // Endless Deads
+                if (title) { title.textContent = '🧟 ZOMBİ KUŞATMASI SONA ERDİ!'; title.style.color = '#ff5252'; }
+                if (desc) desc.textContent = `Heykelin yıkıldı! Toplam ${this.endlessWave || 1} gece boyunca zombi dalgalarına karşı direndin.`;
+            } else if (playerWon) {
                 if (title) title.textContent = '🏆 BÜYÜK ZAFER!';
-                if (desc) desc.textContent = 'Kaos İmparatorluğu yerle bir edildi! İnaworta topraklarına ebedi düzen ve adalet geldi.';
+                if (desc) desc.textContent = 'Kaos İmparatorluğu yerle bir edildi! İnamorta topraklarına ebedi düzen ve adalet geldi.';
             } else {
                 if (title) {
                     title.textContent = '💀 YENİLGİ!';
@@ -3583,7 +3970,9 @@
                 4: '🧙 4. Bölüm: Magikill Tapınağı',
                 5: '👹 5. Bölüm: Kaos Lordu ve Devler Diyarı',
                 6: '⚡ 1v1 Özel Düello',
-                7: '🛡️ 2v2 İttifak Savaşı (Müttefik AI ile Omuz Omuza)'
+                7: '🛡️ 2v2 İttifak Savaşı (Müttefik AI ile Omuz Omuza)',
+                8: '👑 Turnuva: Crown of Inamorta',
+                9: '🧟 Sonsuz Zombiler (Endless Deads)'
             };
             this.addFloatingText(chapterNames[this.currentChapter] || 'Bölüm Başladı!', 550, GROUND_Y - 140, '#ff9800');
         },
@@ -3597,18 +3986,31 @@
             this.controlledUnit = null;
 
             const is2v2Mode = (this.currentChapter === 7);
+            const isTournament = (this.currentChapter === 8);
+            const isEndless = (this.currentChapter === 9);
+
             this.is2v2 = is2v2Mode;
             this.allyGold = 400;
             this.allySpawnTimer = 0;
-            this.maxPop = is2v2Mode ? 35 : 20;
-            this.enemyMaxPop = is2v2Mode ? 35 : 20;
+            this.maxPop = is2v2Mode ? 35 : (isEndless ? 30 : 20);
+            this.enemyMaxPop = is2v2Mode ? 35 : (isEndless ? 40 : 20);
 
-            const hpTable = { 1: 2200, 2: 2600, 3: 3000, 4: 3500, 5: 4500, 6: 3000, 7: 5500 };
+            if (isEndless) {
+                this.endlessWave = 1;
+                this.endlessState = 'day';
+                this.endlessTimer = 0;
+                this.endlessSpawnsLeft = 0;
+            }
+            if (isTournament && !this.tournamentRound) {
+                this.tournamentRound = 1;
+            }
+
+            const hpTable = { 1: 2200, 2: 2600, 3: 3000, 4: 3500, 5: 4500, 6: 3000, 7: 5500, 8: 4000, 9: 99999 };
             const chaosHp = hpTable[this.currentChapter] || (is2v2Mode ? 5500 : 3000);
-            this.statues.order.hp = this.statues.order.maxHp = is2v2Mode ? 5000 : 3000;
+            this.statues.order.hp = this.statues.order.maxHp = is2v2Mode ? 5000 : (isEndless ? 4000 : 3000);
             this.statues.chaos.hp = this.statues.chaos.maxHp = chaosHp;
 
-            this.gold = is2v2Mode ? 650 : 500;
+            this.gold = is2v2Mode ? 650 : (isEndless ? 600 : 500);
             this.enemyGold = is2v2Mode ? 650 : 500;
             this.mana = 150;
             this.isGameOver = false;
@@ -3624,9 +4026,11 @@
             this.spawnUnit('order', 'miner');
             this.spawnUnit('order', 'sword');
 
-            this.spawnUnit('chaos', 'miner');
-            this.spawnUnit('chaos', 'miner');
-            this.spawnUnit('chaos', 'sword');
+            if (!isEndless) {
+                this.spawnUnit('chaos', 'miner');
+                this.spawnUnit('chaos', 'miner');
+                this.spawnUnit('chaos', 'sword');
+            }
 
             if (is2v2Mode) {
                 const a1 = this.spawnUnit('order', 'sword');

@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>🏎️ Bilişim GP: Çok Oyunculu Yarış - Bilişim Arenası</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏎️</text></svg>">
-    <link rel="stylesheet" href="racing.css">
+    <link rel="stylesheet" href="racing.css?v=25">
 </head>
 <body>
     <!-- TOP NAVIGATION -->
@@ -156,6 +156,13 @@
             <span class="nitro-btn-sub">[SHIFT / N]</span>
         </button>
 
+        <!-- ON-SCREEN INTERACTIVE CAMERA BUTTON -->
+        <button id="btn-screen-camera" class="hud-cam-btn" title="Kamera Görünümünü Değiştir [C Tuşu]">
+            <span class="cam-btn-icon">🎥</span>
+            <span id="hud-cam-mode-txt" class="cam-btn-txt">3. ŞAHIS (NFS)</span>
+            <span class="cam-btn-sub">[C Tuşu]</span>
+        </button>
+
         <!-- DRIFT NOTIFICATION -->
         <div id="hud-drift-notice" class="drift-notice">🔥 +150 DRIFT!</div>
 
@@ -171,7 +178,7 @@
             <div class="key-tip"><kbd>A</kbd> <kbd>D</kbd> / <kbd>←</kbd> <kbd>→</kbd> Direksiyon</div>
             <div class="key-tip"><kbd>SPACE</kbd> Drift</div>
             <div class="key-tip key-tip-nitro"><kbd>SHIFT</kbd> / <kbd>N</kbd> ⚡ NİTRO BOOST</div>
-            <div class="key-tip"><kbd>C</kbd> Kamera Değiştir</div>
+            <div class="key-tip"><kbd>C</kbd> 🎥 Kamera (NFS / 1. Şahıs)</div>
             <div class="key-tip"><kbd>R</kbd> Sıfırla</div>
         </footer>
     </div>
@@ -192,7 +199,7 @@
         </div>
     </div>
 
-    <script src="three.min.js"></script>
-    <script src="racing.js"></script>
+    <script src="three.min.js?v=25"></script>
+    <script src="racing.js?v=25"></script>
 </body>
 </html>

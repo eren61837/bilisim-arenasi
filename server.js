@@ -311,7 +311,8 @@ function getGameRatings() {
     survivor: { sum: 246, count: 50 },
     diep: { sum: 242, count: 50 },
     zombs: { sum: 249, count: 50 },
-    redmatch: { sum: 240, count: 50 },
+    flappy: { sum: 246, count: 50 },
+    tetris: { sum: 248, count: 50 },
     dino: { sum: 232, count: 50 },
     racing: { sum: 248, count: 50 },
     subway: { sum: 244, count: 50 },
@@ -867,7 +868,8 @@ exit
   else if (pathname === '/sos') safePath = '/sos.html';
   else if (pathname === '/kafatopu') safePath = '/kafatopu.html';
   else if (pathname === '/zombs') safePath = '/zombs.html';
-  else if (pathname === '/redmatch') safePath = '/redmatch.html';
+  else if (pathname === '/flappy') safePath = '/flappy.html';
+  else if (pathname === '/tetris') safePath = '/tetris.html';
   else if (pathname === '/dino') safePath = '/dino.html';
   else if (pathname === '/sumo') safePath = '/sumo.html';
   else if (pathname === '/stickwar') safePath = '/stickwar.html';

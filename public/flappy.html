@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>🐦 FLAPPY CYBER BIRD - Bilişim Arenası</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🐦</text></svg>">
+    <link rel="stylesheet" href="flappy.css?v=1">
+</head>
+<body>
+    <!-- TOP NAVIGATION -->
+    <header class="flappy-topbar">
+        <div class="flappy-brand">
+            <button class="btn-flappy-back" id="btn-back-portal">🏠 Portale Dön</button>
+            <div class="flappy-title">
+                <span>🐦 FLAPPY CYBER BIRD</span>
+                <small>Bilişim Arenası Efsanesi</small>
+            </div>
+        </div>
+        <div class="flappy-stats-hud">
+            <div class="stat-badge">🏆 EN İYİ: <strong id="hud-best-score">0</strong></div>
+            <button class="btn-sound-toggle" id="btn-sound">🔊 Ses: Açık</button>
+        </div>
+    </header>
+
+    <!-- MAIN GAME VIEWPORT -->
+    <main class="flappy-container">
+        <canvas id="flappy-canvas"></canvas>
+
+        <!-- LIVE SCORE DISPLAY -->
+        <div class="flappy-live-score" id="live-score">0</div>
+
+        <!-- START SCREEN OVERLAY -->
+        <div class="flappy-overlay" id="overlay-start">
+            <div class="flappy-card">
+                <div class="card-hero-icon">🐦 ⚡ 🌆</div>
+                <h1>FLAPPY CYBER BIRD</h1>
+                <p class="card-subtitle">Boruların arasından süzül, rekorunu kır!</p>
+
+                <!-- SKIN SELECTOR -->
+                <div class="skin-picker">
+                    <span class="picker-label">Kuş Görünümü Seç:</span>
+                    <div class="skins-flex" id="skins-container">
+                        <button class="skin-btn active" data-skin="cyber">
+                            <span>🐦</span> Cyber
+                        </button>
+                        <button class="skin-btn" data-skin="phoenix">
+                            <span>🔥</span> Phoenix
+                        </button>
+                        <button class="skin-btn" data-skin="mecha">
+                            <span>🤖</span> Mecha
+                        </button>
+                        <button class="skin-btn" data-skin="gold">
+                            <span>👑</span> Gold
+                        </button>
+                    </div>
+                </div>
+
+                <button class="btn-flappy-play" id="btn-start-game">
+                    UÇUŞA BAŞLA (TIKLA / BOŞLUK) 🚀
+                </button>
+
+                <div class="control-hints">
+                    <span>[BOŞLUK] veya [SOL TIK] ile kanat çırp!</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- GAME OVER SCREEN OVERLAY -->
+        <div class="flappy-overlay hidden" id="overlay-gameover">
+            <div class="flappy-card gameover-card">
+                <h2 class="gameover-title">💥 OYUN BİTTİ!</h2>
+                
+                <div class="score-board">
+                    <div class="medal-slot">
+                        <span class="medal-label">MADALYA</span>
+                        <div class="medal-icon" id="go-medal">🥉</div>
+                    </div>
+                    <div class="score-slot">
+                        <div class="score-row"><span>SKOR:</span> <b id="go-score">0</b></div>
+                        <div class="score-row"><span>EN İYİ:</span> <b id="go-best">0</b></div>
+                    </div>
+                </div>
+
+                <div class="gameover-buttons">
+                    <button class="btn-flappy-play" id="btn-restart-game">TEKRAR UÇ 🔄</button>
+                    <button class="btn-flappy-portal" id="btn-go-portal">🏠 Portale Dön</button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- MOBILE TAP INSTRUCTION -->
+    <footer class="flappy-footer">
+        <span>Tüm cihazlarda uyumlu • Dokunmatik veya Boşluk Tuşu</span>
+    </footer>
+
+    <!-- EXIT RATING MODAL (PORTALE GİDERKEN DEĞERLENDİRME) -->
+    <div class="flappy-modal-backdrop hidden" id="modal-exit-rating">
+        <div class="flappy-rating-box">
+            <div style="font-size:42px;">⭐</div>
+            <h2>FLAPPY BIRD'Ü DEĞERLENDİR!</h2>
+            <p>Arenaya dönmeden önce bu oyuna kaç yıldız verirsin?</p>
+            <div class="rating-stars" id="exit-stars">
+                <span data-star="1">★</span>
+                <span data-star="2">★</span>
+                <span data-star="3">★</span>
+                <span data-star="4">★</span>
+                <span data-star="5">★</span>
+            </div>
+            <div style="display:flex; gap:10px; margin-top:16px;">
+                <button class="btn-flappy-play" id="btn-submit-rating" style="padding:10px 18px; font-size:14px;">Oyla ve Dön ⭐</button>
+                <button class="btn-flappy-back" id="btn-skip-rating" style="padding:10px 18px; font-size:14px;">Geç</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="flappy.js?v=1"></script>
+</body>
+</html>
