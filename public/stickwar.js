@@ -2437,14 +2437,16 @@
         },
 
         renderStatues(ctx) {
-            // Order Golden Statue
+            // Order Golden Statue (Iconic Stick War Monument)
             const stO = this.statues.order;
             ctx.save();
             ctx.translate(stO.x, GROUND_Y);
 
             // Plinth / Base
             ctx.fillStyle = '#37474f';
-            ctx.fillRect(-35, -25, 70, 25);
+            ctx.fillRect(-45, -25, 90, 25);
+            ctx.fillStyle = '#263238';
+            ctx.fillRect(-38, -15, 76, 15);
 
             // Golden Monument Stick Guardian
             ctx.strokeStyle = '#ffd700';
@@ -2453,14 +2455,14 @@
 
             // Legs
             ctx.beginPath();
-            ctx.moveTo(-15, -25); ctx.lineTo(-10, -80); ctx.lineTo(0, -95);
-            ctx.moveTo(15, -25); ctx.lineTo(10, -80); ctx.lineTo(0, -95);
+            ctx.moveTo(-18, -25); ctx.lineTo(-12, -80); ctx.lineTo(0, -95);
+            ctx.moveTo(18, -25); ctx.lineTo(12, -80); ctx.lineTo(0, -95);
             // Spine
             ctx.lineTo(0, -150);
             // Raised Sword Arm
             ctx.moveTo(0, -140); ctx.lineTo(35, -170); ctx.lineTo(65, -195);
             // Shield Arm
-            ctx.moveTo(0, -140); ctx.lineTo(-25, -130);
+            ctx.moveTo(0, -140); ctx.lineTo(-28, -130);
             ctx.stroke();
 
             // Head
@@ -2469,11 +2471,35 @@
             ctx.fillStyle = '#ffd700';
             ctx.fill();
 
-            // Sword blade
-            ctx.strokeStyle = '#00e5ff';
-            ctx.lineWidth = 4;
+            // Spartan Helmet Crest on Statue
+            ctx.fillStyle = '#d50000';
             ctx.beginPath();
-            ctx.moveTo(65, -195); ctx.lineTo(110, -240);
+            ctx.moveTo(-12, -181); ctx.quadraticCurveTo(0, -202, 14, -181);
+            ctx.lineTo(10, -176); ctx.quadraticCurveTo(0, -194, -10, -176);
+            ctx.closePath();
+            ctx.fill();
+
+            // Large Golden Hoplon Shield in Statue's Hand
+            ctx.fillStyle = '#8c6218';
+            ctx.beginPath();
+            ctx.arc(-30, -130, 24, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = '#ffd700';
+            ctx.lineWidth = 4;
+            ctx.stroke();
+
+            // Spartan Lambda (Λ) on Shield
+            ctx.strokeStyle = '#ffd700';
+            ctx.lineWidth = 3.5;
+            ctx.beginPath();
+            ctx.moveTo(-38, -120); ctx.lineTo(-30, -142); ctx.lineTo(-22, -120);
+            ctx.stroke();
+
+            // Glowing Golden Sword Blade
+            ctx.strokeStyle = '#00e5ff';
+            ctx.lineWidth = 5;
+            ctx.beginPath();
+            ctx.moveTo(65, -195); ctx.lineTo(115, -245);
             ctx.stroke();
 
             ctx.restore();
@@ -2484,15 +2510,17 @@
             ctx.translate(stC.x, GROUND_Y);
 
             ctx.fillStyle = '#261b1b';
-            ctx.fillRect(-35, -25, 70, 25);
+            ctx.fillRect(-45, -25, 90, 25);
+            ctx.fillStyle = '#1a1010';
+            ctx.fillRect(-38, -15, 76, 15);
 
             ctx.strokeStyle = '#ff3d00';
             ctx.lineWidth = 6;
             ctx.lineCap = 'round';
 
             ctx.beginPath();
-            ctx.moveTo(-15, -25); ctx.lineTo(-10, -80); ctx.lineTo(0, -95);
-            ctx.moveTo(15, -25); ctx.lineTo(10, -80); ctx.lineTo(0, -95);
+            ctx.moveTo(-18, -25); ctx.lineTo(-12, -80); ctx.lineTo(0, -95);
+            ctx.moveTo(18, -25); ctx.lineTo(12, -80); ctx.lineTo(0, -95);
             ctx.lineTo(0, -150);
             ctx.moveTo(0, -140); ctx.lineTo(-35, -170); ctx.lineTo(-65, -195);
             ctx.stroke();
@@ -2502,11 +2530,19 @@
             ctx.fillStyle = '#ff3d00';
             ctx.fill();
 
+            // Horns on Chaos Statue
+            ctx.strokeStyle = '#b71c1c';
+            ctx.lineWidth = 4;
+            ctx.beginPath();
+            ctx.moveTo(-10, -178); ctx.lineTo(-24, -202);
+            ctx.moveTo(10, -178); ctx.lineTo(24, -202);
+            ctx.stroke();
+
             // Red glowing staff
             ctx.strokeStyle = '#d50000';
             ctx.lineWidth = 5;
             ctx.beginPath();
-            ctx.moveTo(-65, -195); ctx.lineTo(-105, -240);
+            ctx.moveTo(-65, -195); ctx.lineTo(-115, -245);
             ctx.stroke();
 
             ctx.restore();
@@ -2558,7 +2594,8 @@
 
                 const isOrder = u.side === 'order';
                 const mainColor = isOrder ? '#00e5ff' : '#ff3d00';
-                const skinColor = '#ffffff';
+                const bodyColor = '#0a0a0a'; // Iconic Stick War solid black silhouette
+                const eyeColor = isOrder ? '#00e5ff' : '#ff1744';
 
                 // Ally Unit Indicator Tag
                 if (u.isAlly && u.hp > 0) {
@@ -2597,19 +2634,19 @@
                     ctx.fillRect(-bw / 2, -75, bw * pct, bh);
                 }
 
-                // DRAW ARTICULATED STICK FIGURE
-                const scale = u.type === 'giant' ? 2.2 : (u.type === 'crawler' ? 0.7 : 1.0);
+                // DRAW ARTICULATED STICK FIGURE (1-to-1 Stick War: Legacy)
+                const scale = u.type === 'giant' ? 2.3 : (u.type === 'crawler' ? 0.7 : 1.0);
                 ctx.scale(scale * u.facing, scale);
 
                 const legAngle = u.animAction === 'walk' ? Math.sin(u.walkCycle) * 0.6 : 0;
-                const armAngle = u.animAction === 'attack' ? -Math.PI * 0.4 : (u.animAction === 'walk' ? -Math.sin(u.walkCycle) * 0.5 : 0.2);
+                const armAngle = u.animAction === 'attack' ? -Math.PI * 0.45 : (u.animAction === 'walk' ? -Math.sin(u.walkCycle) * 0.5 : 0.2);
 
-                ctx.strokeStyle = skinColor;
-                ctx.lineWidth = 3;
+                ctx.strokeStyle = bodyColor;
+                ctx.lineWidth = u.type === 'giant' ? 6 : 3.5;
                 ctx.lineCap = 'round';
                 ctx.lineJoin = 'round';
 
-                // 1. Legs (thigh + shin)
+                // 1. Legs (thigh + knee + shin + foot)
                 // Left Leg
                 ctx.beginPath();
                 ctx.moveTo(0, -25);
@@ -2630,124 +2667,350 @@
                 ctx.lineTo(0, -48);
                 ctx.stroke();
 
-                // 3. Head
+                // 3. Head (Black circular silhouette)
                 ctx.beginPath();
-                ctx.arc(0, -56, 7, 0, Math.PI * 2);
-                ctx.fillStyle = skinColor;
+                ctx.arc(0, -56, 7.5, 0, Math.PI * 2);
+                ctx.fillStyle = bodyColor;
                 ctx.fill();
 
-                // 4. Arms & Equipment
-                ctx.strokeStyle = skinColor;
+                // 4. Iconic Stick War Fierce Glowing Eye Slit
+                ctx.fillStyle = eyeColor;
+                ctx.fillRect(3, -57.5, 3.2, 2.2);
+
+                // 5. Arms, Armor & Equipment (1-to-1 Authentic Stick War Weapons)
+                ctx.strokeStyle = bodyColor;
 
                 if (u.type === 'miner') {
-                    // Pickaxe
+                    // Miner Helmet / Cap
+                    ctx.fillStyle = '#5d4037';
                     ctx.beginPath();
-                    ctx.moveTo(0, -42);
-                    ctx.lineTo(12, -35);
+                    ctx.arc(0, -59, 8, Math.PI, Math.PI * 2);
+                    ctx.fill();
+                    ctx.fillRect(-2, -59, 12, 3); // cap visor
+
+                    // Mining Sack on Back
+                    ctx.fillStyle = '#6d4c41';
+                    ctx.beginPath();
+                    ctx.ellipse(-10, -36, 7, 10, -0.3, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.strokeStyle = '#4e342e';
+                    ctx.lineWidth = 1.5;
                     ctx.stroke();
 
-                    // Pickaxe head & shaft
-                    ctx.strokeStyle = '#ffd700';
-                    ctx.lineWidth = 2.5;
-                    ctx.beginPath();
-                    ctx.moveTo(8, -48); ctx.lineTo(18, -25);
-                    ctx.moveTo(4, -46); ctx.lineTo(15, -42);
-                    ctx.stroke();
-
+                    // Gold Nuggets visible in sack
                     if (u.carriedGold > 0) {
                         ctx.fillStyle = '#ffd700';
                         ctx.beginPath();
-                        ctx.arc(-8, -32, 5, 0, Math.PI * 2);
+                        ctx.arc(-8, -43, 3, 0, Math.PI * 2);
+                        ctx.arc(-11, -39, 3.5, 0, Math.PI * 2);
+                        ctx.arc(-7, -35, 2.8, 0, Math.PI * 2);
                         ctx.fill();
                     }
+
+                    // Miner Arms holding pickaxe
+                    ctx.strokeStyle = bodyColor;
+                    ctx.lineWidth = 3.5;
+                    ctx.beginPath();
+                    ctx.moveTo(0, -42);
+                    ctx.lineTo(10, -38);
+                    ctx.lineTo(16, -30);
+                    ctx.stroke();
+
+                    // Sturdy Two-Handed Pickaxe
+                    const pickSwing = (u.animAction === 'attack') ? Math.sin(u.animTimer * 18) * 0.8 : 0;
+                    ctx.save();
+                    ctx.translate(14, -34);
+                    ctx.rotate(pickSwing);
+                    // Wooden Handle
+                    ctx.strokeStyle = '#8d6e63';
+                    ctx.lineWidth = 3;
+                    ctx.beginPath();
+                    ctx.moveTo(-6, -14); ctx.lineTo(14, 18);
+                    ctx.stroke();
+                    // Iron Pick Head
+                    ctx.strokeStyle = '#cfd8dc';
+                    ctx.lineWidth = 3.5;
+                    ctx.beginPath();
+                    ctx.moveTo(8, 8); ctx.lineTo(20, 26);
+                    ctx.moveTo(14, 18); ctx.lineTo(6, 26);
+                    ctx.stroke();
+                    ctx.restore();
+
                 } else if (u.type === 'sword') {
+                    // Swordwrath: Leather Baldric Chest Sash
+                    ctx.strokeStyle = '#4e342e';
+                    ctx.lineWidth = 2.5;
+                    ctx.beginPath();
+                    ctx.moveTo(-6, -46); ctx.lineTo(6, -26);
+                    ctx.stroke();
+
                     // Sword Arm
+                    ctx.strokeStyle = bodyColor;
+                    ctx.lineWidth = 3.5;
                     ctx.beginPath();
                     ctx.moveTo(0, -42);
                     ctx.lineTo(14, -38 + Math.sin(armAngle) * 10);
                     ctx.stroke();
 
-                    // Sword Blade
+                    // Iconic Swordwrath Steel Broadsword
+                    const swordSwing = (u.animAction === 'attack') ? Math.sin(u.animTimer * 16) * 1.2 : 0;
+                    ctx.save();
+                    ctx.translate(14, -38 + Math.sin(armAngle) * 10);
+                    ctx.rotate(swordSwing);
+
+                    // Crossguard & Hilt
+                    ctx.strokeStyle = '#d4af37';
+                    ctx.lineWidth = 3;
+                    ctx.beginPath();
+                    ctx.moveTo(-4, -2); ctx.lineTo(4, 2);
+                    ctx.stroke();
+
+                    // Steel Blade
+                    ctx.fillStyle = '#eceff1';
                     ctx.strokeStyle = mainColor;
-                    ctx.lineWidth = 3;
+                    ctx.lineWidth = 1.5;
                     ctx.beginPath();
-                    ctx.moveTo(14, -38 + Math.sin(armAngle) * 10);
-                    ctx.lineTo(28, -50 + Math.sin(armAngle) * 15);
-                    ctx.stroke();
-                } else if (u.type === 'archer') {
-                    // Bow
-                    ctx.beginPath();
-                    ctx.moveTo(0, -42); ctx.lineTo(12, -38);
-                    ctx.stroke();
-
-                    ctx.strokeStyle = '#d4a373';
-                    ctx.lineWidth = 2.5;
-                    ctx.beginPath();
-                    ctx.arc(14, -38, 12, -Math.PI * 0.4, Math.PI * 0.4);
-                    ctx.stroke();
-                } else if (u.type === 'spear') {
-                    // Big Corinthian Shield
-                    ctx.fillStyle = mainColor;
-                    ctx.beginPath();
-                    ctx.ellipse(14, -36, 6, 18, 0, 0, Math.PI * 2);
+                    ctx.moveTo(0, 0);
+                    ctx.lineTo(26, -24);
+                    ctx.lineTo(28, -22);
+                    ctx.lineTo(4, 3);
+                    ctx.closePath();
                     ctx.fill();
-                    ctx.strokeStyle = '#fff';
                     ctx.stroke();
 
-                    // Spear
-                    ctx.strokeStyle = '#c0c0c0';
+                    // Attack Slash Motion Swoosh Arc
+                    if (u.animAction === 'attack') {
+                        ctx.strokeStyle = mainColor;
+                        ctx.lineWidth = 2.5;
+                        ctx.beginPath();
+                        ctx.arc(0, 0, 32, -0.8, 0.8);
+                        ctx.stroke();
+                    }
+                    ctx.restore();
+
+                } else if (u.type === 'archer') {
+                    // Archidon: Leather Quiver on Back with Arrows
+                    ctx.fillStyle = '#5d4037';
+                    ctx.fillRect(-12, -45, 6, 18);
+                    // Fletched Arrow Tails sticking out
+                    ctx.strokeStyle = isOrder ? '#00e5ff' : '#ff1744';
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.moveTo(-10, -45); ctx.lineTo(-12, -54);
+                    ctx.moveTo(-8, -45); ctx.lineTo(-9, -53);
+                    ctx.moveTo(-6, -45); ctx.lineTo(-6, -55);
+                    ctx.stroke();
+
+                    // Bow Arm & Recurve Bow
+                    ctx.strokeStyle = bodyColor;
+                    ctx.lineWidth = 3.5;
+                    ctx.beginPath();
+                    ctx.moveTo(0, -42); ctx.lineTo(14, -40);
+                    ctx.stroke();
+
+                    // Wooden Recurve Bow
+                    ctx.strokeStyle = '#8d6e63';
+                    ctx.lineWidth = 3;
+                    ctx.beginPath();
+                    ctx.arc(14, -40, 16, -Math.PI * 0.38, Math.PI * 0.38);
+                    ctx.stroke();
+
+                    // Bowstring & Nocked Arrow
+                    ctx.strokeStyle = '#ffffff';
+                    ctx.lineWidth = 1.2;
+                    ctx.beginPath();
+                    if (u.animAction === 'attack') {
+                        // Drawn string and arrow ready to fire!
+                        ctx.moveTo(2, -40);
+                        ctx.lineTo(26, -52);
+                        ctx.moveTo(2, -40);
+                        ctx.lineTo(26, -28);
+                        ctx.stroke();
+                        // Nocked Arrow
+                        ctx.strokeStyle = '#ffd700';
+                        ctx.lineWidth = 2;
+                        ctx.beginPath();
+                        ctx.moveTo(2, -40); ctx.lineTo(22, -40);
+                        ctx.stroke();
+                    } else {
+                        ctx.moveTo(26, -52); ctx.lineTo(26, -28);
+                        ctx.stroke();
+                    }
+
+                } else if (u.type === 'spear') {
+                    // ========================================================
+                    // SPEARTON: ICONIC BRONZE CORINTHIAN HELMET & CREST
+                    // ========================================================
+                    // Bronze Helmet Cap
+                    ctx.fillStyle = '#c99738';
+                    ctx.beginPath();
+                    ctx.arc(0, -57, 8.5, Math.PI, Math.PI * 2);
+                    ctx.lineTo(6, -53);
+                    ctx.lineTo(2, -53);
+                    ctx.lineTo(2, -58);
+                    ctx.lineTo(-4, -58);
+                    ctx.closePath();
+                    ctx.fill();
+                    ctx.strokeStyle = '#8c6218';
+                    ctx.lineWidth = 1.2;
+                    ctx.stroke();
+
+                    // Spartan Tall Horsehair Crest / Plumage
+                    ctx.fillStyle = isOrder ? '#d50000' : '#212121';
+                    ctx.beginPath();
+                    ctx.moveTo(-7, -64);
+                    ctx.quadraticCurveTo(0, -74, 9, -64);
+                    ctx.lineTo(7, -61);
+                    ctx.quadraticCurveTo(0, -68, -5, -61);
+                    ctx.closePath();
+                    ctx.fill();
+
+                    // Eye slit showing through Spartan helmet
+                    ctx.fillStyle = eyeColor;
+                    ctx.fillRect(2.5, -57, 3, 2);
+
+                    // ========================================================
+                    // SPARTAN HOPLON ROUND SHIELD
+                    // ========================================================
+                    // Large Bronze Shield
+                    ctx.fillStyle = '#b8860b';
+                    ctx.beginPath();
+                    ctx.arc(14, -34, 15, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    // Golden Shield Rim
+                    ctx.strokeStyle = '#ffd700';
+                    ctx.lineWidth = 2.5;
+                    ctx.stroke();
+
+                    // Spartan Emblem / Chevron (Lambda Λ)
+                    ctx.strokeStyle = '#3e2723';
                     ctx.lineWidth = 2.5;
                     ctx.beginPath();
-                    ctx.moveTo(-10, -25); ctx.lineTo(34, -45);
+                    ctx.moveTo(9, -28); ctx.lineTo(14, -39); ctx.lineTo(19, -28);
                     ctx.stroke();
-                } else if (u.type === 'mage') {
-                    // Arcane Staff
-                    ctx.strokeStyle = '#9c27b0';
+
+                    // ========================================================
+                    // SPARTAN ASHWOOD SPEAR
+                    // ========================================================
+                    ctx.save();
+                    const spearThrust = (u.animAction === 'attack') ? Math.sin(u.animTimer * 16) * 14 : 0;
+                    ctx.translate(spearThrust, 0);
+
+                    // Wooden Shaft
+                    ctx.strokeStyle = '#8d6e63';
                     ctx.lineWidth = 3;
+                    ctx.beginPath();
+                    ctx.moveTo(-18, -24); ctx.lineTo(38, -44);
+                    ctx.stroke();
+
+                    // Leaf-shaped Iron Spearhead
+                    ctx.fillStyle = '#eceff1';
+                    ctx.strokeStyle = '#90a4ae';
+                    ctx.lineWidth = 1.5;
+                    ctx.beginPath();
+                    ctx.moveTo(38, -44);
+                    ctx.lineTo(46, -48);
+                    ctx.lineTo(50, -48);
+                    ctx.lineTo(40, -42);
+                    ctx.closePath();
+                    ctx.fill();
+                    ctx.stroke();
+                    ctx.restore();
+
+                } else if (u.type === 'mage') {
+                    // Magikill: Pointed Wizard Hat
+                    ctx.fillStyle = '#311b92';
+                    ctx.beginPath();
+                    ctx.moveTo(-10, -61);
+                    ctx.lineTo(12, -61);
+                    ctx.lineTo(2, -78);
+                    ctx.closePath();
+                    ctx.fill();
+                    ctx.strokeStyle = '#7c4dff';
+                    ctx.lineWidth = 1.5;
+                    ctx.stroke();
+
+                    // Wizard Robe Cape
+                    ctx.fillStyle = 'rgba(49, 27, 146, 0.85)';
+                    ctx.beginPath();
+                    ctx.moveTo(0, -48);
+                    ctx.lineTo(-12, -22);
+                    ctx.lineTo(-4, -20);
+                    ctx.lineTo(4, -48);
+                    ctx.closePath();
+                    ctx.fill();
+
+                    // Arcane Staff
+                    ctx.strokeStyle = '#5d4037';
+                    ctx.lineWidth = 3.5;
                     ctx.beginPath();
                     ctx.moveTo(0, -42); ctx.lineTo(16, -38);
-                    ctx.moveTo(16, -10); ctx.lineTo(16, -65);
+                    ctx.moveTo(16, -10); ctx.lineTo(16, -68);
                     ctx.stroke();
 
-                    // Glowing Orb
+                    // Levitating Glowing Arcane Orb
+                    ctx.save();
+                    ctx.shadowColor = '#00e5ff';
+                    ctx.shadowBlur = 12;
                     ctx.fillStyle = '#00e5ff';
                     ctx.beginPath();
-                    ctx.arc(16, -68, 6, 0, Math.PI * 2);
+                    ctx.arc(16, -72, 7, 0, Math.PI * 2);
                     ctx.fill();
+                    ctx.restore();
+
                 } else if (u.type === 'giant') {
-                    // Spiked Wooden Club
-                    ctx.strokeStyle = '#8d6e63';
-                    ctx.lineWidth = 6;
+                    // Towering Giant with Spiked Tree Trunk Club
+                    ctx.strokeStyle = bodyColor;
+                    ctx.lineWidth = 7;
                     ctx.beginPath();
-                    ctx.moveTo(0, -40); ctx.lineTo(24, -35); ctx.lineTo(36, -60);
+                    ctx.moveTo(0, -40); ctx.lineTo(24, -35); ctx.lineTo(36, -58);
                     ctx.stroke();
+
+                    // Spiked Club Head
+                    ctx.strokeStyle = '#5d4037';
+                    ctx.lineWidth = 8;
+                    ctx.beginPath();
+                    ctx.moveTo(28, -50); ctx.lineTo(44, -72);
+                    ctx.stroke();
+
+                    // Iron Spikes
+                    ctx.strokeStyle = '#cfd8dc';
+                    ctx.lineWidth = 2.5;
+                    ctx.beginPath();
+                    ctx.moveTo(34, -58); ctx.lineTo(30, -64);
+                    ctx.moveTo(38, -62); ctx.lineTo(44, -66);
+                    ctx.moveTo(42, -68); ctx.lineTo(38, -74);
+                    ctx.stroke();
+
                 } else if (u.type === 'meric') {
                     // Golden Healer Caduceus / Staff
                     ctx.strokeStyle = '#ffd700';
-                    ctx.lineWidth = 2.5;
+                    ctx.lineWidth = 2.8;
                     ctx.beginPath();
                     ctx.moveTo(0, -42); ctx.lineTo(14, -38);
-                    ctx.moveTo(14, -12); ctx.lineTo(14, -64);
+                    ctx.moveTo(14, -12); ctx.lineTo(14, -66);
                     ctx.stroke();
 
                     // Glowing Sacred Heal Gem
                     ctx.fillStyle = '#00e676';
                     ctx.beginPath();
-                    ctx.arc(14, -66, 5, 0, Math.PI * 2);
+                    ctx.arc(14, -68, 6, 0, Math.PI * 2);
                     ctx.fill();
 
                     // Holy Halo
                     ctx.strokeStyle = '#ffd700';
-                    ctx.lineWidth = 1.5;
+                    ctx.lineWidth = 1.8;
                     ctx.beginPath();
-                    ctx.ellipse(0, -68, 8, 3, 0, 0, Math.PI * 2);
+                    ctx.ellipse(0, -70, 9, 3.5, 0, 0, Math.PI * 2);
                     ctx.stroke();
+
                 } else if (u.type === 'bomber') {
-                    // Gunpowder Keg on Back/Head
+                    // Gunpowder Keg on Back
                     ctx.fillStyle = '#4e342e';
                     ctx.fillRect(-8, -48, 16, 14);
                     ctx.strokeStyle = '#ffd700';
-                    ctx.lineWidth = 1;
+                    ctx.lineWidth = 1.5;
                     ctx.strokeRect(-8, -48, 16, 14);
 
                     // Burning Fuse
@@ -2757,39 +3020,42 @@
                     ctx.stroke();
                     ctx.fillStyle = '#ff3d00';
                     ctx.beginPath();
-                    ctx.arc(4, -54, 2.5, 0, Math.PI * 2);
+                    ctx.arc(4, -54, 3, 0, Math.PI * 2);
                     ctx.fill();
+
                 } else if (u.type === 'juggerknight') {
                     // Horned Iron Helmet
                     ctx.fillStyle = '#37474f';
                     ctx.fillRect(-6, -63, 12, 5);
                     ctx.strokeStyle = '#b0bec5';
+                    ctx.lineWidth = 2;
                     ctx.beginPath();
-                    ctx.moveTo(-6, -63); ctx.lineTo(-11, -72);
-                    ctx.moveTo(6, -63); ctx.lineTo(11, -72);
+                    ctx.moveTo(-6, -63); ctx.lineTo(-12, -74);
+                    ctx.moveTo(6, -63); ctx.lineTo(12, -74);
                     ctx.stroke();
 
                     // Massive Spiked Cleaver
                     ctx.strokeStyle = '#cfd8dc';
-                    ctx.lineWidth = 4;
+                    ctx.lineWidth = 4.5;
                     ctx.beginPath();
-                    ctx.moveTo(10, -36); ctx.lineTo(26, -58);
+                    ctx.moveTo(10, -36); ctx.lineTo(28, -60);
                     ctx.stroke();
                     ctx.fillStyle = '#90a4ae';
-                    ctx.fillRect(18, -60, 14, 8);
+                    ctx.fillRect(20, -62, 16, 9);
+
                 } else if (u.type === 'marrowkai') {
                     // Dark Necromancer Staff
                     ctx.strokeStyle = '#4a148c';
-                    ctx.lineWidth = 3;
+                    ctx.lineWidth = 3.5;
                     ctx.beginPath();
                     ctx.moveTo(0, -42); ctx.lineTo(16, -38);
-                    ctx.moveTo(16, -10); ctx.lineTo(16, -68);
+                    ctx.moveTo(16, -10); ctx.lineTo(16, -70);
                     ctx.stroke();
 
                     // Poison Purple Skull
                     ctx.fillStyle = '#ab47bc';
                     ctx.beginPath();
-                    ctx.arc(16, -70, 7, 0, Math.PI * 2);
+                    ctx.arc(16, -72, 8, 0, Math.PI * 2);
                     ctx.fill();
                 }
 
