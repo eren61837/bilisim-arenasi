@@ -55,6 +55,15 @@ db.exec(`
     created_at INTEGER NOT NULL
   );
 
+  CREATE TABLE IF NOT EXISTS game_ratings (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    game_id TEXT NOT NULL,
+    username TEXT NOT NULL,
+    rating INTEGER NOT NULL,
+    created_at INTEGER NOT NULL,
+    UNIQUE(game_id, username)
+  );
+
   CREATE TABLE IF NOT EXISTS protected_zones (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     room TEXT NOT NULL,
@@ -288,6 +297,45 @@ function parseJsonBody(req) {
     });
     req.on('error', reject);
   });
+}
+
+function getGameRatings() {
+  const defaults = {
+    cs16: { sum: 245, count: 50 },
+    stickwar: { sum: 247, count: 50 },
+    minecraft: { sum: 242, count: 50 },
+    sumo: { sum: 248, count: 50 },
+    kafatopu: { sum: 236, count: 50 },
+    sos: { sum: 238, count: 50 },
+    geometrydash: { sum: 244, count: 50 },
+    survivor: { sum: 246, count: 50 },
+    diep: { sum: 242, count: 50 },
+    zombs: { sum: 249, count: 50 },
+    redmatch: { sum: 240, count: 50 },
+    dino: { sum: 232, count: 50 },
+    racing: { sum: 248, count: 50 },
+    subway: { sum: 244, count: 50 },
+    templerun: { sum: 241, count: 50 },
+    gartic: { sum: 245, count: 50 },
+    python: { sum: 247, count: 50 }
+  };
+  const result = {};
+  for (const [k, v] of Object.entries(defaults)) {
+    result[k] = { avg: Number((v.sum / v.count).toFixed(1)), count: v.count };
+  }
+  try {
+    const rows = db.prepare('SELECT game_id, SUM(rating) as total_sum, COUNT(*) as total_count FROM game_ratings GROUP BY game_id').all();
+    for (const r of rows) {
+      const base = defaults[r.game_id] || { sum: 0, count: 0 };
+      const totSum = base.sum + Number(r.total_sum);
+      const totCount = base.count + Number(r.total_count);
+      result[r.game_id] = {
+        avg: Number((totSum / totCount).toFixed(1)),
+        count: totCount
+      };
+    }
+  } catch (_) {}
+  return result;
 }
 
 const server = http.createServer(async (req, res) => {
@@ -745,6 +793,39 @@ exit
         return sendJson(res, 200, gamesManager ? gamesManager.getStats() : { lanIp: getLanIp(), onlineTotal: connectedClients.size, games: {} });
       }
 
+      // 8a. GET /api/game-ratings
+      if (pathname === '/api/game-ratings' && req.method === 'GET') {
+        return sendJson(res, 200, { success: true, ratings: getGameRatings() });
+      }
+
+      // 8b. POST /api/rate-game
+      if (pathname === '/api/rate-game' && req.method === 'POST') {
+        const body = await parseJsonBody(req);
+        const gameId = String(body.gameId || '').trim().toLowerCase();
+        const rating = parseInt(body.rating, 10);
+        const username = String(body.username || 'Misafir').trim().slice(0, 30);
+        if (!gameId || isNaN(rating) || rating < 1 || rating > 5) {
+          return sendJson(res, 400, { error: 'Geçersiz puan veya oyun ID (1-5 arası olmalıdır).' });
+        }
+        try {
+          db.prepare(`
+            INSERT INTO game_ratings (game_id, username, rating, created_at)
+            VALUES (?, ?, ?, ?)
+            ON CONFLICT(game_id, username) DO UPDATE SET rating = excluded.rating, created_at = excluded.created_at
+          `).run(gameId, username, rating, Date.now());
+        } catch (dbErr) {
+          console.error('Rate DB error:', dbErr);
+        }
+        const updated = getGameRatings();
+        return sendJson(res, 200, {
+          success: true,
+          gameId,
+          newAvg: updated[gameId] ? updated[gameId].avg : rating,
+          newCount: updated[gameId] ? updated[gameId].count : 1,
+          ratings: updated
+        });
+      }
+
       // 9. GET /api/admin/bot-config
       if (pathname === '/api/admin/bot-config' && req.method === 'GET') {
         return sendJson(res, 200, { success: true, config: OFFICIAL_BOT });
@@ -796,6 +877,7 @@ exit
   else if (pathname === '/templerun') safePath = '/templerun.html';
   else if (pathname === '/gartic') safePath = '/gartic.html';
   else if (pathname === '/racing') safePath = '/racing.html';
+  else if (pathname === '/python' || pathname === '/pygame') safePath = '/python.html';
   else if (safePath === '/' || safePath === '\\') safePath = '/index.html';
 
   // Check both PUBLIC_DIR and root (__dirname), pick whichever exists and is newer!

@@ -412,9 +412,11 @@
           updateCount('count-subway', data.games.subway);
           updateCount('count-temple', data.games.templerun);
           updateCount('count-gartic', data.games.gartic);
+          updateCount('count-python', data.games.python);
 
           // 👑 DYNAMIC POPULARITY SORTING (Seçkin oyunlar)
           const gameEntries = [
+            { id: 'count-python', count: data.games.python || 0, name: 'Python & Pygame' },
             { id: 'count-racing', count: data.games.racing || 0, name: 'Bilişim GP Yarış' },
             { id: 'count-subway', count: data.games.subway || 0, name: 'Subway Surfers' },
             { id: 'count-temple', count: data.games.templerun || 0, name: 'Temple Run 2' },
@@ -928,7 +930,7 @@
           <button id="btn-close-upd" style="background:transparent; border:none; color:#888; font-size:18px; cursor:pointer; padding:2px 6px;">✕</button>
         </div>
         <p style="font-size:13px; color:#ddd; line-height:1.55; margin:0 0 14px 0; word-break:break-word;">
-          beyler sa yeni guncellemeleri getirdim deeep io yerine diep io yu ekledim tanklar cok sariyo stat fln yukseltionuz zombs io da geldi onur baran la eyup kizilderenn istedikleri loading screene yazildi bide pixelplace deki isim koyma ve giremmeme bugunu duzelttim artik direk girip boyaniyo lag fln da kalmadi hadi ii oyunlar
+          beyler sa dev guncellemeler geldi: Python &amp; Pygame web arenası eklendi Main.py kodunu canlı gorup degistirebiliosunuz, tum oyunlara yildizli puanlama sistemi geldi herkes oy verebilio ortalama puan gozukuo, stick war da okcular artik kiliclilarin tam arkasina gecip siraya dizilio, dusman AI orduyu toplayip dalga dalga saldirio, 2v2 ittifak savasi ve kaleye sigin modu geldi birlikler arkadaki dev kaleye siginio okcular surlardan indirio, bide bilisim gp drift yarisi geldi hadi ii oyunlar 🔥
         </p>
         <div style="display:flex; justify-content:flex-end;">
           <button id="btn-ack-upd" style="background:linear-gradient(135deg, #00dbff, #0050a0); border:none; color:#000; font-weight:800; font-size:12px; padding:7px 16px; border-radius:8px; cursor:pointer; box-shadow:0 0 12px rgba(0,219,255,0.3);">
@@ -950,8 +952,138 @@
     }, 1400);
   }
 
+  // 11. GAME RATINGS SYSTEM (1-5 YILDIZ & ORTALAMA PUAN)
+  function initGameRatings() {
+    const modal = document.getElementById('modal-rate-game');
+    const modalTitle = document.getElementById('rate-modal-title');
+    const starsRow = document.getElementById('rate-stars-row');
+    const feedback = document.getElementById('rate-feedback');
+    const btnCancel = document.getElementById('btn-cancel-rating');
+
+    let activeGameId = null;
+    let selectedRating = 0;
+
+    // Attach badges to cards
+    const cards = document.querySelectorAll('.game-card');
+    cards.forEach(card => {
+      const href = card.getAttribute('href') || '';
+      const gameId = href.replace(/^\//, '').split('?')[0].toLowerCase();
+      if (!gameId) return;
+
+      const titleRow = card.querySelector('.game-title-row');
+      if (!titleRow) return;
+
+      let badge = card.querySelector('.game-rating-badge');
+      if (!badge) {
+        badge = document.createElement('div');
+        badge.className = 'game-rating-badge';
+        badge.setAttribute('data-game-id', gameId);
+        badge.innerHTML = `<span class="rate-star-icon">⭐</span> <span class="rate-avg">--</span> <span class="rate-count">(-- oy)</span> <span class="rate-btn-hint">Puan Ver</span>`;
+        titleRow.parentNode.insertBefore(badge, titleRow.nextSibling);
+      }
+
+      badge.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        openRatingModal(gameId, card.querySelector('.game-title')?.textContent || gameId);
+      });
+    });
+
+    // Fetch live ratings
+    fetch('/api/game-ratings')
+      .then(r => r.json())
+      .then(data => {
+        if (data && data.ratings) updateBadgesUI(data.ratings);
+      })
+      .catch(() => {});
+
+    function updateBadgesUI(ratings) {
+      document.querySelectorAll('.game-rating-badge').forEach(badge => {
+        const gid = badge.getAttribute('data-game-id');
+        const info = ratings[gid] || { avg: 4.8, count: 50 };
+        const avgEl = badge.querySelector('.rate-avg');
+        const countEl = badge.querySelector('.rate-count');
+        if (avgEl) avgEl.textContent = Number(info.avg).toFixed(1);
+        if (countEl) countEl.textContent = `(${info.count} oy)`;
+      });
+    }
+
+    function openRatingModal(gameId, gameTitle) {
+      if (!modal) return;
+      activeGameId = gameId;
+      selectedRating = parseInt(localStorage.getItem('my_rating_' + gameId) || '0', 10);
+      if (modalTitle) modalTitle.textContent = `${gameTitle} • Puan Ver`;
+      if (feedback) feedback.textContent = selectedRating > 0 ? `Daha önce ${selectedRating} yıldız vermiştin.` : '';
+      highlightStars(selectedRating);
+      modal.style.display = 'flex';
+    }
+
+    function highlightStars(rating, isHover = false) {
+      if (!starsRow) return;
+      const stars = starsRow.querySelectorAll('.star-btn');
+      stars.forEach((btn, idx) => {
+        const starVal = idx + 1;
+        if (isHover) {
+          btn.classList.toggle('hovered', starVal <= rating);
+        } else {
+          btn.classList.remove('hovered');
+          btn.classList.toggle('active', starVal <= rating);
+        }
+      });
+    }
+
+    if (starsRow) {
+      const stars = starsRow.querySelectorAll('.star-btn');
+      stars.forEach(btn => {
+        const starVal = parseInt(btn.getAttribute('data-star'), 10);
+        btn.addEventListener('mouseenter', () => highlightStars(starVal, true));
+        btn.addEventListener('mouseleave', () => highlightStars(selectedRating, false));
+        btn.addEventListener('click', () => submitRating(starVal));
+      });
+    }
+
+    function submitRating(stars) {
+      if (!activeGameId) return;
+      selectedRating = stars;
+      localStorage.setItem('my_rating_' + activeGameId, String(stars));
+      highlightStars(stars, false);
+      if (feedback) feedback.textContent = `⭐ ${stars} yıldız gönderiliyor...`;
+
+      fetch('/api/rate-game', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          gameId: activeGameId,
+          rating: stars,
+          username: state.username || 'Misafir'
+        })
+      })
+      .then(r => r.json())
+      .then(res => {
+        if (res && res.success) {
+          if (feedback) feedback.textContent = `✅ Teşekkürler! Puanın kaydedildi (Yeni Ortalama: ${res.newAvg} ⭐)`;
+          if (res.ratings) updateBadgesUI(res.ratings);
+          try { AudioEngine.playDing(); } catch(_) {}
+          setTimeout(() => {
+            if (modal) modal.style.display = 'none';
+          }, 1100);
+        }
+      })
+      .catch(() => {
+        if (feedback) feedback.textContent = 'Bağlantı hatası!';
+      });
+    }
+
+    if (btnCancel) {
+      btnCancel.addEventListener('click', () => {
+        if (modal) modal.style.display = 'none';
+      });
+    }
+  }
+
   initCyberCanvas();
   initWS();
+  initGameRatings();
   showUpdateNotification();
 
 })();

@@ -133,11 +133,11 @@
         <div class="hero-left">
             <h2>🚀 EFSANE OYUN ARENASINA HOŞ GELDİN</h2>
             <p>
-                İndirme yok, kurulum yok! Linke tıklayarak doğrudan arkadaşlarınla <strong>Bilişim GP Yarış</strong>, <strong>Subway Surfers</strong>, <strong>Temple Run 2</strong>, <strong>Gartic.io</strong>, <strong>Counter-Strike 1.6</strong>, <strong>Ahmet Hakan Kutu Sumo</strong>, <strong>Stick War: Legacy</strong>, <strong>Minecraft 3D</strong>, <strong>Redmatch 3D Arena</strong>, <strong>Diep.io Tank</strong>, <strong>Zombs.io Üs Savunması</strong>, <strong>Vampire Survivors RPG</strong>, <strong>Kafa Topu</strong>, <strong>SOS Arenası</strong>, <strong>Geometry Dash</strong> ve <strong>Chrome Cyber Dino Runner</strong> oyna!
+                İndirme yok, kurulum yok! Linke tıklayarak doğrudan arkadaşlarınla <strong>Python &amp; Pygame</strong>, <strong>Bilişim GP Yarış</strong>, <strong>Subway Surfers</strong>, <strong>Temple Run 2</strong>, <strong>Gartic.io</strong>, <strong>Counter-Strike 1.6</strong>, <strong>Ahmet Hakan Kutu Sumo</strong>, <strong>Stick War: Legacy</strong>, <strong>Minecraft 3D</strong>, <strong>Redmatch 3D Arena</strong>, <strong>Diep.io Tank</strong>, <strong>Zombs.io Üs Savunması</strong>, <strong>Vampire Survivors RPG</strong>, <strong>Kafa Topu</strong>, <strong>SOS Arenası</strong>, <strong>Geometry Dash</strong> ve <strong>Chrome Cyber Dino Runner</strong> oyna!
             </p>
             <div class="hero-badges-row">
                 <div class="hero-badge-item">⚡ <strong>Sıfır Gecikme</strong> (Yerel 60FPS)</div>
-                <div class="hero-badge-item">🎮 <strong>16 Seçkin Oyun</strong> (Ultra Optimize)</div>
+                <div class="hero-badge-item">🎮 <strong>17 Seçkin Oyun</strong> (Ultra Optimize)</div>
                 <div class="hero-badge-item" style="border-color:#ffd700; color:#ffd700">👑 <strong>Geliştirici: Halil Eren</strong></div>
                 <div class="hero-badge-item">🛡️ <strong>MEB Uyumlu &amp; Güvenli</strong></div>
             </div>
@@ -160,7 +160,7 @@
     <div class="filter-tabs-row">
         <div class="section-headline">ARENA OYUNLARI</div>
         <div class="category-buttons">
-            <button class="btn-cat-tab active" data-filter="all">🔥 Tümü (16)</button>
+            <button class="btn-cat-tab active" data-filter="all">🔥 Tümü (17)</button>
             <button class="btn-cat-tab" data-filter="fps">🔫 3D &amp; FPS</button>
             <button class="btn-cat-tab" data-filter="strategy">⚔️ Strateji &amp; Savaş</button>
             <button class="btn-cat-tab" data-filter="io">🛡️ .IO &amp; Hayatta Kalma</button>
@@ -605,6 +605,33 @@
             </div>
         </a>
 
+        <!-- 18. PYTHON & PYGAME ARENASI -->
+        <a href="/python" class="game-card card-python" data-category="arcade strategy">
+            <div class="game-thumb" style="background: radial-gradient(circle, #003314 0%, #001407 100%);">
+                <span class="game-thumb-art">🐍</span>
+                <div class="thumb-gradient-overlay"></div>
+                <div class="genre-tag-floating" style="color:#00e676;">PYGAME &amp; PYTHON</div>
+                <div class="live-player-badge" id="count-python">🟢 0 Oyuncu</div>
+            </div>
+            <div class="game-info">
+                <div class="game-title-row">
+                    <span class="game-title">Python &amp; Pygame Web Arenası</span>
+                </div>
+                <p class="game-desc">
+                    İnternetten derlenmiş efsane Pygame oyunları! Cyber Space Invaders, Neon Retro Snake ve Flappy Python. Üstelik Python kaynak kodunu canlı görüp parametreleri değiştirebilirsin.
+                </p>
+                <div class="game-tags">
+                    <span class="game-tag" style="border-color:#00e676; color:#00e676;">🐍 Gerçek Python</span>
+                    <span class="game-tag">Space Invaders 60FPS</span>
+                    <span class="game-tag">Retro Snake</span>
+                    <span class="game-tag">Canlı Kod Editörü</span>
+                </div>
+                <div class="game-play-btn" style="background:linear-gradient(135deg,#00e676,#ffd700); color:#000;">
+                    ▶ KODLA &amp; OYNA 🐍
+                </div>
+            </div>
+        </a>
+
     </div>
 
     <!-- GLOBAL CLASSROOM LIVE CHAT -->
@@ -682,6 +709,26 @@
         <div class="name-modal-buttons">
             <button id="btn-send-announce" class="btn-save-name" style="background:var(--red); color:#fff;">YAYINLA 📢</button>
             <button id="btn-cancel-announce" style="background:rgba(255,255,255,0.1); color:#fff; border:none; padding:10px; border-radius:6px; cursor:pointer;">İptal</button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL: RATE GAME (YILDIZ VER & DEĞERLENDİR) -->
+<div id="modal-rate-game" class="rating-modal-backdrop" style="display:none;">
+    <div class="rating-modal-card">
+        <div style="font-size:48px; margin-bottom:8px;">⭐</div>
+        <h2 id="rate-modal-title" style="font-size:22px; font-weight:900; color:#fff; margin-bottom:6px;">Oyunu Değerlendir</h2>
+        <p style="font-size:13px; color:#aaa; margin-bottom:16px;">Bu oyuna kaç yıldız veriyorsun?</p>
+        <div class="rating-stars-row" id="rate-stars-row">
+            <button class="star-btn" data-star="1">★</button>
+            <button class="star-btn" data-star="2">★</button>
+            <button class="star-btn" data-star="3">★</button>
+            <button class="star-btn" data-star="4">★</button>
+            <button class="star-btn" data-star="5">★</button>
+        </div>
+        <div id="rate-feedback" style="font-size:13px; color:#00e676; margin-bottom:14px; min-height:18px;"></div>
+        <div style="display:flex; justify-content:center; gap:10px;">
+            <button id="btn-cancel-rating" style="background:transparent; border:1px solid #555; color:#aaa; padding:8px 22px; border-radius:8px; cursor:pointer; font-size:12px;">Kapat</button>
         </div>
     </div>
 </div>

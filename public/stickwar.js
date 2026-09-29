@@ -376,8 +376,8 @@
 
         // Castles
         castles: {
-            order: { x: 80, archerY: GROUND_Y - 140, fireCd: 0 },
-            chaos: { x: 3720, archerY: GROUND_Y - 140, fireCd: 0 }
+            order: { x: 80, archerY: GROUND_Y - 225, fireCd: 0 },
+            chaos: { x: 3720, archerY: GROUND_Y - 225, fireCd: 0 }
         },
 
         currentChapter: 1,
@@ -866,8 +866,11 @@
             let pOrder = 0, pChaos = 0;
             this.units.forEach(u => {
                 const c = UNIT_TYPES[u.type];
-                if (u.side === 'order') pOrder += c.pop;
-                else pChaos += c.pop;
+                if (u.side === 'order') {
+                    if (!u.isAlly) pOrder += c.pop;
+                } else {
+                    pChaos += c.pop;
+                }
             });
             this.pop = pOrder;
             this.enemyPop = pChaos;
@@ -1225,6 +1228,7 @@
 
         damageUnit(target, dmg, attacker) {
             if (target.hp <= 0) return;
+            if (target.isGarrisoned && target.type !== 'archer') return; // Sheltered inside the castle fortress!
 
             let finalDmg = dmg;
 
@@ -1330,8 +1334,39 @@
             });
         },
 
+        /* ALLIED AI (2v2 MODE) */
+        updateAllyAI(dt) {
+            if (!this.allySpawnTimer) this.allySpawnTimer = 0;
+            if (!this.allyGold) this.allyGold = 400;
+            this.allyGold += 35 * dt;
+            this.allySpawnTimer += dt;
+
+            // Allied Commander recruits balanced reinforcements (Swords, Archers, Speartons, Mages)
+            if (this.allySpawnTimer > 3.8) {
+                this.allySpawnTimer = 0;
+                const allyUnits = this.units.filter(u => u.side === 'order' && u.isAlly && u.hp > 0);
+                if (allyUnits.length < 14) {
+                    const pool = ['sword', 'sword', 'archer', 'spear', 'mage'];
+                    const chosen = pool[Math.floor(Math.random() * pool.length)];
+                    const cfg = UNIT_TYPES[chosen];
+                    if (this.allyGold >= cfg.cost) {
+                        this.allyGold -= cfg.cost;
+                        const u = this.spawnUnit('order', chosen);
+                        if (u) {
+                            u.isAlly = true;
+                            this.addFloatingText(u.x, GROUND_Y - 90, `🛡️ Müttefik ${cfg.name}!`, '#00e5ff');
+                        }
+                    }
+                }
+            }
+        },
+
         /* AI LOGIC */
         updateAI(dt) {
+            if (this.is2v2 || this.currentChapter === 7) {
+                this.updateAllyAI(dt);
+            }
+
             this.enemySpawnTimer += dt;
 
             // Dynamic recruitment based on gold & situation
@@ -1396,6 +1431,18 @@
                     } else if (this.enemyGold >= UNIT_TYPES.sword.cost) {
                         this.purchaseUnit('chaos', 'sword');
                     }
+                } else if (this.currentChapter === 7) {
+                    // Chapter 7: 2v2 Alliance War - Double Chaos Army
+                    const rnd = Math.random();
+                    if (rnd < 0.18 && this.enemyGold >= UNIT_TYPES.giant.cost) {
+                        this.purchaseUnit('chaos', 'giant');
+                    } else if (rnd < 0.45 && this.enemyGold >= UNIT_TYPES.spear.cost) {
+                        this.purchaseUnit('chaos', 'spear');
+                    } else if (rnd < 0.75 && this.enemyGold >= UNIT_TYPES.archer.cost) {
+                        this.purchaseUnit('chaos', 'archer');
+                    } else if (this.enemyGold >= UNIT_TYPES.sword.cost) {
+                        this.purchaseUnit('chaos', 'sword');
+                    }
                 } else {
                     // 1v1 / Free Sandbox
                     if (this.enemyGold >= UNIT_TYPES.giant.cost && Math.random() < 0.25) {
@@ -1412,16 +1459,35 @@
                 }
             }
 
-            // Decide tactical formation
-            const chaosCombatUnits = this.units.filter(u => u.side === 'chaos' && u.type !== 'miner');
-            const orderCombatUnits = this.units.filter(u => u.side === 'order' && u.type !== 'miner');
+            // Tactical Wave State Machine
+            if (!this.enemyWavePhase) this.enemyWavePhase = 'assembling';
 
-            if (chaosCombatUnits.length >= 6 || this.orderMode === 'retreat') {
-                this.enemyAIState = 'attack';
-            } else if (this.statues.chaos.hp < 1200 && chaosCombatUnits.length < 3) {
-                this.enemyAIState = 'retreat';
-            } else {
+            const chaosCombatUnits = this.units.filter(u => u.side === 'chaos' && u.type !== 'miner');
+            const targetWaveSize = (this.is2v2 || this.currentChapter === 7 || this.currentChapter === 5) ? 10 : (this.currentChapter >= 3 ? 7 : 5);
+
+            // Emergency defense: if player units are threatening Chaos statue, defend actively!
+            const playerThreat = this.units.some(u => u.side === 'order' && u.hp > 0 && u.x > 2550);
+
+            if (playerThreat) {
                 this.enemyAIState = 'defend';
+            } else if (this.enemyWavePhase === 'assembling') {
+                this.enemyAIState = 'defend';
+                // Wait until the army reaches full wave size and has balanced melee + ranged
+                const hasMelee = chaosCombatUnits.some(u => u.type === 'sword' || u.type === 'spear' || u.type === 'giant' || u.type === 'juggerknight');
+                const hasRanged = chaosCombatUnits.some(u => u.type === 'archer' || u.type === 'mage' || u.type === 'marrowkai');
+
+                if (chaosCombatUnits.length >= targetWaveSize && (hasMelee || this.currentChapter === 1)) {
+                    this.enemyWavePhase = 'marching';
+                    this.enemyAIState = 'attack';
+                    this.addFloatingText('🔥 KAOS TAARRUZU BAŞLADI!', 3200, GROUND_Y - 140, '#ff3d00');
+                }
+            } else if (this.enemyWavePhase === 'marching') {
+                this.enemyAIState = 'attack';
+                // If wave suffered severe losses, retreat to statue to rebuild
+                if (chaosCombatUnits.length <= 1) {
+                    this.enemyWavePhase = 'assembling';
+                    this.enemyAIState = 'defend';
+                }
             }
         },
 
@@ -1754,18 +1820,145 @@
 
             // Movement according to army mode
             if (mode === 'retreat') {
-                const retreatX = isOrder ? 140 : 3660;
-                if (Math.abs(u.x - retreatX) > 20) {
-                    u.facing = retreatX > u.x ? 1 : -1;
-                    u.x += u.facing * u.speed * 60 * dt;
-                    u.walkCycle += 10 * dt;
-                    u.animAction = 'walk';
+                if (isOrder) {
+                    const castleDoorX = 140;
+                    if (u.type === 'archer') {
+                        // Archidons climb the castle ramparts and shoot from battlements!
+                        const slot = (u.id.charCodeAt(0) % 4);
+                        const wallSlotX = 50 + slot * 24;
+                        if (Math.abs(u.x - wallSlotX) > 15) {
+                            u.facing = wallSlotX > u.x ? 1 : -1;
+                            u.x += u.facing * u.speed * 60 * dt;
+                            u.walkCycle += 10 * dt;
+                            u.animAction = 'walk';
+                            u.isGarrisoned = false;
+                        } else {
+                            u.x = wallSlotX;
+                            u.y = this.castles.order.archerY;
+                            u.facing = 1;
+                            u.animAction = 'idle';
+                            u.isGarrisoned = true;
+                            // Shoot at approaching enemies from the high castle ramparts!
+                            const intruder = this.units.find(en => en.side === 'chaos' && en.hp > 0 && en.x < 750);
+                            if (intruder && now - u.lastAttack >= u.attackCd) {
+                                u.lastAttack = now;
+                                u.animAction = 'attack';
+                                u.animTimer = 0.35;
+                                this.fireArrow(u, intruder.x, intruder.y - 30);
+                            }
+                        }
+                    } else {
+                        // Miners & Melee infantry enter the fortress keep
+                        if (u.x > castleDoorX) {
+                            u.facing = -1;
+                            u.x += u.facing * u.speed * 60 * dt;
+                            u.walkCycle += 10 * dt;
+                            u.animAction = 'walk';
+                            u.isGarrisoned = false;
+                        } else {
+                            u.isGarrisoned = true;
+                            u.animAction = 'idle';
+                            u.facing = 1;
+                        }
+                    }
                 } else {
-                    u.animAction = 'idle';
+                    const retreatX = 3660;
+                    if (Math.abs(u.x - retreatX) > 20) {
+                        u.facing = retreatX > u.x ? 1 : -1;
+                        u.x += u.facing * u.speed * 60 * dt;
+                        u.walkCycle += 10 * dt;
+                        u.animAction = 'walk';
+                    } else {
+                        u.animAction = 'idle';
+                    }
                 }
-            } else if (mode === 'defend') {
+                return;
+            }
+
+            // If switching out of retreat, release from garrison
+            if (u.isGarrisoned) {
+                u.isGarrisoned = false;
+                u.y = GROUND_Y;
+            }
+
+            // TACTICAL FORMATION: ARCHIDONS & MAGES STAY STRICTLY BEHIND SWORDSMEN
+            const isRanged = (u.type === 'archer' || u.type === 'mage' || u.type === 'meric');
+            if (isRanged) {
+                if (isOrder) {
+                    const meleeUnits = this.units.filter(m => m.side === 'order' && !m.isGarrisoned && m.hp > 0 && (m.type === 'sword' || m.type === 'spear' || m.type === 'juggerknight' || m.type === 'giant'));
+                    if (meleeUnits.length > 0) {
+                        const maxFrontX = Math.max(...meleeUnits.map(m => m.x));
+                        const idealArchidonX = Math.max(250, maxFrontX - 140 - (u.id.charCodeAt(0) % 4) * 22);
+
+                        // If enemy in range, hold ground and shoot!
+                        if (nearestEnemy && distToEnemy <= u.range) {
+                            u.facing = 1;
+                            if (distToEnemy < 150) {
+                                u.facing = -1;
+                                u.x -= u.speed * 40 * dt;
+                                u.animAction = 'walk';
+                            } else {
+                                u.animAction = 'idle';
+                            }
+                            return;
+                        }
+
+                        // Maintain formation behind swordsmen
+                        if (u.x < idealArchidonX - 25) {
+                            u.facing = 1;
+                            u.x += u.speed * 60 * dt;
+                            u.animAction = 'walk';
+                            u.walkCycle += 10 * dt;
+                        } else if (u.x > idealArchidonX + 25) {
+                            u.facing = -1;
+                            u.x -= u.speed * 40 * dt;
+                            u.animAction = 'walk';
+                            u.walkCycle += 10 * dt;
+                        } else {
+                            u.animAction = 'idle';
+                            u.facing = 1;
+                        }
+                        return;
+                    }
+                } else {
+                    const chaosMelee = this.units.filter(m => m.side === 'chaos' && m.hp > 0 && (m.type === 'sword' || m.type === 'spear' || m.type === 'juggerknight' || m.type === 'giant'));
+                    if (chaosMelee.length > 0) {
+                        const minFrontX = Math.min(...chaosMelee.map(m => m.x));
+                        const idealArchidonX = Math.min(3550, minFrontX + 140 + (u.id.charCodeAt(0) % 4) * 22);
+
+                        if (nearestEnemy && distToEnemy <= u.range) {
+                            u.facing = -1;
+                            if (distToEnemy < 150) {
+                                u.facing = 1;
+                                u.x += u.speed * 40 * dt;
+                                u.animAction = 'walk';
+                            } else {
+                                u.animAction = 'idle';
+                            }
+                            return;
+                        }
+
+                        if (u.x > idealArchidonX + 25) {
+                            u.facing = -1;
+                            u.x -= u.speed * 60 * dt;
+                            u.animAction = 'walk';
+                            u.walkCycle += 10 * dt;
+                        } else if (u.x < idealArchidonX - 25) {
+                            u.facing = 1;
+                            u.x += u.speed * 40 * dt;
+                            u.animAction = 'walk';
+                            u.walkCycle += 10 * dt;
+                        } else {
+                            u.animAction = 'idle';
+                            u.facing = -1;
+                        }
+                        return;
+                    }
+                }
+            }
+
+            if (mode === 'defend') {
                 const defendX = isOrder ? 750 : 3050;
-                // If enemy is advancing inside defensive zone, push to meet them
                 if (nearestEnemy && (isOrder ? nearestEnemy.x < 1200 : nearestEnemy.x > 2600)) {
                     u.facing = nearestEnemy.x > u.x ? 1 : -1;
                     u.x += u.facing * u.speed * 60 * dt;
@@ -1782,7 +1975,6 @@
                     if (u.type === 'spear') u.isShieldGuarding = true;
                 }
             } else if (mode === 'attack') {
-                // March towards enemy base/statue
                 const marchTargetX = nearestEnemy ? nearestEnemy.x : targetStatue.x;
                 u.facing = marchTargetX > u.x ? 1 : -1;
                 u.x += u.facing * u.speed * 60 * dt;
@@ -1802,10 +1994,17 @@
                     u.x += u.facing * u.speed * 60 * dt;
                     u.animAction = 'walk';
                     u.walkCycle += 10 * dt;
+                    u.isGarrisoned = false;
                 } else {
                     u.animAction = 'idle';
+                    if (isOrder) u.isGarrisoned = true;
                 }
                 return;
+            }
+
+            // Release miner from garrison when moving out
+            if (u.isGarrisoned) {
+                u.isGarrisoned = false;
             }
 
             // If carrying gold, return to base statue
@@ -1853,12 +2052,13 @@
         },
 
         getAssignedMine(miner, isOrder) {
+            const isEven = miner.id.charCodeAt(0) % 2 === 0;
             if (isOrder) {
                 if (this.orderMode === 'attack') return this.goldMines[2]; // Rich Center Mine!
-                return (miner.id % 2 === 0) ? this.goldMines[0] : this.goldMines[1];
+                return isEven ? this.goldMines[0] : this.goldMines[1];
             } else {
                 if (this.enemyAIState === 'attack') return this.goldMines[2];
-                return (miner.id % 2 === 0) ? this.goldMines[4] : this.goldMines[3];
+                return isEven ? this.goldMines[4] : this.goldMines[3];
             }
         },
 
@@ -1880,7 +2080,7 @@
             let nearest = null;
             let minDist = 99999;
             this.units.forEach(u => {
-                if (u.side === targetSide && u.hp > 0) {
+                if (u.side === targetSide && u.hp > 0 && (!u.isGarrisoned || u.type === 'archer')) {
                     const d = Math.abs(unit.x - u.x);
                     if (d < minDist) {
                         minDist = d;
@@ -2014,25 +2214,226 @@
         },
 
         renderCastles(ctx) {
-            // Order Castle (Left)
-            ctx.fillStyle = '#1e2430';
-            ctx.fillRect(40, GROUND_Y - 220, 80, 220);
-            ctx.fillStyle = '#00e5ff';
-            ctx.fillRect(75, GROUND_Y - 250, 10, 30); // Banner pole
+            // ==================== ORDER CASTLE FORTRESS (LEFT) ====================
+            ctx.save();
+            const castleLeft = 20;
+            const castleWidth = 140;
+            const wallTop = GROUND_Y - 220;
+            const wallH = 220;
+
+            // Main Keep Body Gradient
+            const orderWallGrad = ctx.createLinearGradient(castleLeft, wallTop, castleLeft + castleWidth, GROUND_Y);
+            orderWallGrad.addColorStop(0, '#242f3d');
+            orderWallGrad.addColorStop(0.5, '#1e2430');
+            orderWallGrad.addColorStop(1, '#11151c');
+            ctx.fillStyle = orderWallGrad;
+            ctx.fillRect(castleLeft, wallTop, castleWidth, wallH);
+
+            // Stone Masonry Lines
+            ctx.strokeStyle = 'rgba(0, 229, 255, 0.15)';
+            ctx.lineWidth = 1;
+            for (let y = wallTop + 20; y < GROUND_Y; y += 22) {
+                ctx.beginPath();
+                ctx.moveTo(castleLeft, y);
+                ctx.lineTo(castleLeft + castleWidth, y);
+                ctx.stroke();
+            }
+
+            // Crenellations / Battlements at top
+            ctx.fillStyle = '#2c3e50';
+            for (let bx = castleLeft; bx < castleLeft + castleWidth; bx += 28) {
+                ctx.fillRect(bx, wallTop - 18, 16, 18);
+            }
+
+            // Rampart Archer Walkway (where garrisoned archers stand)
+            ctx.fillStyle = '#34495e';
+            ctx.fillRect(castleLeft, wallTop, castleWidth, 12);
+            ctx.strokeStyle = '#00e5ff';
+            ctx.lineWidth = 2;
             ctx.beginPath();
-            ctx.arc(80, this.castles.order.archerY, 8, 0, Math.PI * 2); // Archer head
+            ctx.moveTo(castleLeft, wallTop);
+            ctx.lineTo(castleLeft + castleWidth, wallTop);
+            ctx.stroke();
+
+            // High Watchtower (Leftmost)
+            ctx.fillStyle = '#1a2332';
+            ctx.fillRect(castleLeft - 10, wallTop - 70, 45, 90);
+            ctx.fillStyle = '#24334a';
+            ctx.fillRect(castleLeft - 12, wallTop - 85, 14, 15);
+            ctx.fillRect(castleLeft + 8, wallTop - 85, 14, 15);
+            ctx.fillRect(castleLeft + 25, wallTop - 85, 12, 15);
+
+            // Order Banner Pole & Flag
+            ctx.strokeStyle = '#ffd700';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(castleLeft + 5, wallTop - 85);
+            ctx.lineTo(castleLeft + 5, wallTop - 125);
+            ctx.stroke();
             ctx.fillStyle = '#00e5ff';
+            ctx.beginPath();
+            ctx.moveTo(castleLeft + 6, wallTop - 125);
+            ctx.lineTo(castleLeft + 35, wallTop - 112);
+            ctx.lineTo(castleLeft + 6, wallTop - 100);
+            ctx.closePath();
             ctx.fill();
 
-            // Chaos Castle (Right)
-            ctx.fillStyle = '#2b1b1b';
-            ctx.fillRect(3680, GROUND_Y - 220, 80, 220);
-            ctx.fillStyle = '#ff3d00';
-            ctx.fillRect(3715, GROUND_Y - 250, 10, 30);
+            // Arched Fortress Gate (Enter/Exit point for retreat)
+            const gateX = castleLeft + 65;
+            const gateW = 55;
+            const gateH = 85;
+            const gateY = GROUND_Y - gateH;
+
+            // Stone arch rim
+            ctx.fillStyle = '#0d1117';
             ctx.beginPath();
-            ctx.arc(3720, this.castles.chaos.archerY, 8, 0, Math.PI * 2);
-            ctx.fillStyle = '#ff3d00';
+            ctx.moveTo(gateX, GROUND_Y);
+            ctx.lineTo(gateX, gateY + 25);
+            ctx.arc(gateX + gateW / 2, gateY + 25, gateW / 2, Math.PI, 0, false);
+            ctx.lineTo(gateX + gateW, GROUND_Y);
+            ctx.closePath();
             ctx.fill();
+
+            // Portcullis Grate (Iron bars)
+            ctx.strokeStyle = '#4a5568';
+            ctx.lineWidth = 2.5;
+            for (let gx = gateX + 8; gx < gateX + gateW; gx += 10) {
+                ctx.beginPath();
+                ctx.moveTo(gx, gateY + 15);
+                ctx.lineTo(gx, GROUND_Y);
+                ctx.stroke();
+            }
+            for (let gy = gateY + 25; gy < GROUND_Y; gy += 15) {
+                ctx.beginPath();
+                ctx.moveTo(gateX + 4, gy);
+                ctx.lineTo(gateX + gateW - 4, gy);
+                ctx.stroke();
+            }
+
+            // Torch Lights at Gate
+            const now = Date.now() * 0.005;
+            const flicker = Math.sin(now) * 2;
+            ctx.fillStyle = '#ff9800';
+            ctx.beginPath();
+            ctx.arc(gateX - 8, gateY + 30, 4 + flicker, 0, Math.PI * 2);
+            ctx.arc(gateX + gateW + 8, gateY + 30, 4 - flicker, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Garrison Counter Badge
+            const orderGarrison = this.units.filter(u => u.side === 'order' && u.isGarrisoned);
+            if (orderGarrison.length > 0) {
+                const label = `🏰 Sığınak: ${orderGarrison.length} Asker`;
+                ctx.font = 'bold 12px sans-serif';
+                const tw = ctx.measureText(label).width;
+                const bx = gateX + gateW / 2 - (tw + 16) / 2;
+                const by = gateY - 32;
+
+                ctx.fillStyle = 'rgba(13, 17, 23, 0.88)';
+                ctx.strokeStyle = '#00e5ff';
+                ctx.lineWidth = 1.5;
+                ctx.beginPath();
+                if (ctx.roundRect) {
+                    ctx.roundRect(bx, by, tw + 16, 22, 6);
+                } else {
+                    ctx.rect(bx, by, tw + 16, 22);
+                }
+                ctx.fill();
+                ctx.stroke();
+
+                ctx.fillStyle = '#00e5ff';
+                ctx.textAlign = 'center';
+                ctx.fillText(label, gateX + gateW / 2, by + 15);
+            }
+
+            // ==================== CHAOS CASTLE FORTRESS (RIGHT) ====================
+            const chaosLeft = 3640;
+            const chaosWidth = 140;
+
+            const chaosWallGrad = ctx.createLinearGradient(chaosLeft, wallTop, chaosLeft + chaosWidth, GROUND_Y);
+            chaosWallGrad.addColorStop(0, '#3a1a1a');
+            chaosWallGrad.addColorStop(0.5, '#261212');
+            chaosWallGrad.addColorStop(1, '#150808');
+            ctx.fillStyle = chaosWallGrad;
+            ctx.fillRect(chaosLeft, wallTop, chaosWidth, wallH);
+
+            // Dark stone masonry
+            ctx.strokeStyle = 'rgba(255, 61, 0, 0.15)';
+            ctx.lineWidth = 1;
+            for (let y = wallTop + 20; y < GROUND_Y; y += 22) {
+                ctx.beginPath();
+                ctx.moveTo(chaosLeft, y);
+                ctx.lineTo(chaosLeft + chaosWidth, y);
+                ctx.stroke();
+            }
+
+            // Spiked Crenellations
+            ctx.fillStyle = '#421616';
+            for (let bx = chaosLeft; bx < chaosLeft + chaosWidth; bx += 28) {
+                ctx.fillRect(bx, wallTop - 18, 16, 18);
+                // Spikes
+                ctx.beginPath();
+                ctx.moveTo(bx, wallTop - 18);
+                ctx.lineTo(bx + 8, wallTop - 26);
+                ctx.lineTo(bx + 16, wallTop - 18);
+                ctx.fillStyle = '#ff3d00';
+                ctx.fill();
+            }
+
+            // Chaos Archer Walkway
+            ctx.fillStyle = '#3a1818';
+            ctx.fillRect(chaosLeft, wallTop, chaosWidth, 12);
+            ctx.strokeStyle = '#ff3d00';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(chaosLeft, wallTop);
+            ctx.lineTo(chaosLeft + chaosWidth, wallTop);
+            ctx.stroke();
+
+            // Chaos High Spire (Rightmost)
+            ctx.fillStyle = '#2b0d0d';
+            ctx.fillRect(chaosLeft + chaosWidth - 35, wallTop - 70, 45, 90);
+
+            // Chaos Banner Pole & Flag
+            ctx.strokeStyle = '#d50000';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(chaosLeft + chaosWidth - 10, wallTop - 70);
+            ctx.lineTo(chaosLeft + chaosWidth - 10, wallTop - 120);
+            ctx.stroke();
+            ctx.fillStyle = '#ff1744';
+            ctx.beginPath();
+            ctx.moveTo(chaosLeft + chaosWidth - 9, wallTop - 120);
+            ctx.lineTo(chaosLeft + chaosWidth - 38, wallTop - 107);
+            ctx.lineTo(chaosLeft + chaosWidth - 9, wallTop - 95);
+            ctx.closePath();
+            ctx.fill();
+
+            // Chaos Spiked Gate
+            const cGateX = chaosLeft + 20;
+            const cGateW = 55;
+            const cGateH = 85;
+            const cGateY = GROUND_Y - cGateH;
+
+            ctx.fillStyle = '#100505';
+            ctx.beginPath();
+            ctx.moveTo(cGateX, GROUND_Y);
+            ctx.lineTo(cGateX, cGateY + 25);
+            ctx.arc(cGateX + cGateW / 2, cGateY + 25, cGateW / 2, Math.PI, 0, false);
+            ctx.lineTo(cGateX + cGateW, GROUND_Y);
+            ctx.closePath();
+            ctx.fill();
+
+            // Spikes on gate
+            ctx.strokeStyle = '#ff3d00';
+            ctx.lineWidth = 2;
+            for (let gx = cGateX + 8; gx < cGateX + cGateW; gx += 10) {
+                ctx.beginPath();
+                ctx.moveTo(gx, cGateY + 15);
+                ctx.lineTo(gx, GROUND_Y);
+                ctx.stroke();
+            }
+
+            ctx.restore();
         },
 
         renderStatues(ctx) {
@@ -2147,12 +2548,25 @@
 
         renderUnits(ctx) {
             this.units.forEach(u => {
+                // If unit is garrisoned inside the castle fortress (except archers atop the ramparts), skip drawing
+                if (u.isGarrisoned && u.type !== 'archer') {
+                    return;
+                }
+
                 ctx.save();
                 ctx.translate(u.x, u.y);
 
                 const isOrder = u.side === 'order';
                 const mainColor = isOrder ? '#00e5ff' : '#ff3d00';
                 const skinColor = '#ffffff';
+
+                // Ally Unit Indicator Tag
+                if (u.isAlly && u.hp > 0) {
+                    ctx.font = 'bold 9px sans-serif';
+                    ctx.fillStyle = '#00e5ff';
+                    ctx.textAlign = 'center';
+                    ctx.fillText('🛡️ Müttefik', 0, -84);
+                }
 
                 // Controlled Aura
                 if (this.controlledUnit && this.controlledUnit.id === u.id) {
@@ -2577,7 +2991,8 @@
                 3: '🛡️ 3. Bölüm: Spearton Çölü',
                 4: '🧙 4. Bölüm: Magikill Tapınağı',
                 5: '👹 5. Bölüm: Kaos Lordu ve Devler Diyarı',
-                6: '⚡ 1v1 Özel Düello'
+                6: '⚡ 1v1 Özel Düello',
+                7: '🛡️ 2v2 İttifak Savaşı (Müttefik AI ile Omuz Omuza)'
             };
             this.addFloatingText(chapterNames[this.currentChapter] || 'Bölüm Başladı!', 550, GROUND_Y - 140, '#ff9800');
         },
@@ -2590,13 +3005,20 @@
             this.magicSpells = [];
             this.controlledUnit = null;
 
-            const hpTable = { 1: 2200, 2: 2600, 3: 3000, 4: 3500, 5: 4500, 6: 3000 };
-            const chaosHp = hpTable[this.currentChapter] || 3000;
-            this.statues.order.hp = this.statues.order.maxHp = 3000;
+            const is2v2Mode = (this.currentChapter === 7);
+            this.is2v2 = is2v2Mode;
+            this.allyGold = 400;
+            this.allySpawnTimer = 0;
+            this.maxPop = is2v2Mode ? 35 : 20;
+            this.enemyMaxPop = is2v2Mode ? 35 : 20;
+
+            const hpTable = { 1: 2200, 2: 2600, 3: 3000, 4: 3500, 5: 4500, 6: 3000, 7: 5500 };
+            const chaosHp = hpTable[this.currentChapter] || (is2v2Mode ? 5500 : 3000);
+            this.statues.order.hp = this.statues.order.maxHp = is2v2Mode ? 5000 : 3000;
             this.statues.chaos.hp = this.statues.chaos.maxHp = chaosHp;
 
-            this.gold = 500;
-            this.enemyGold = 500;
+            this.gold = is2v2Mode ? 650 : 500;
+            this.enemyGold = is2v2Mode ? 650 : 500;
             this.mana = 150;
             this.isGameOver = false;
             this.statsKills = 0;
@@ -2614,6 +3036,15 @@
             this.spawnUnit('chaos', 'miner');
             this.spawnUnit('chaos', 'miner');
             this.spawnUnit('chaos', 'sword');
+
+            if (is2v2Mode) {
+                const a1 = this.spawnUnit('order', 'sword');
+                if (a1) a1.isAlly = true;
+                const a2 = this.spawnUnit('order', 'archer');
+                if (a2) a2.isAlly = true;
+                this.spawnUnit('chaos', 'sword');
+                this.spawnUnit('chaos', 'archer');
+            }
 
             this.updateResourceUI();
             this.updateStatueUI();

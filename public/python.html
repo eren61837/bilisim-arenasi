@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>🐍 Python & Pygame Web Arenası - Bilişim Arenası</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🐍</text></svg>">
+    <link rel="stylesheet" href="python.css">
+</head>
+<body>
+    <!-- TOP NAVIGATION -->
+    <header class="py-top-bar">
+        <div class="py-brand">
+            <a href="/" class="btn-py-nav">⬅ Arenaya Dön</a>
+            <span class="py-title">🐍 PYTHON &amp; PYGAME <span>ARENASI</span></span>
+        </div>
+
+        <div class="py-actions">
+            <label style="font-size:11px; color:#aaa;">Pygame Oyunu:</label>
+            <select id="py-game-select" class="py-select" onchange="changePyGame(this.value)">
+                <option value="space">🚀 Pygame: Cyber Space Invaders</option>
+                <option value="snake">🐍 Pygame: Neon Retro Snake</option>
+                <option value="flappy">🕊️ Pygame: Flappy Python</option>
+            </select>
+            <button class="btn-py-nav" id="btn-toggle-code" onclick="toggleCodePanel()">💻 Python Kodunu Gör</button>
+            <button class="btn-py-nav" id="btn-toggle-sound" onclick="toggleAudio()">🔊 Ses: Açık</button>
+            <button class="btn-py-nav" onclick="toggleFullscreen()">⛶ Tam Ekran</button>
+        </div>
+    </header>
+
+    <!-- MAIN CONTAINER -->
+    <main class="py-main-container">
+        <!-- CANVAS GAME SCREEN -->
+        <div class="py-canvas-wrapper" id="canvas-wrapper">
+            <canvas id="pygame-canvas" width="800" height="600"></canvas>
+            
+            <!-- OVERLAY HUD -->
+            <div class="py-hud-overlay">
+                <div class="py-hud-left">
+                    <span id="hud-score-label">SKOR: <strong id="py-hud-score">0</strong></span>
+                    <span id="hud-wave-label" style="display:inline;">DALGA: <strong id="py-hud-wave">1</strong></span>
+                </div>
+                <div class="py-hud-right">
+                    <span id="hud-lives-label">CAN: <strong id="py-hud-lives">❤️❤️❤️</strong></span>
+                </div>
+            </div>
+
+            <!-- GAME OVER MODAL -->
+            <div id="py-gameover" class="py-gameover-overlay" style="display:none;">
+                <div class="py-gameover-card">
+                    <h2 id="go-title">OYUN BİTTİ!</h2>
+                    <p>Skorun: <strong id="go-score">0</strong> | En Yüksek: <strong id="go-highscore">0</strong></p>
+                    <button class="btn-py-action" onclick="restartCurrentGame()">Yeniden Başlat 🔄</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- CODE INSPECTOR & LIVE EDITOR PANEL -->
+        <div class="py-code-panel" id="py-code-panel" style="display:none;">
+            <div class="code-panel-header">
+                <span>🐍 main.py (Gerçek Python Kodu)</span>
+                <button class="btn-close-code" onclick="toggleCodePanel()">✕</button>
+            </div>
+            <div class="code-editor-wrap">
+                <textarea id="py-code-editor" class="py-code-editor" spellcheck="false"></textarea>
+            </div>
+            <div class="code-panel-footer">
+                <span class="code-tip">💡 İpucu: Parametreleri değiştirip "Kodu Uygula" butonuna bas!</span>
+                <button class="btn-py-action" onclick="applyPythonCode()">Kodu Uygula &amp; Yenile ⚡</button>
+            </div>
+        </div>
+    </main>
+
+    <!-- BOTTOM CONTROLS RIBBON -->
+    <footer class="py-bottom-bar">
+        <div class="key-tip"><kbd>WASD</kbd> / <kbd>YÖN TUŞLARI</kbd> Hareket</div>
+        <div class="key-tip"><kbd>SPACE</kbd> Lazer Ateşle / Zıpla</div>
+        <div class="key-tip"><kbd>R</kbd> Yeniden Başlat</div>
+        <div class="key-tip"><kbd>P</kbd> Duraklat</div>
+        <div style="color:#00dbff; font-weight:800;">⚡ Bilişim Sınıfı İçin 100% Yerel Pygame Motoru</div>
+    </footer>
+
+    <script src="python.js"></script>
+</body>
+</html>

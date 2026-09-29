@@ -1039,4 +1039,103 @@ body {
   50% { transform: scale(1.3); opacity: 0.6; }
 }
 
+/* GAME RATING SYSTEM */
+.game-rating-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(255, 215, 0, 0.12);
+  border: 1px solid rgba(255, 215, 0, 0.4);
+  color: #ffd700;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 11.5px;
+  font-weight: 800;
+  margin-top: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  width: fit-content;
+}
+.game-rating-badge:hover {
+  background: rgba(255, 215, 0, 0.25);
+  border-color: #ffd700;
+  box-shadow: 0 0 12px rgba(255, 215, 0, 0.5);
+  transform: scale(1.05);
+}
+.game-rating-badge .rate-star-icon {
+  font-size: 13px;
+}
+.game-rating-badge .rate-btn-hint {
+  font-size: 10px;
+  color: #00dbff;
+  margin-left: 3px;
+  text-decoration: underline;
+}
+
+/* RATING MODAL */
+.rating-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.88);
+  backdrop-filter: blur(8px);
+  z-index: 99999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn 0.25s;
+}
+.rating-modal-card {
+  background: linear-gradient(135deg, #0d1117 0%, #161b22 100%);
+  border: 2px solid #ffd700;
+  border-radius: 18px;
+  padding: 36px 32px;
+  max-width: 440px;
+  width: 90%;
+  text-align: center;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.9), 0 0 35px rgba(255, 215, 0, 0.25);
+  animation: popUp 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+}
+@keyframes popUp {
+  from { transform: scale(0.8); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+.rating-stars-row {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin: 20px 0;
+}
+.star-btn {
+  background: transparent;
+  border: none;
+  font-size: 38px;
+  cursor: pointer;
+  color: #444;
+  transition: all 0.15s ease;
+  filter: drop-shadow(0 0 2px rgba(0,0,0,0.5));
+}
+.star-btn.active, .star-btn.hovered {
+  color: #ffd700;
+  transform: scale(1.2);
+  filter: drop-shadow(0 0 15px rgba(255, 215, 0, 0.8));
+}
+.btn-submit-rating {
+  width: 100%;
+  background: linear-gradient(135deg, #ffd700, #ff8c00);
+  color: #000;
+  font-size: 16px;
+  font-weight: 900;
+  border: none;
+  border-radius: 10px;
+  padding: 13px;
+  cursor: pointer;
+  box-shadow: 0 4px 20px rgba(255, 215, 0, 0.4);
+  transition: all 0.2s;
+}
+.btn-submit-rating:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 30px rgba(255, 215, 0, 0.7);
+}
+
+
 
