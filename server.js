@@ -915,7 +915,7 @@ exit
   // Smart Bandwidth Optimizer for Render 100GB limit:
   // - HTML: 5 minutes cache with must-revalidate (keeps content fresh)
   // - Media / WASM / Audio / JS / CSS: 7 days immutable cache (saves 95% bandwidth!)
-  let cacheHeader = 'public, max-age=604800, immutable';
+  let cacheHeader = 'no-cache, no-store, must-revalidate';
   if (ext === '.html') {
     cacheHeader = 'public, max-age=300, must-revalidate';
   }

@@ -719,3 +719,73 @@ html, body {
     display: inline-flex;
     align-items: center;
 }
+
+/* EPIC ANIMATED GUI FOR STICK WAR LEGACY */
+.sw-command-panel {
+    border-bottom: 2px solid #ff9800;
+    box-shadow: 0 4px 30px rgba(255, 152, 0, 0.4);
+    animation: panelSlideIn 0.6s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+}
+
+@keyframes panelSlideIn {
+    from { transform: translateY(-50px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+.btn-recruit {
+    transition: all 0.2s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-recruit::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient(45deg, transparent, rgba(255,215,0,0.1), transparent);
+    transform: rotate(45deg);
+    transition: transform 0.4s;
+}
+
+.btn-recruit:hover::after {
+    transform: rotate(45deg) translate(50%, 50%);
+}
+
+.btn-recruit:hover:not(:disabled) {
+    transform: scale(1.05) translateY(-3px);
+    border-color: #ffd700;
+    box-shadow: 0 0 20px rgba(255, 215, 0, 0.6), inset 0 0 10px rgba(255, 215, 0, 0.2);
+}
+
+.chapter-card {
+    transition: all 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+    position: relative;
+    overflow: hidden;
+}
+
+.chapter-card:hover {
+    transform: scale(1.03);
+    box-shadow: 0 0 30px rgba(255, 152, 0, 0.5);
+}
+
+.chapter-card[data-chapter="6"], .chapter-card[data-chapter="7"] {
+    border-width: 2px;
+    animation: pvpGlow 2s infinite alternate;
+}
+
+@keyframes pvpGlow {
+    from { box-shadow: 0 0 10px rgba(0, 230, 118, 0.3); }
+    to { box-shadow: 0 0 30px rgba(0, 230, 118, 0.8); }
+}
+
+.sw-statue-bars {
+    animation: pulseBars 3s infinite alternate;
+}
+
+@keyframes pulseBars {
+    from { opacity: 0.9; }
+    to { opacity: 1; }
+}
