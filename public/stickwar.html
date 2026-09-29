@@ -14,7 +14,8 @@
         <!-- BRAND & NAVIGATION -->
         <div class="sw-brand">
             <a href="/" class="btn-sw-nav">🏠 Portale Dön</a>
-            <span class="sw-title">⚔️ STICK WAR: LEGACY</span>
+            <span class="sw-title">⚔️ STICK WAR</span>
+            <span class="sw-creators-tag">👑 Yapımcılar: Ahmet Baki ve Hakan Samet</span>
         </div>
 
         <!-- CURRENT MUSIC BADGE -->
@@ -32,6 +33,10 @@
             <div class="res-item res-gold">
                 <span class="res-icon">🟡</span>
                 <span class="res-val" id="res-gold-val">500</span>
+            </div>
+            <div class="res-item res-mana" id="res-mana-box">
+                <span class="res-icon">🔵</span>
+                <span class="res-val" id="res-mana-val">150 / 500</span>
             </div>
             <div class="res-item res-pop">
                 <span class="res-icon">👥</span>
@@ -51,8 +56,9 @@
             </div>
         </div>
 
-        <!-- ACTIONS -->
+        <!-- ACTIONS & MODE SWITCHER -->
         <div class="sw-actions">
+            <button class="btn-sw-nav active-mode" id="btn-toggle-game-mode" title="Stick War Legacy ve Stick War 2: Order Empire Arasında Geçiş Yap">👑 Stick War 2: Order Empire</button>
             <button class="btn-sw-nav" id="btn-sw-upgrades">🔨 Yükseltmeler</button>
             <button class="btn-sw-nav" id="btn-sw-restart">🔄 Yeniden Başlat</button>
             <button class="btn-sw-nav" id="btn-sw-fullscreen">⛶ Tam Ekran</button>
@@ -74,6 +80,22 @@
             <button class="btn-formation" id="btn-order-retreat" title="Tüm birlikler kaleye sığınır. (Müzik: Run From Your Demons)">
                 <span class="f-icon">🏰</span>
                 <span class="f-text">KALEYE SIĞIN</span>
+            </button>
+        </div>
+
+        <!-- STICK WAR 2 GOD POWERS & SPELLS -->
+        <div class="sw-spells-group" id="sw-spells-group">
+            <button class="btn-spell" id="btn-spell-rage" title="Tüm kılıçlılara çılgın öfke kazandırır! (100 Mana)">
+                <span class="spell-icon">⚡</span>
+                <span class="spell-name">ÖFKE (100)</span>
+            </button>
+            <button class="btn-spell" id="btn-spell-heal" title="Tüm ordunun canını %35 tazeler! (150 Mana)">
+                <span class="spell-icon">💖</span>
+                <span class="spell-name">ŞİFA (150)</span>
+            </button>
+            <button class="btn-spell" id="btn-spell-meteor" title="Düşman saflarına dev alevli göktaşı indirir! (250 Mana)">
+                <span class="spell-icon">☄️</span>
+                <span class="spell-name">GÖKTAŞI (250)</span>
             </button>
         </div>
 
@@ -110,6 +132,14 @@
                     <span class="rec-cost">🟡 500</span>
                 </div>
                 <span class="rec-pop-tag">+2</span>
+            </button>
+            <button class="btn-recruit" id="btn-spawn-meric" data-cost="200" data-pop="1">
+                <div class="rec-avatar">✨</div>
+                <div class="rec-info">
+                    <span class="rec-name">Şifacı (Meric)</span>
+                    <span class="rec-cost">🟡 200 🔵 80</span>
+                </div>
+                <span class="rec-pop-tag">+1</span>
             </button>
             <button class="btn-recruit" id="btn-spawn-mage" data-cost="1200" data-pop="3">
                 <div class="rec-avatar">🧙</div>

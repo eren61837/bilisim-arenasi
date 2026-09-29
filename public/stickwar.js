@@ -84,17 +84,67 @@
             avatar: '👹',
             desc: 'Devasa sopasıyla yeri sarsar, düşmanları havaya savurur.'
         },
+        meric: {
+            name: 'Şifacı (Meric)',
+            cost: 200,
+            mana: 80,
+            pop: 1,
+            hp: 120,
+            speed: 2.2,
+            range: 220,
+            damage: 0,
+            heal: 28,
+            attackCd: 1.4,
+            avatar: '✨',
+            desc: 'Yaralı dost askerleri kutsal altın ışıkla iyileştirir.'
+        },
+        bomber: {
+            name: 'Bombacı (Bomber)',
+            cost: 200,
+            pop: 1,
+            hp: 85,
+            speed: 4.6,
+            range: 35,
+            damage: 85,
+            attackCd: 0.5,
+            avatar: '💣',
+            desc: 'Barut fıçısıyla hızla koşar ve intihar patlaması yapar.'
+        },
+        juggerknight: {
+            name: 'Kaos Şövalyesi',
+            cost: 650,
+            pop: 2,
+            hp: 440,
+            speed: 2.0,
+            range: 60,
+            damage: 38,
+            attackCd: 1.0,
+            avatar: '🪓',
+            desc: 'Ağır zırhlı Kaos devi, dev baltasıyla döner saldırı yapar.'
+        },
+        marrowkai: {
+            name: 'Marrowkai',
+            cost: 1400,
+            pop: 3,
+            hp: 280,
+            speed: 1.6,
+            range: 420,
+            damage: 60,
+            attackCd: 2.0,
+            avatar: '💀',
+            desc: 'Kaos büyücüsü, zehir bulutu ve kara ruhlar fırlatır.'
+        },
         crawler: {
-            name: 'Minyon',
+            name: 'Minyon (Crawler)',
             cost: 0,
             pop: 0,
-            hp: 55,
+            hp: 65,
             speed: 4.2,
             range: 35,
-            damage: 12,
+            damage: 14,
             attackCd: 0.6,
             avatar: '💀',
-            desc: 'Büyücünün çağırdığı hızlı iskelet.'
+            desc: 'Kaos ordusunun 4 ayaklı hızlı yaratığı.'
         }
     };
 
@@ -305,8 +355,12 @@
         // Game State
         orderMode: 'defend', // 'defend' | 'attack' | 'retreat'
         gold: 500,
+        mana: 150,
+        maxMana: 500,
         pop: 0,
         maxPop: 20,
+        isStickWar2Mode: true,
+        rageTimer: 0,
 
         enemyGold: 500,
         enemyPop: 0,
@@ -411,6 +465,17 @@
             btnAttack.addEventListener('click', () => this.setOrderMode('attack'));
             btnRetreat.addEventListener('click', () => this.setOrderMode('retreat'));
 
+            // Stick War 2 Mode Toggle
+            const btnMode = document.getElementById('btn-toggle-game-mode');
+            if (btnMode) {
+                btnMode.addEventListener('click', () => this.toggleGameMode());
+            }
+
+            // Stick War 2 Spells
+            document.getElementById('btn-spell-rage')?.addEventListener('click', () => this.castSpell('rage'));
+            document.getElementById('btn-spell-heal')?.addEventListener('click', () => this.castSpell('heal'));
+            document.getElementById('btn-spell-meteor')?.addEventListener('click', () => this.castSpell('meteor'));
+
             // Unit Spawn Buttons
             document.querySelectorAll('.btn-recruit').forEach(btn => {
                 btn.addEventListener('click', () => {
@@ -418,6 +483,7 @@
                     const unitKey = type === 'sword' ? 'sword' : 
                                     type === 'archer' ? 'archer' : 
                                     type === 'spear' ? 'spear' : 
+                                    type === 'meric' ? 'meric' :
                                     type === 'mage' ? 'mage' : 
                                     type === 'giant' ? 'giant' : 'miner';
                     this.purchaseUnit('order', unitKey);
@@ -569,11 +635,16 @@
                     this.addFloatingText(this.camX + this.width / 2, 200, 'Yetersiz Altın!', '#ff5252');
                     return;
                 }
+                if (cfg.mana && this.mana < cfg.mana) {
+                    this.addFloatingText(this.camX + this.width / 2, 200, 'Yetersiz Mana! (' + cfg.mana + ' Mana Gerekli)', '#38bdf8');
+                    return;
+                }
                 if (this.pop + cfg.pop > this.maxPop) {
                     this.addFloatingText(this.camX + this.width / 2, 200, 'Nüfus Dolu! (20/20)', '#ff5252');
                     return;
                 }
                 this.gold -= cfg.cost;
+                if (cfg.mana) this.mana -= cfg.mana;
                 this.spawnUnit('order', unitTypeKey);
                 this.updateUI();
             } else {
@@ -582,6 +653,135 @@
                     this.spawnUnit('chaos', unitTypeKey);
                 }
             }
+        },
+
+        /* STICK WAR 2: GAME MODE TOGGLE & SPELLS */
+        toggleGameMode() {
+            this.isStickWar2Mode = !this.isStickWar2Mode;
+            const btn = document.getElementById('btn-toggle-game-mode');
+            const spells = document.getElementById('sw-spells-group');
+            const manaBox = document.getElementById('res-mana-box');
+            const mericBtn = document.getElementById('btn-spawn-meric');
+
+            if (this.isStickWar2Mode) {
+                if (btn) btn.textContent = '👑 Mod: Stick War II (Order vs Chaos)';
+                if (spells) spells.style.display = 'flex';
+                if (manaBox) manaBox.style.display = 'flex';
+                if (mericBtn) mericBtn.style.display = 'flex';
+                this.addFloatingText(this.camX + this.width / 2, 180, 'STICK WAR 2: ORDER EMPIRE MODU AKTİF! 👑', '#ffd700');
+            } else {
+                if (btn) btn.textContent = '⚔️ Mod: Stick War Legacy';
+                if (spells) spells.style.display = 'none';
+                if (manaBox) manaBox.style.display = 'none';
+                if (mericBtn) mericBtn.style.display = 'none';
+                this.addFloatingText(this.camX + this.width / 2, 180, 'STICK WAR LEGACY MODU AKTİF! ⚔️', '#00e5ff');
+            }
+        },
+
+        castSpell(type) {
+            if (!this.isStickWar2Mode) return;
+
+            if (type === 'rage') {
+                if (this.mana < 100) {
+                    this.addFloatingText(this.camX + this.width / 2, 200, 'Yetersiz Mana! (100 Gerekli)', '#38bdf8');
+                    return;
+                }
+                this.mana -= 100;
+                this.rageTimer = 9.0;
+                this.screenShake = 6;
+                SoundManager.playSfx('giantSmash');
+                this.addFloatingText(this.camX + this.width / 2, 160, '🔥 ÇILGIN ÖFKE AKTİF! (2x HIZ & HASAR)', '#ff3d00');
+
+                // Enrage melee units
+                this.units.forEach(u => {
+                    if (u.side === 'order' && (u.type === 'sword' || u.type === 'spear')) {
+                        u.speed *= 1.4;
+                        u.damage = Math.round(u.damage * 1.5);
+                        for (let p = 0; p < 8; p++) {
+                            this.particles.push({
+                                x: u.x + (Math.random() - 0.5) * 20,
+                                y: u.y - 30,
+                                vx: (Math.random() - 0.5) * 40,
+                                vy: -Math.random() * 80 - 40,
+                                color: '#ff3d00',
+                                size: 4,
+                                life: 0.6,
+                                maxLife: 0.6
+                            });
+                        }
+                    }
+                });
+            } else if (type === 'heal') {
+                if (this.mana < 150) {
+                    this.addFloatingText(this.camX + this.width / 2, 200, 'Yetersiz Mana! (150 Gerekli)', '#38bdf8');
+                    return;
+                }
+                this.mana -= 150;
+                SoundManager.playSfx('magicBoom');
+                this.addFloatingText(this.camX + this.width / 2, 160, '✨ KUTSAL İYİLEŞTİRME (%40 CAN YENİLENDİ)', '#00e676');
+
+                this.units.forEach(u => {
+                    if (u.side === 'order' && u.hp > 0) {
+                        const healAmt = Math.round(u.maxHp * 0.4);
+                        u.hp = Math.min(u.maxHp, u.hp + healAmt);
+                        this.addFloatingText(u.x, u.y - 50, `+${healAmt}`, '#00e676');
+                        for (let p = 0; p < 5; p++) {
+                            this.particles.push({
+                                x: u.x + (Math.random() - 0.5) * 20,
+                                y: u.y - 20,
+                                vx: (Math.random() - 0.5) * 30,
+                                vy: -Math.random() * 60 - 30,
+                                color: '#00e676',
+                                size: 3,
+                                life: 0.6,
+                                maxLife: 0.6
+                            });
+                        }
+                    }
+                });
+            } else if (type === 'meteor') {
+                if (this.mana < 250) {
+                    this.addFloatingText(this.camX + this.width / 2, 200, 'Yetersiz Mana! (250 Gerekli)', '#38bdf8');
+                    return;
+                }
+                this.mana -= 250;
+                this.screenShake = 18;
+                SoundManager.playSfx('giantSmash');
+
+                // Determine strike zone (enemy frontline or enemy statue)
+                const enemyUnits = this.units.filter(u => u.side === 'chaos' && u.hp > 0);
+                const strikeX = enemyUnits.length > 0 ? enemyUnits[0].x : this.statues.chaos.x;
+
+                this.addFloatingText(strikeX, 180, '☄️ GÖKTAŞI ÇARPMASI!', '#ff3d00');
+
+                // Blast damage
+                this.units.forEach(u => {
+                    if (u.side === 'chaos' && u.hp > 0 && Math.abs(u.x - strikeX) < 220) {
+                        this.damageUnit(u, 260, { x: strikeX });
+                        u.vy = -340;
+                        u.vx = (u.x > strikeX ? 1 : -1) * 120;
+                    }
+                });
+
+                if (Math.abs(this.statues.chaos.x - strikeX) < 240) {
+                    this.damageStatue('chaos', 200);
+                }
+
+                // Meteor explosion particles
+                for (let p = 0; p < 45; p++) {
+                    this.particles.push({
+                        x: strikeX + (Math.random() - 0.5) * 80,
+                        y: GROUND_Y - Math.random() * 20,
+                        vx: (Math.random() - 0.5) * 260,
+                        vy: -Math.random() * 380 - 120,
+                        color: Math.random() < 0.5 ? '#ff3d00' : '#ffd700',
+                        size: Math.random() * 6 + 3,
+                        life: 0.9,
+                        maxLife: 0.9
+                    });
+                }
+            }
+            this.updateUI();
         },
 
         spawnUnit(side, type) {
@@ -714,8 +914,16 @@
                 this.fireArrow(unit, this.worldMouseX, this.worldMouseY);
             } else if (unit.type === 'mage') {
                 this.castMageSpell(unit, this.worldMouseX, this.worldMouseY);
+            } else if (unit.type === 'marrowkai') {
+                this.performMarrowkaiAttack(unit, this.worldMouseX, this.worldMouseY);
             } else if (unit.type === 'giant') {
                 this.performGiantSmash(unit);
+            } else if (unit.type === 'juggerknight') {
+                this.performJuggerAttack(unit);
+            } else if (unit.type === 'bomber') {
+                this.detonateBomber(unit);
+            } else if (unit.type === 'meric') {
+                this.performMericHeal(unit);
             } else if (unit.type === 'miner') {
                 // If near gold mine, mine it; else slash
                 const mine = this.getNearestMine(unit.x);
@@ -863,6 +1071,138 @@
             }
         },
 
+        /* STICK WAR 2 COMBAT ACTIONS */
+        performMericHeal(unit) {
+            const wounded = this.units
+                .filter(u => u.side === unit.side && u.hp > 0 && u.hp < u.maxHp && u.id !== unit.id)
+                .sort((a, b) => (a.hp / a.maxHp) - (b.hp / b.maxHp))[0];
+
+            if (!wounded) return false;
+
+            unit.facing = wounded.x > unit.x ? 1 : -1;
+            const healAmt = 35;
+            wounded.hp = Math.min(wounded.maxHp, wounded.hp + healAmt);
+            SoundManager.playSfx('magicBoom');
+            this.addFloatingText(wounded.x, wounded.y - 45, `+${healAmt} ❤️`, '#00e676');
+
+            for (let i = 0; i < 12; i++) {
+                const lerp = Math.random();
+                this.particles.push({
+                    x: unit.x + (wounded.x - unit.x) * lerp,
+                    y: unit.y - 35 + (Math.random() - 0.5) * 20,
+                    vx: (Math.random() - 0.5) * 20,
+                    vy: -Math.random() * 40 - 10,
+                    color: '#00e676',
+                    size: 3,
+                    life: 0.5,
+                    maxLife: 0.5
+                });
+            }
+            return true;
+        },
+
+        detonateBomber(unit) {
+            SoundManager.playSfx('giantSmash');
+            this.screenShake = 16;
+            const targetSide = unit.side === 'order' ? 'chaos' : 'order';
+            const boomX = unit.x;
+
+            this.addFloatingText(boomX, unit.y - 50, '💥 BOOM!', '#ff3d00');
+
+            this.units.forEach(target => {
+                if (target.side === targetSide && target.hp > 0) {
+                    const dist = Math.abs(target.x - boomX);
+                    if (dist < 110) {
+                        this.damageUnit(target, unit.damage, unit);
+                        target.vx = (target.x > boomX ? 1 : -1) * 220;
+                        target.vy = -260;
+                    }
+                }
+            });
+
+            const enemyStatue = this.statues[targetSide];
+            if (enemyStatue && Math.abs(boomX - enemyStatue.x) < 120) {
+                this.damageStatue(targetSide, unit.damage);
+            }
+
+            for (let p = 0; p < 35; p++) {
+                this.particles.push({
+                    x: boomX + (Math.random() - 0.5) * 30,
+                    y: GROUND_Y - 20 + (Math.random() - 0.5) * 30,
+                    vx: (Math.random() - 0.5) * 240,
+                    vy: -Math.random() * 300 - 60,
+                    color: Math.random() < 0.6 ? '#ff3d00' : '#ffd700',
+                    size: Math.random() * 5 + 3,
+                    life: 0.7,
+                    maxLife: 0.7
+                });
+            }
+
+            unit.hp = 0;
+        },
+
+        performJuggerAttack(unit) {
+            SoundManager.playSfx('slash');
+            this.screenShake = 6;
+            const targetSide = unit.side === 'order' ? 'chaos' : 'order';
+            const hitBox = {
+                x: unit.facing === 1 ? unit.x : unit.x - unit.range,
+                y: unit.y - 75,
+                w: unit.range + 30,
+                h: 75
+            };
+
+            let hitAny = false;
+            this.units.forEach(target => {
+                if (target.side === targetSide && target.hp > 0) {
+                    if (target.x >= hitBox.x && target.x <= hitBox.x + hitBox.w) {
+                        this.damageUnit(target, unit.damage, unit);
+                        target.vx = unit.facing * 80;
+                        hitAny = true;
+                    }
+                }
+            });
+
+            const enemyStatue = this.statues[targetSide];
+            if (enemyStatue && enemyStatue.hp > 0 && Math.abs(unit.x - enemyStatue.x) <= unit.range + 35) {
+                this.damageStatue(targetSide, unit.damage);
+                hitAny = true;
+            }
+
+            if (hitAny) {
+                this.addHitSparks(unit.x + unit.facing * 35, unit.y - 45, '#e0e0e0');
+            }
+        },
+
+        performMarrowkaiAttack(unit, targetX, targetY) {
+            SoundManager.playSfx('magicBoom');
+            const blastX = Math.max(200, Math.min(WORLD_WIDTH - 200, targetX));
+
+            this.magicSpells.push({
+                side: unit.side,
+                x: blastX,
+                y: GROUND_Y,
+                radius: 85,
+                timer: 0.5,
+                erupted: false,
+                damage: unit.damage,
+                color: '#9c27b0'
+            });
+
+            for (let i = 0; i < 16; i++) {
+                this.particles.push({
+                    x: blastX + (Math.random() - 0.5) * 70,
+                    y: GROUND_Y - Math.random() * 20,
+                    vx: (Math.random() - 0.5) * 50,
+                    vy: -Math.random() * 90 - 40,
+                    color: '#9c27b0',
+                    size: 4,
+                    life: 0.8,
+                    maxLife: 0.8
+                });
+            }
+        },
+
         damageUnit(target, dmg, attacker) {
             if (target.hp <= 0) return;
 
@@ -982,16 +1322,32 @@
                 const minerCount = this.units.filter(u => u.side === 'chaos' && u.type === 'miner').length;
                 if (minerCount < 3 && this.enemyGold >= UNIT_TYPES.miner.cost) {
                     this.purchaseUnit('chaos', 'miner');
-                } else if (this.enemyGold >= UNIT_TYPES.giant.cost && Math.random() < 0.25) {
-                    this.purchaseUnit('chaos', 'giant');
-                } else if (this.enemyGold >= UNIT_TYPES.mage.cost && Math.random() < 0.3) {
-                    this.purchaseUnit('chaos', 'mage');
-                } else if (this.enemyGold >= UNIT_TYPES.spear.cost && Math.random() < 0.4) {
-                    this.purchaseUnit('chaos', 'spear');
-                } else if (this.enemyGold >= UNIT_TYPES.archer.cost && Math.random() < 0.5) {
-                    this.purchaseUnit('chaos', 'archer');
-                } else if (this.enemyGold >= UNIT_TYPES.sword.cost) {
-                    this.purchaseUnit('chaos', 'sword');
+                } else if (this.isStickWar2Mode) {
+                    // Stick War 2 Chaos Empire Roster
+                    const rnd = Math.random();
+                    if (rnd < 0.25 && this.enemyGold >= UNIT_TYPES.bomber.cost) {
+                        this.purchaseUnit('chaos', 'bomber');
+                    } else if (rnd < 0.50 && this.enemyGold >= UNIT_TYPES.juggerknight.cost) {
+                        this.purchaseUnit('chaos', 'juggerknight');
+                    } else if (rnd < 0.70 && this.enemyGold >= UNIT_TYPES.crawler.cost) {
+                        this.purchaseUnit('chaos', 'crawler');
+                    } else if (rnd < 0.85 && this.enemyGold >= UNIT_TYPES.marrowkai.cost) {
+                        this.purchaseUnit('chaos', 'marrowkai');
+                    } else if (this.enemyGold >= UNIT_TYPES.sword.cost) {
+                        this.purchaseUnit('chaos', 'sword');
+                    }
+                } else {
+                    if (this.enemyGold >= UNIT_TYPES.giant.cost && Math.random() < 0.25) {
+                        this.purchaseUnit('chaos', 'giant');
+                    } else if (this.enemyGold >= UNIT_TYPES.mage.cost && Math.random() < 0.3) {
+                        this.purchaseUnit('chaos', 'mage');
+                    } else if (this.enemyGold >= UNIT_TYPES.spear.cost && Math.random() < 0.4) {
+                        this.purchaseUnit('chaos', 'spear');
+                    } else if (this.enemyGold >= UNIT_TYPES.archer.cost && Math.random() < 0.5) {
+                        this.purchaseUnit('chaos', 'archer');
+                    } else if (this.enemyGold >= UNIT_TYPES.sword.cost) {
+                        this.purchaseUnit('chaos', 'sword');
+                    }
                 }
             }
 
@@ -1047,6 +1403,18 @@
             // AI
             this.updateAI(dt);
             this.updateCastles(dt);
+
+            // Stick War 2: Mana Generation & Rage Timer
+            if (this.isStickWar2Mode) {
+                const minerBonus = this.units.filter(u => u.side === 'order' && u.type === 'miner' && u.hp > 0).length * 1.5;
+                this.mana = Math.min(this.maxMana, this.mana + dt * (6 + minerBonus));
+                const manaEl = document.getElementById('res-mana-val');
+                if (manaEl) manaEl.textContent = Math.floor(this.mana);
+            }
+
+            if (this.rageTimer > 0) {
+                this.rageTimer = Math.max(0, this.rageTimer - dt);
+            }
 
             // Screen Shake Decay
             if (this.screenShake > 0) this.screenShake = Math.max(0, this.screenShake - dt * 25);
@@ -1188,7 +1556,7 @@
                             y: GROUND_Y,
                             vx: (Math.random() - 0.5) * 60,
                             vy: -Math.random() * 300 - 150,
-                            color: '#00e5ff',
+                            color: sp.color || (sp.side === 'order' ? '#00e5ff' : '#9c27b0'),
                             size: 5,
                             life: 0.7,
                             maxLife: 0.7
@@ -1267,6 +1635,28 @@
 
             const now = Date.now() / 1000;
 
+            // SPECIAL UNITS LOGIC: Meric (Healer) & Bomber (Kamikaze)
+            if (u.type === 'meric') {
+                const wounded = this.units.find(a => a.side === u.side && a.hp > 0 && a.hp < a.maxHp && a.id !== u.id && Math.abs(a.x - u.x) <= u.range);
+                if (wounded) {
+                    u.facing = wounded.x > u.x ? 1 : -1;
+                    if (now - u.lastAttack >= u.attackCd) {
+                        u.lastAttack = now;
+                        u.animAction = 'attack';
+                        u.animTimer = 0.35;
+                        this.performMericHeal(u);
+                    }
+                    return;
+                }
+            }
+
+            if (u.type === 'bomber') {
+                if ((nearestEnemy && distToEnemy <= 40) || (targetStatue && distToStatue <= 50)) {
+                    this.detonateBomber(u);
+                    return;
+                }
+            }
+
             // Attack if within range
             if (nearestEnemy && distToEnemy <= u.range) {
                 u.facing = nearestEnemy.x > u.x ? 1 : -1;
@@ -1276,7 +1666,10 @@
                     u.animTimer = 0.35;
                     if (u.type === 'archer') this.fireArrow(u, nearestEnemy.x, nearestEnemy.y - 30);
                     else if (u.type === 'mage') this.castMageSpell(u, nearestEnemy.x, nearestEnemy.y);
+                    else if (u.type === 'marrowkai') this.performMarrowkaiAttack(u, nearestEnemy.x, nearestEnemy.y);
                     else if (u.type === 'giant') this.performGiantSmash(u);
+                    else if (u.type === 'juggerknight') this.performJuggerAttack(u);
+                    else if (u.type === 'meric') this.performMericHeal(u);
                     else this.performMeleeAttack(u);
                 }
                 return;
@@ -1290,7 +1683,9 @@
                     u.animTimer = 0.35;
                     if (u.type === 'archer') this.fireArrow(u, targetStatue.x, GROUND_Y - 80);
                     else if (u.type === 'mage') this.castMageSpell(u, targetStatue.x, GROUND_Y);
+                    else if (u.type === 'marrowkai') this.performMarrowkaiAttack(u, targetStatue.x, GROUND_Y);
                     else if (u.type === 'giant') this.performGiantSmash(u);
+                    else if (u.type === 'juggerknight') this.performJuggerAttack(u);
                     else this.performMeleeAttack(u);
                 }
                 return;
@@ -1850,6 +2245,84 @@
                     ctx.beginPath();
                     ctx.moveTo(0, -40); ctx.lineTo(24, -35); ctx.lineTo(36, -60);
                     ctx.stroke();
+                } else if (u.type === 'meric') {
+                    // Golden Healer Caduceus / Staff
+                    ctx.strokeStyle = '#ffd700';
+                    ctx.lineWidth = 2.5;
+                    ctx.beginPath();
+                    ctx.moveTo(0, -42); ctx.lineTo(14, -38);
+                    ctx.moveTo(14, -12); ctx.lineTo(14, -64);
+                    ctx.stroke();
+
+                    // Glowing Sacred Heal Gem
+                    ctx.fillStyle = '#00e676';
+                    ctx.beginPath();
+                    ctx.arc(14, -66, 5, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    // Holy Halo
+                    ctx.strokeStyle = '#ffd700';
+                    ctx.lineWidth = 1.5;
+                    ctx.beginPath();
+                    ctx.ellipse(0, -68, 8, 3, 0, 0, Math.PI * 2);
+                    ctx.stroke();
+                } else if (u.type === 'bomber') {
+                    // Gunpowder Keg on Back/Head
+                    ctx.fillStyle = '#4e342e';
+                    ctx.fillRect(-8, -48, 16, 14);
+                    ctx.strokeStyle = '#ffd700';
+                    ctx.lineWidth = 1;
+                    ctx.strokeRect(-8, -48, 16, 14);
+
+                    // Burning Fuse
+                    ctx.strokeStyle = '#ff9800';
+                    ctx.beginPath();
+                    ctx.moveTo(0, -48); ctx.lineTo(4, -54);
+                    ctx.stroke();
+                    ctx.fillStyle = '#ff3d00';
+                    ctx.beginPath();
+                    ctx.arc(4, -54, 2.5, 0, Math.PI * 2);
+                    ctx.fill();
+                } else if (u.type === 'juggerknight') {
+                    // Horned Iron Helmet
+                    ctx.fillStyle = '#37474f';
+                    ctx.fillRect(-6, -63, 12, 5);
+                    ctx.strokeStyle = '#b0bec5';
+                    ctx.beginPath();
+                    ctx.moveTo(-6, -63); ctx.lineTo(-11, -72);
+                    ctx.moveTo(6, -63); ctx.lineTo(11, -72);
+                    ctx.stroke();
+
+                    // Massive Spiked Cleaver
+                    ctx.strokeStyle = '#cfd8dc';
+                    ctx.lineWidth = 4;
+                    ctx.beginPath();
+                    ctx.moveTo(10, -36); ctx.lineTo(26, -58);
+                    ctx.stroke();
+                    ctx.fillStyle = '#90a4ae';
+                    ctx.fillRect(18, -60, 14, 8);
+                } else if (u.type === 'marrowkai') {
+                    // Dark Necromancer Staff
+                    ctx.strokeStyle = '#4a148c';
+                    ctx.lineWidth = 3;
+                    ctx.beginPath();
+                    ctx.moveTo(0, -42); ctx.lineTo(16, -38);
+                    ctx.moveTo(16, -10); ctx.lineTo(16, -68);
+                    ctx.stroke();
+
+                    // Poison Purple Skull
+                    ctx.fillStyle = '#ab47bc';
+                    ctx.beginPath();
+                    ctx.arc(16, -70, 7, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+
+                // Rage Aura (Flame Effect)
+                if (u.side === 'order' && this.rageTimer > 0) {
+                    ctx.fillStyle = 'rgba(255, 61, 0, 0.35)';
+                    ctx.beginPath();
+                    ctx.arc(0, -30, 24, 0, Math.PI * 2);
+                    ctx.fill();
                 }
 
                 ctx.restore();
@@ -1885,7 +2358,7 @@
             this.magicSpells.forEach(sp => {
                 ctx.save();
                 ctx.translate(sp.x, sp.y);
-                ctx.strokeStyle = sp.side === 'order' ? '#00e5ff' : '#ff3d00';
+                ctx.strokeStyle = sp.color || (sp.side === 'order' ? '#00e5ff' : '#9c27b0');
                 ctx.lineWidth = 3;
                 ctx.beginPath();
                 ctx.arc(0, 0, sp.radius * (1 - sp.timer / 0.6), 0, Math.PI * 2);

@@ -51,6 +51,18 @@ html, body {
     text-transform: uppercase;
 }
 
+.sw-creators-tag {
+    font-size: 11px;
+    font-weight: 800;
+    color: #ffd700;
+    background: rgba(255, 215, 0, 0.12);
+    border: 1px solid rgba(255, 215, 0, 0.4);
+    padding: 3px 8px;
+    border-radius: 6px;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+}
+
 .btn-sw-nav {
     background: rgba(255, 215, 0, 0.12);
     color: #ffd700;
@@ -174,6 +186,55 @@ html, body {
 
 .res-pop .res-val {
     color: #00e5ff;
+}
+
+.res-mana .res-val {
+    color: #38bdf8;
+    text-shadow: 0 0 10px rgba(56, 189, 248, 0.5);
+}
+
+.btn-sw-nav.active-mode {
+    background: linear-gradient(135deg, rgba(56, 189, 248, 0.25), rgba(255, 215, 0, 0.25));
+    border-color: #38bdf8;
+    color: #38bdf8;
+    box-shadow: 0 0 12px rgba(56, 189, 248, 0.4);
+}
+
+/* SPELLS BAR (STICK WAR 2: ORDER EMPIRE) */
+.sw-spells-group {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(0, 0, 0, 0.4);
+    padding: 3px 8px;
+    border-radius: 8px;
+    border: 1px solid rgba(56, 189, 248, 0.3);
+}
+
+.btn-spell {
+    background: rgba(56, 189, 248, 0.12);
+    border: 1px solid rgba(56, 189, 248, 0.35);
+    color: #fff;
+    padding: 6px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 11px;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    transition: all 0.2s;
+}
+
+.btn-spell:hover {
+    background: #38bdf8;
+    color: #000;
+    transform: translateY(-1px);
+    box-shadow: 0 0 12px rgba(56, 189, 248, 0.5);
+}
+
+.btn-spell:active {
+    transform: translateY(1px);
 }
 
 /* STATUE HP BARS */
