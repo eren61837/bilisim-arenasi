@@ -1896,48 +1896,39 @@ function initGamesManager(wss, db) {
   return {
     getLanIp,
     getStats() {
-      let xoxCount = 0, csCount = 0, agarCount = 0, slitherCount = 0, tankCount = 0, deeeepCount = 0, diepCount = 0, mcCount = 0, survivorCount = 0, trollCount = 0, gdCount = 0, minerCount = 0, pixelCount = 0, sosCount = 0, kafatopuCount = 0, zombsCount = 0, redmatchCount = 0;
+      let csCount = 0, diepCount = 0, mcCount = 0, survivorCount = 0, gdCount = 0, pixelCount = 0, sosCount = 0, kafatopuCount = 0, zombsCount = 0, redmatchCount = 0, dinoCount = 0;
+      let realHumanTotal = 0;
       wss.clients.forEach(c => {
-        if (c.readyState === WebSocket.OPEN) {
-          if (c.room === 'xox') xoxCount++;
-          else if (c.room === 'cs16') csCount++;
-          else if (c.room === 'agario') agarCount++;
-          else if (c.room === 'slither') slitherCount++;
-          else if (c.room === 'tank') tankCount++;
-          else if (c.room === 'diep' || c.room === 'deeeep') diepCount++;
+        if (c.readyState === WebSocket.OPEN && !c.isBot) {
+          realHumanTotal++;
+          if (c.room === 'cs16') csCount++;
+          else if (c.room === 'diep') diepCount++;
           else if (c.room === 'minecraft') mcCount++;
           else if (c.room === 'survivor') survivorCount++;
-          else if (c.room === 'trollparkur') trollCount++;
           else if (c.room === 'geometrydash') gdCount++;
-          else if (c.room === 'miner') minerCount++;
           else if (c.room === 'sos') sosCount++;
           else if (c.room === 'kafatopu') kafatopuCount++;
           else if (c.room === 'zombs') zombsCount++;
           else if (c.room === 'redmatch') redmatchCount++;
-          else pixelCount++;
+          else if (c.room === 'dino') dinoCount++;
+          else if (c.room === 'world' || c.room === 'turkey' || c.room === 'pixelplace') pixelCount++;
         }
       });
       return {
         lanIp: getLanIp(),
-        onlineTotal: Math.max(wss.clients.size, 1),
+        onlineTotal: realHumanTotal,
         games: {
-          xox: xoxCount + (xoxCount > 0 ? 0 : 2),
-          cs16: csCount + CS_BOTS.length,
-          agario: agarCount + agarBots.length,
-          slither: slitherCount + slitherBots.length,
-          tank: tankCount + tankBots.length,
-          diep: Math.max(diepCount, 2),
-          deeeep: Math.max(diepCount, 2),
-          minecraft: Math.max(mcCount, 1),
-          survivor: Math.max(survivorCount, 1),
-          trollparkur: Math.max(trollCount, 1),
-          geometrydash: Math.max(gdCount, 1),
-          miner: Math.max(minerCount, 1),
-          pixelplace: Math.max(pixelCount, 1),
-          sos: Math.max(sosCount, 1),
-          kafatopu: Math.max(kafatopuCount, 1),
-          zombs: Math.max(zombsCount, 1),
-          redmatch: Math.max(redmatchCount, 3)
+          cs16: csCount,
+          diep: diepCount,
+          minecraft: mcCount,
+          survivor: survivorCount,
+          geometrydash: gdCount,
+          pixelplace: pixelCount,
+          sos: sosCount,
+          kafatopu: kafatopuCount,
+          zombs: zombsCount,
+          redmatch: redmatchCount,
+          dino: dinoCount
         }
       };
     },
@@ -1956,7 +1947,11 @@ function initGamesManager(wss, db) {
       }
       if (data.type === 'admin_clear_chat') { if (ws.isAdmin) clearPortalChat(); return true; }
       if (data.type === 'admin_announcement') {
-        if (ws.isAdmin && (data.text || data.message)) {
+        if (!ws.isAdmin) {
+          ws.send(JSON.stringify({ type: 'portal_error', message: '❌ Yetkisiz erişim: Sadece yetkili adminler duyuru gönderebilir!' }));
+          return true;
+        }
+        if (data.text || data.message) {
           broadcastAnnouncement(data.text || data.message, data.author || ws.user?.username || '👑 Admin');
         }
         return true;

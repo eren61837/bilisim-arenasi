@@ -3,297 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>🧟 ZOMBS.IO - Bilişim Arenası</title>
+    <title>🧟 ZOMBS.IO - Bilişim Arenası (Yerel 60FPS Motor)</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🧟</text></svg>">
-    <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        html, body {
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-            background: #080d0b;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-            color: #fff;
-        }
-
-        /* TOP NAVIGATION BAR */
-        .zombs-topbar {
-            height: 48px;
-            background: linear-gradient(180deg, #101915 0%, #090e0c 100%);
-            border-bottom: 2px solid #00e676;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0 16px;
-            z-index: 1000;
-            box-shadow: 0 4px 20px rgba(0, 230, 118, 0.15);
-        }
-
-        .zombs-brand {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .btn-zombs-nav {
-            background: rgba(0, 230, 118, 0.12);
-            color: #00e676;
-            border: 1px solid #00e676;
-            padding: 6px 14px;
-            border-radius: 6px;
-            font-size: 13px;
-            font-weight: 800;
-            cursor: pointer;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            transition: all 0.2s ease;
-        }
-        .btn-zombs-nav:hover {
-            background: #00e676;
-            color: #000;
-            box-shadow: 0 0 15px rgba(0, 230, 118, 0.5);
-            transform: translateY(-1px);
-        }
-
-        .zombs-title-text {
-            font-weight: 900;
-            font-size: 16px;
-            letter-spacing: 1px;
-            color: #00e676;
-            text-shadow: 0 0 10px rgba(0, 230, 118, 0.4);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .credits-badges {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .credit-tag {
-            font-size: 11px;
-            font-weight: 800;
-            padding: 4px 10px;
-            border-radius: 20px;
-            letter-spacing: 0.5px;
-        }
-        .credit-tag.req {
-            background: rgba(255, 215, 0, 0.15);
-            color: #ffd700;
-            border: 1px solid rgba(255, 215, 0, 0.45);
-        }
-        .credit-tag.dev {
-            background: rgba(0, 229, 255, 0.15);
-            color: #00e5ff;
-            border: 1px solid rgba(0, 229, 255, 0.45);
-        }
-
-        .zombs-actions {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        /* MAIN GAME CONTAINER */
-        #game-container {
-            position: absolute;
-            top: 48px;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: #000;
-        }
-
-        #zombs-frame {
-            width: 100%;
-            height: 100%;
-            border: none;
-            display: block;
-        }
-
-        /* HINT BANNER */
-        .zombs-hint-banner {
-            position: absolute;
-            bottom: 12px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(10, 16, 13, 0.92);
-            border: 1px solid rgba(0, 230, 118, 0.4);
-            border-radius: 30px;
-            padding: 6px 20px;
-            font-size: 12px;
-            font-weight: 600;
-            color: #d1fae5;
-            display: flex;
-            align-items: center;
-            gap: 16px;
-            pointer-events: none;
-            z-index: 500;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.8);
-            transition: opacity 0.5s ease;
-        }
-        .zombs-hint-banner b {
-            color: #00e676;
-        }
-
-        /* LOADING SCREEN OVERLAY */
-        .loading-overlay {
-            position: fixed;
-            inset: 0;
-            background: radial-gradient(circle at center, #0e1c15 0%, #060b08 100%);
-            z-index: 999999;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: opacity 0.6s ease, visibility 0.6s ease;
-        }
-        .loading-overlay.fade-out {
-            opacity: 0;
-            visibility: hidden;
-            pointer-events: none;
-        }
-        .loading-content {
-            background: linear-gradient(145deg, #122119, #09120d);
-            border: 2px solid #00e676;
-            border-radius: 20px;
-            padding: 40px 36px;
-            max-width: 480px;
-            width: 90%;
-            text-align: center;
-            box-shadow: 0 0 80px rgba(0, 230, 118, 0.3), inset 0 0 30px rgba(0, 230, 118, 0.08);
-            animation: zombsPop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-        }
-        @keyframes zombsPop {
-            from { transform: scale(0.85); opacity: 0; }
-            to { transform: scale(1); opacity: 1; }
-        }
-        .loading-logo {
-            font-size: 56px;
-            margin-bottom: 8px;
-            filter: drop-shadow(0 0 16px rgba(0, 230, 118, 0.6));
-            animation: bounce 2s infinite ease-in-out;
-        }
-        @keyframes bounce {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-8px); }
-        }
-        .loading-title {
-            font-size: 32px;
-            font-weight: 900;
-            color: #fff;
-            margin-bottom: 6px;
-            letter-spacing: 3px;
-            text-shadow: 0 0 20px rgba(0, 230, 118, 0.6);
-        }
-        .loading-subtitle {
-            font-size: 14px;
-            color: #8fa89b;
-            margin-bottom: 24px;
-            font-weight: 500;
-        }
-        .loading-credits-box {
-            background: rgba(0, 0, 0, 0.45);
-            border: 1px solid rgba(0, 230, 118, 0.3);
-            border-radius: 14px;
-            padding: 16px 20px;
-            margin-bottom: 24px;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-        .credit-row {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-        .credit-badge {
-            font-size: 11px;
-            font-weight: 800;
-            padding: 4px 10px;
-            border-radius: 6px;
-            letter-spacing: 1px;
-        }
-        .credit-badge.req {
-            background: rgba(255, 215, 0, 0.15);
-            color: #ffd700;
-            border: 1px solid rgba(255, 215, 0, 0.45);
-        }
-        .credit-badge.dev {
-            background: rgba(0, 229, 255, 0.15);
-            color: #00e5ff;
-            border: 1px solid rgba(0, 229, 255, 0.45);
-        }
-        .credit-name {
-            font-size: 16px;
-            font-weight: 800;
-            color: #fff;
-            letter-spacing: 0.5px;
-        }
-        .loading-bar-wrap {
-            width: 100%;
-            height: 10px;
-            background: rgba(255, 255, 255, 0.08);
-            border-radius: 10px;
-            overflow: hidden;
-            margin-bottom: 12px;
-            border: 1px solid rgba(0, 230, 118, 0.2);
-        }
-        .loading-bar-fill {
-            width: 0%;
-            height: 100%;
-            background: linear-gradient(90deg, #00e676, #00e5ff);
-            border-radius: 10px;
-            box-shadow: 0 0 12px rgba(0, 230, 118, 0.8);
-            animation: zombsFill 2s ease-in-out forwards;
-        }
-        @keyframes zombsFill {
-            0% { width: 4%; }
-            35% { width: 45%; }
-            70% { width: 85%; }
-            100% { width: 100%; }
-        }
-        .loading-status {
-            font-size: 13px;
-            color: #00e676;
-            font-weight: 700;
-            letter-spacing: 1px;
-        }
-
-        @media (max-width: 768px) {
-            .credits-badges { display: none; }
-            .zombs-hint-banner { display: none; }
-        }
-    </style>
+    <link rel="stylesheet" href="zombs.css">
+    <link rel="stylesheet" href="bgm.css">
 </head>
 <body>
-
-    <!-- ZOMBS.IO LOADING SCREEN OVERLAY -->
-    <div id="zombs-loading-screen" class="loading-overlay">
-        <div class="loading-content">
-            <div class="loading-logo">🧟 ⛏️ 🏰</div>
-            <h1 class="loading-title">ZOMBS.IO</h1>
-            <p class="loading-subtitle">Zombi Hayatta Kalma &amp; Kule Savunması</p>
-            
-            <div class="loading-credits-box">
-                <div class="credit-row">
-                    <span class="credit-badge req">👑 İSTEYEN</span>
-                    <span class="credit-name">Onur Baran</span>
-                </div>
-                <div class="credit-row">
-                    <span class="credit-badge dev">⚡ GELİŞTİRİCİ</span>
-                    <span class="credit-name">erencix</span>
-                </div>
-            </div>
-
-            <div class="loading-bar-wrap">
-                <div class="loading-bar-fill"></div>
-            </div>
-            <div class="loading-status" id="loading-status-text">Sunuculara bağlanılıyor...</div>
-        </div>
-    </div>
 
     <!-- TOP NAVIGATION BAR -->
     <header class="zombs-topbar">
@@ -301,96 +16,154 @@
             <a href="/" class="btn-zombs-nav">🏠 Portale Dön</a>
             <div class="zombs-title-text">
                 <span>🧟</span>
-                <span>ZOMBS.IO ARENASI</span>
+                <span>ZOMBS.IO</span>
             </div>
         </div>
 
+        <!-- DAY / NIGHT & WAVE INDICATOR -->
+        <div class="wave-timer-bar">
+            <span id="wave-num" class="wave-pill">DALGA 1</span>
+            <span id="cycle-status" class="cycle-pill">☀️ GÜNDÜZ (35s)</span>
+        </div>
+
         <div class="credits-badges">
-            <span class="credit-tag req" id="zombs-player-tag">👤 Oyuncu</span>
+            <span class="credit-tag req" id="zombs-player-tag">👤 Savaşçı</span>
             <span class="credit-tag req">👑 İsteyen: Onur Baran</span>
             <span class="credit-tag dev">⚡ Geliştirici: erencix</span>
         </div>
 
         <div class="zombs-actions">
+            <button class="btn-zombs-nav" id="btn-shop-open" style="background:#ffd700; color:#000;">🛒 Mağaza (B)</button>
             <button class="btn-zombs-nav" id="btn-fullscreen">⛶ Tam Ekran</button>
             <button class="btn-zombs-nav" id="btn-reload">🔄 Yeniden Başlat</button>
         </div>
     </header>
 
-    <!-- GAME IFRAME VIEWPORT -->
-    <main id="game-container">
-        <iframe id="zombs-frame" src="https://zombs.io/" allow="autoplay; fullscreen; pointer-lock; gamepad" sandbox="allow-forms allow-modals allow-orientation-lock allow-pointer-lock allow-popups allow-popups-to-escape-sandbox allow-presentation allow-same-origin allow-scripts"></iframe>
+    <!-- NATIVE 60FPS CANVAS VIEWPORT -->
+    <canvas id="zombs-canvas"></canvas>
 
-        <!-- Quick Help Hint -->
-        <div class="zombs-hint-banner" id="hint-banner">
-            <span>⌨️ <b>WASD:</b> Hareket</span>
-            <span>🖱️ <b>Sol Tık:</b> Saldır &amp; Kaynak Topla</span>
-            <span>🏰 <b>Altın Kasası:</b> Önce Kasayı Yerleştir</span>
-            <span>🛒 <b>B:</b> Mağaza &amp; Kuleler</span>
-            <span>🛡️ <b>E:</b> Hepsini Yükselt</span>
-            <span>👥 <b>P:</b> Parti</span>
+    <!-- IN-GAME HUD: RESOURCES (TOP LEFT) -->
+    <div class="zombs-hud-resources">
+        <div class="res-card wood">
+            <span class="res-icon">🌲</span>
+            <span class="res-val" id="res-wood">80</span>
         </div>
-    </main>
+        <div class="res-card stone">
+            <span class="res-icon">🪨</span>
+            <span class="res-val" id="res-stone">40</span>
+        </div>
+        <div class="res-card gold">
+            <span class="res-icon">💰</span>
+            <span class="res-val" id="res-gold">50</span>
+        </div>
+        <div class="res-card score">
+            <span class="res-icon">⭐</span>
+            <span class="res-val" id="res-score">0</span>
+        </div>
+    </div>
 
-    <script>
-        (function() {
-            'use strict';
+    <!-- HEALTH BAR (BOTTOM LEFT) -->
+    <div class="zombs-hud-health">
+        <div class="hp-label">CAN: <span id="hp-val">100 / 100</span></div>
+        <div class="hp-bar-bg">
+            <div id="hp-fill" class="hp-bar-fill"></div>
+        </div>
+    </div>
 
-            const loadingScreen = document.getElementById('zombs-loading-screen');
-            const statusText = document.getElementById('loading-status-text');
-            const btnFullscreen = document.getElementById('btn-fullscreen');
-            const btnReload = document.getElementById('btn-reload');
-            const frame = document.getElementById('zombs-frame');
-            const hintBanner = document.getElementById('hint-banner');
+    <!-- HOTBAR / BUILDING SELECTOR (BOTTOM CENTER) -->
+    <div class="zombs-hotbar">
+        <div class="hotbar-slot active" data-building="stash">
+            <span class="slot-num">1</span>
+            <span class="slot-icon">👑</span>
+            <span class="slot-name">Altın Kasası</span>
+            <span class="slot-cost">Ücretsiz</span>
+        </div>
+        <div class="hotbar-slot" data-building="wall">
+            <span class="slot-num">2</span>
+            <span class="slot-icon">🧱</span>
+            <span class="slot-name">Ahşap Duvar</span>
+            <span class="slot-cost">15🌲</span>
+        </div>
+        <div class="hotbar-slot" data-building="stonewall">
+            <span class="slot-num">3</span>
+            <span class="slot-icon">🏛️</span>
+            <span class="slot-name">Taş Duvar</span>
+            <span class="slot-cost">10🌲 20🪨</span>
+        </div>
+        <div class="hotbar-slot" data-building="spike">
+            <span class="slot-num">4</span>
+            <span class="slot-icon">🌵</span>
+            <span class="slot-name">Dikenli Duvar</span>
+            <span class="slot-cost">20🌲 10🪨</span>
+        </div>
+        <div class="hotbar-slot" data-building="arrow">
+            <span class="slot-num">5</span>
+            <span class="slot-icon">🏹</span>
+            <span class="slot-name">Ok Kulesi</span>
+            <span class="slot-cost">30🌲 15🪨 10💰</span>
+        </div>
+        <div class="hotbar-slot" data-building="cannon">
+            <span class="slot-num">6</span>
+            <span class="slot-icon">💣</span>
+            <span class="slot-name">Top Kulesi</span>
+            <span class="slot-cost">45🌲 40🪨 25💰</span>
+        </div>
+        <div class="hotbar-slot" data-building="goldmine">
+            <span class="slot-num">7</span>
+            <span class="slot-icon">💰</span>
+            <span class="slot-name">Altın Madeni</span>
+            <span class="slot-cost">40🌲 25🪨</span>
+        </div>
+    </div>
 
-            // Dynamic loading status messages
-            setTimeout(() => {
-                if (statusText) statusText.textContent = "Altın kasası ve kuleler hazırlanıyor...";
-            }, 600);
-            setTimeout(() => {
-                if (statusText) statusText.textContent = "Gece dalgaları hesaplanıyor...";
-            }, 1200);
-            setTimeout(() => {
-                if (statusText) statusText.textContent = "Zombiler kapıda! İyi şanslar!";
-            }, 1700);
+    <!-- SHOP / UPGRADES MODAL (B KEY) -->
+    <div id="modal-shop" class="zombs-modal-backdrop hidden">
+        <div class="zombs-modal-card">
+            <div class="modal-header-row">
+                <h2 class="modal-title">🛒 SAVAŞÇI MAĞAZASI &amp; GELİŞTİRMELER</h2>
+                <button id="btn-shop-close" class="btn-modal-close">✕</button>
+            </div>
+            <div class="shop-grid">
+                <div class="shop-item-card">
+                    <div class="shop-item-title">⛏️ Kazma Seviyesi</div>
+                    <div class="shop-item-desc">Ağaç ve taşları daha hızlı kır, zombilere daha çok vur.</div>
+                    <div class="shop-item-cost">Maliyet: 50 💰 Altın</div>
+                    <button class="btn-shop-buy" id="btn-buy-pickaxe">YÜKSELT (+10 Güç)</button>
+                </div>
+                <div class="shop-item-card">
+                    <div class="shop-item-title">⚔️ Elmas Kılıç</div>
+                    <div class="shop-item-desc">Zombileri tek vuruşta biçen keskin kılıç kuşan.</div>
+                    <div class="shop-item-cost">Maliyet: 80 💰 Altın</div>
+                    <button class="btn-shop-buy" id="btn-buy-sword">SATIN AL (+25 Hasar)</button>
+                </div>
+                <div class="shop-item-card">
+                    <div class="shop-item-title">🛡️ Çelik Zırh</div>
+                    <div class="shop-item-desc">Maksimum canını artır ve dayanıklılık kazan.</div>
+                    <div class="shop-item-cost">Maliyet: 60 💰 Altın</div>
+                    <button class="btn-shop-buy" id="btn-buy-armor">GELİŞTİR (+30 Can)</button>
+                </div>
+                <div class="shop-item-card">
+                    <div class="shop-item-title">💖 Şifa İksiri</div>
+                    <div class="shop-item-desc">Yaralarını sar, 50 Can anında yenilensin.</div>
+                    <div class="shop-item-cost">Maliyet: 20 💰 Altın</div>
+                    <button class="btn-shop-buy" id="btn-buy-heal">CAN DOLDUR (+50 HP)</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
-            // Dismiss Loading Screen
-            setTimeout(() => {
-                if (loadingScreen) {
-                    loadingScreen.classList.add('fade-out');
-                    setTimeout(() => {
-                        loadingScreen.remove();
-                    }, 650);
-                }
-            }, 2100);
+    <!-- GAME OVER MODAL -->
+    <div id="modal-game-over" class="zombs-modal-backdrop hidden">
+        <div class="zombs-modal-card game-over-modal">
+            <h1 class="game-over-title">💀 OYUN BİTTİ!</h1>
+            <p id="game-over-reason" class="game-over-sub">Altın Kasanız Yok Edildi!</p>
+            <div style="font-size: 20px; font-weight: 800; color: #ffd700; margin-bottom: 8px;" id="game-over-wave">Ulaşılan Dalga: 1</div>
+            <div style="font-size: 16px; color: #00e676; margin-bottom: 28px;" id="game-over-score">Toplam Skor: 0</div>
+            <button id="btn-respawn" class="btn-respawn">TEKRAR OYNA ⚔️</button>
+        </div>
+    </div>
 
-            // Auto fade out hint banner after 12s to keep view clean
-            setTimeout(() => {
-                if (hintBanner) {
-                    hintBanner.style.opacity = '0';
-                    setTimeout(() => hintBanner.remove(), 600);
-                }
-            }, 12000);
-
-            // Fullscreen Toggle
-            btnFullscreen.addEventListener('click', () => {
-                const el = document.documentElement;
-                if (!document.fullscreenElement) {
-                    if (el.requestFullscreen) el.requestFullscreen();
-                    else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
-                } else {
-                    if (document.exitFullscreen) document.exitFullscreen();
-                }
-            });
-
-            // Update Player Name
-            const savedName = localStorage.getItem('portal_username');
-            const zTag = document.getElementById('zombs-player-tag');
-            if (savedName && zTag) zTag.textContent = '👤 ' + savedName;
-        })();
-    </script>
-
-    <!-- Universal Presence & In-Game Online Counter -->
+    <script src="zombs.js"></script>
     <script src="overlay-back.js"></script>
 </body>
 </html>

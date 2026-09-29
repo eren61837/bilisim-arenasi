@@ -120,10 +120,12 @@
             <span>Canlı Oyuncu</span>
         </div>
 
-        <div class="user-profile-badge" id="btn-user-profile" title="İsmini Değiştir">
+        <button id="btn-header-auth" class="btn-quick-random" style="padding:6px 14px; background:rgba(0,219,255,0.15); border:1px solid #00dbff; color:#00dbff; font-weight:800; font-size:12px; cursor:pointer; border-radius:8px;">🔑 Giriş / Kayıt Ol</button>
+
+        <div class="user-profile-badge" id="btn-user-profile" title="Profilim ve Çıkış">
             <span>👤</span>
             <strong id="portal-username">Kral</strong>
-            <button id="btn-change-name" class="btn-rename-icon">✏️</button>
+            <button id="btn-change-name" class="btn-rename-icon">⚙️</button>
         </div>
 
         <button id="btn-open-admin" class="btn-header-admin">🔑 Admin</button>
@@ -138,13 +140,13 @@
         <div class="hero-left">
             <h2>🚀 EFSANE OYUN ARENASINA HOŞ GELDİN</h2>
             <p>
-                İndirme yok, kurulum yok! Aynı sınıftaki veya dünyanın herhangi bir yerindeki arkadaşların linke tıklayarak anında seninle birlikte <strong>3D CS 1.6 FPS</strong>, <strong>Diep.io Tank</strong>, <strong>Zombs.io Kule Savunması</strong>, <strong>Minecraft 3D</strong>, <strong>Tank Savaşı</strong>, <strong>Slither.io</strong>, <strong>Agar.io</strong>, <strong>PixelPlace Harita</strong> ve <strong>SOS Arenası</strong> oynayabilir!
+                İndirme yok, kurulum yok! Linke tıklayarak doğrudan arkadaşlarınla <strong>Counter-Strike 1.6</strong>, <strong>Minecraft 3D</strong>, <strong>Redmatch 3D Arena</strong>, <strong>Diep.io Tank</strong>, <strong>Zombs.io Üs Savunması</strong>, <strong>Vampire Survivors RPG</strong>, <strong>Kafa Topu Beyaz Saray</strong>, <strong>Beyaz Saray PixelPlace</strong>, <strong>SOS Arenası</strong>, <strong>Geometry Dash</strong> ve <strong>Chrome Cyber Dino Runner</strong> oyna!
             </p>
             <div class="hero-badges-row">
-                <div class="hero-badge-item">⚡ <strong>Sıfır Gecikme</strong> (Ultra Optimize)</div>
-                <div class="hero-badge-item">🎮 <strong>15 Efsane Oyun</strong> (Multiplayer &amp; Tek Kişilik)</div>
-                <div class="hero-badge-item" style="border-color:#ffd700; color:#ffd700">👑 <strong>Geliştirici: erencix &amp; Halil Eren</strong></div>
-                <div class="hero-badge-item">🤖 <strong>Akıllı Bot Desteği</strong></div>
+                <div class="hero-badge-item">⚡ <strong>Sıfır Gecikme</strong> (Yerel 60FPS)</div>
+                <div class="hero-badge-item">🎮 <strong>11 Efsane Oyun</strong> (Özenle Seçilmiş)</div>
+                <div class="hero-badge-item" style="border-color:#ffd700; color:#ffd700">👑 <strong>Geliştirici: Halil Eren</strong></div>
+                <div class="hero-badge-item">🛡️ <strong>MEB Uyumlu &amp; Güvenli</strong></div>
             </div>
             <div class="hero-live-trend-bar" id="hero-live-trend">
                 🔥 <span style="color:#ffd700;font-weight:900;">CANLI TREND:</span> <b>Arenadaki oyuncular hesaplanıyor...</b>
@@ -165,37 +167,37 @@
     <div class="filter-tabs-row">
         <div class="section-headline">ARENA OYUNLARI</div>
         <div class="category-buttons">
-            <button class="btn-cat-tab active" data-filter="all">🔥 Tümü (15)</button>
-            <button class="btn-cat-tab" data-filter="action">🔫 Aksiyon & FPS</button>
-            <button class="btn-cat-tab" data-filter="io">🌊 .IO Hayatta Kalma</button>
-            <button class="btn-cat-tab" data-filter="strategy">🎨 Yaratıcılık & Zeka</button>
-            <button class="btn-cat-tab" data-filter="solo">🤪 Troll & Tek Kişilik</button>
+            <button class="btn-cat-tab active" data-filter="all">🔥 Tümü (11)</button>
+            <button class="btn-cat-tab" data-filter="fps">🔫 3D &amp; FPS</button>
+            <button class="btn-cat-tab" data-filter="io">🛡️ .IO &amp; Hayatta Kalma</button>
+            <button class="btn-cat-tab" data-filter="multi">⚽ Çok Oyunculu &amp; Zeka</button>
+            <button class="btn-cat-tab" data-filter="arcade">⚡ Ritim &amp; Arcade</button>
         </div>
     </div>
 
-    <!-- 8 FEATURED GAME CARDS GRID -->
+    <!-- 11 CURATED GAME CARDS GRID -->
     <div class="games-grid" id="games-grid">
 
-        <!-- 1. CS 1.6 & CS2 WEB 3D -->
-        <a href="/cs16" class="game-card card-cs" data-category="action">
+        <!-- 1. CS 1.6 WEB 3D -->
+        <a href="/cs16" class="game-card card-cs" data-category="fps">
             <div class="game-thumb">
                 <span class="game-thumb-art">🔫</span>
                 <div class="thumb-gradient-overlay"></div>
-                <div class="genre-tag-floating">3D FPS & REKABET</div>
+                <div class="genre-tag-floating">3D FPS &amp; REKABET</div>
                 <div class="live-player-badge" id="count-cs16">🟢 0 Oyuncu</div>
             </div>
             <div class="game-info">
                 <div class="game-title-row">
-                    <span class="game-title">Counter-Strike 1.6 (Orijinal Hazır Motor)</span>
+                    <span class="game-title">Counter-Strike 1.6 (Web 3D &amp; Online)</span>
                 </div>
                 <p class="game-desc">
-                    Orijinal WebAssembly CS 1.6 motoru! de_dust2, Aztec, Inferno haritaları, botlar ve canlı sunucular ile sıfır hata, akıcı ve hazır Counter-Strike deneyimi.
+                    Efsane de_dust2, Aztec ve Inferno haritaları! Orijinal silah mekanikleri (AK-47, AWP, M4A1, Deagle), ses efektleri ve canlı MEB uyumlu çok oyunculu sunucular.
                 </p>
                 <div class="game-tags">
-                    <span class="game-tag">WASM 1.6</span>
-                    <span class="game-tag">Botlar & Online</span>
+                    <span class="game-tag">WASM / WebGL</span>
                     <span class="game-tag">de_dust2</span>
-                    <span class="game-tag">Aztec & Inferno</span>
+                    <span class="game-tag">Canlı FPS</span>
+                    <span class="game-tag">Botlar &amp; 1v1</span>
                 </div>
                 <div class="game-play-btn" style="background:linear-gradient(135deg,#ffb300,#ff3d00); color:#000;">
                     ▶ SAVAŞA BAŞLA
@@ -203,26 +205,53 @@
             </div>
         </a>
 
-        <!-- 2. REDMATCH 3D ARENA (KANCA & STAT YÜKSELTMELİ HIZLI FPS) -->
-        <a href="/redmatch" class="game-card card-redmatch" data-category="action">
+        <!-- 2. MINECRAFT (EAGLERCRAFT 1.8 & WEB 3D) -->
+        <a href="/minecraft" class="game-card card-minecraft" data-category="fps">
+            <div class="game-thumb" style="background: radial-gradient(circle, #1b3815 0%, #0d1a0d 100%);">
+                <span class="game-thumb-art">⛏️</span>
+                <div class="thumb-gradient-overlay"></div>
+                <div class="genre-tag-floating" style="color:#4caf50">EAGLERCRAFT 1.8.8</div>
+                <div class="live-player-badge" id="count-minecraft">🟢 0 Oyuncu</div>
+            </div>
+            <div class="game-info">
+                <div class="game-title-row">
+                    <span class="game-title">Minecraft (Eaglercraft 1.8 &amp; Web 3D)</span>
+                </div>
+                <p class="game-desc">
+                    Tarayıcıda gerçek Minecraft 1.8.8 Eaglercraft deneyimi! Canlı çok oyunculu sunucular (Ayunboom, Aeon, ArchMC), 3D voxel dünyalar veya tek tıkla TLauncher.
+                </p>
+                <div class="game-tags">
+                    <span class="game-tag">Eaglercraft 1.8.8</span>
+                    <span class="game-tag">Çok Oyunculu Sunucular</span>
+                    <span class="game-tag">3D Voxel Dünyalar</span>
+                    <span class="game-tag">TLauncher</span>
+                </div>
+                <div class="game-play-btn" style="background:linear-gradient(135deg,#43a047,#2e7d32); color:#fff;">
+                    ▶ DÜNYAYA GİR
+                </div>
+            </div>
+        </a>
+
+        <!-- 3. REDMATCH 3D ARENA -->
+        <a href="/redmatch" class="game-card card-redmatch" data-category="fps">
             <div class="game-thumb" style="background: radial-gradient(circle, #2a0815 0%, #080c14 100%);">
                 <span class="game-thumb-art">🎯</span>
                 <div class="thumb-gradient-overlay"></div>
                 <div class="genre-tag-floating" style="color:#ff2255;">3D KANCA &amp; FPS</div>
-                <div class="live-player-badge" id="count-redmatch" style="border-color:#ff2255; color:#ff2255;">🟢 3 Oyuncu</div>
+                <div class="live-player-badge" id="count-redmatch" style="border-color:#ff2255; color:#ff2255;">🟢 0 Oyuncu</div>
             </div>
             <div class="game-info">
                 <div class="game-title-row">
-                    <span class="game-title">Redmatch 3D Arena</span>
+                    <span class="game-title">Redmatch 3D Arena (Kanca &amp; Statlar)</span>
                 </div>
                 <p class="game-desc">
-                    Attack on Titan tarzı kanca ile binalara tutun, sapan gibi fırlayarak uç! Düşman vurdukça kill puanlarıyla can, hız ve zıplama gücünü yükselt.
+                    Attack on Titan tarzı kanca (grappling hook) ile binalara tutun, sapan gibi fırlayarak uç! Vurdukça can, hız ve zıplama gücünü yükselt. Canlı multiplayer arena!
                 </p>
                 <div class="game-tags">
-                    <span class="game-tag" style="border-color:#ff2255; color:#ff4477;">🪝 KANCA</span>
+                    <span class="game-tag" style="border-color:#ff2255; color:#ff4477;">🪝 KANCA FİZİĞİ</span>
                     <span class="game-tag" style="border-color:#ffd54f; color:#ffd54f;">⚡ YÜKSELTMELER</span>
-                    <span class="game-tag">Botlar &amp; Arena</span>
-                    <span class="game-tag">3D FPS</span>
+                    <span class="game-tag">Canlı Multiplayer</span>
+                    <span class="game-tag">Akıcı Mouse Bakış</span>
                 </div>
                 <div class="game-play-btn" style="background:linear-gradient(135deg,#ff2255,#ff5500); color:#fff;">
                     ▶ ARENAYA GİR
@@ -230,12 +259,12 @@
             </div>
         </a>
 
-        <!-- 2. DIEP.IO (2D TANK & EVRİM ARENASI) -->
+        <!-- 4. DIEP.IO (2D TANK & EVRİM ARENASI) -->
         <a href="/diep" class="game-card card-diep" data-category="io">
             <div class="game-thumb">
                 <span class="game-thumb-art">🛡️</span>
                 <div class="thumb-gradient-overlay"></div>
-                <div class="genre-tag-floating" style="color:var(--cyan)">TANK SAVAŞI &amp; EVRİM</div>
+                <div class="genre-tag-floating" style="color:var(--cyan)">YEREL 60FPS TANK MMO</div>
                 <div class="live-player-badge" id="count-diep">🟢 0 Oyuncu</div>
             </div>
             <div class="game-info">
@@ -243,266 +272,77 @@
                     <span class="game-title">Diep.io (2D Tank &amp; Evrim Arenası)</span>
                 </div>
                 <p class="game-desc">
-                    Efsanevi tank savaşları! Geometrik şekilleri vur, seviye atla ve 8 farklı stat geliştir. Seviye 15, 30 ve 45'te Twin, Sniper, Machine Gun, Overlord gibi 45 tank sınıfına evril!
+                    %100 yerel 60FPS canvas motoru! Geometrik şekilleri vur, seviye atla, 8 farklı stat geliştir. Twin, Sniper, Machine Gun, Overlord, Annihilator gibi 11 tank sınıfına evril!
                 </p>
                 <div class="game-tags">
-                    <span class="game-tag">🛡️ 45 Tank Sınıfı</span>
+                    <span class="game-tag">🛡️ 11 Tank Sınıfı</span>
                     <span class="game-tag">⭐ 8 Stat Yükseltme</span>
-                    <span class="game-tag">🎯 Çok Oyunculu MMO</span>
-                    <span class="game-tag">🔥 Orijinal .IO</span>
+                    <span class="game-tag">Yerel 60FPS</span>
+                    <span class="game-tag">Akıllı Botlar &amp; MMO</span>
                 </div>
                 <div class="game-play-btn" style="background:linear-gradient(135deg,#00dbff,#0050a0); color:#000;">
-                    ▶ TANKINI GELİŞTİR &amp; SAVAŞ 🛡️
+                    ▶ TANKINI EVRİLT 🛡️
                 </div>
             </div>
         </a>
 
-        <!-- 3. TANK SAVAŞI 2D (SEKEN MERMİLER) -->
-        <a href="/tank" class="game-card card-tank" data-category="action">
-            <div class="game-thumb">
-                <span class="game-thumb-art">💥</span>
+        <!-- 5. ZOMBS.IO (ZOMBİ & KULE SAVUNMASI) -->
+        <a href="/zombs" class="game-card card-zombs" data-category="io">
+            <div class="game-thumb" style="background: radial-gradient(circle, #0e2b14 0%, #061208 100%);">
+                <span class="game-thumb-art">🧟</span>
                 <div class="thumb-gradient-overlay"></div>
-                <div class="genre-tag-floating" style="color:var(--orange)">SEKEN MERMİLER</div>
-                <div class="live-player-badge" id="count-tank">🟢 0 Oyuncu</div>
+                <div class="genre-tag-floating" style="color:#00e676">ZOMBİ &amp; ÜS SAVUNMASI</div>
+                <div class="live-player-badge" id="count-zombs">🟢 0 Oyuncu</div>
             </div>
             <div class="game-info">
                 <div class="game-title-row">
-                    <span class="game-title">Tank Savaşı 2D (Seken Mermiler!)</span>
+                    <span class="game-title">Zombs.io (Kule Savunması &amp; Hayatta Kalma)</span>
                 </div>
                 <p class="game-desc">
-                    Bilişim sınıfının efsane oyunu! Labirentte tankını sür, duvardan 5 kez seken mermilerle rakipleri vur, kutulardan çıkan Lazer ve Kalkanları topla!
+                    Yerel akıcı motor! Altın kasanı kur, odun ve taş topla, savunma duvarları, taretler ve kuleler inşa et. Gece bastıran devasa zombi ordularını püskürt!
                 </p>
                 <div class="game-tags">
-                    <span class="game-tag">Seken Mermiler</span>
-                    <span class="game-tag">Labirent Arenası</span>
-                    <span class="game-tag">Güçlendirici Kutular</span>
-                    <span class="game-tag">Akıllı Botlar</span>
+                    <span class="game-tag">🏰 Üs &amp; Kule Kurma</span>
+                    <span class="game-tag">🧟 Gece Zombi Dalgaları</span>
+                    <span class="game-tag">Altın Madenleri</span>
+                    <span class="game-tag">Ok &amp; Bomba Kuleleri</span>
                 </div>
-                <div class="game-play-btn" style="background:linear-gradient(135deg,#ff9100,#ff3d00); color:#fff;">
-                    ▶ TANKI SAVAŞA SÜR
+                <div class="game-play-btn" style="background:linear-gradient(135deg,#00e676,#0050a0); color:#000;">
+                    ▶ HEMEN SAVUNMAYA BAŞLA 🧟
                 </div>
             </div>
         </a>
 
-        <!-- 4. SLITHER.IO -->
-        <a href="/slither" class="game-card card-slither" data-category="io">
-            <div class="game-thumb">
-                <span class="game-thumb-art">🐍</span>
-                <div class="thumb-gradient-overlay"></div>
-                <div class="genre-tag-floating" style="color:var(--green)">YILAN SAVAŞI</div>
-                <div class="live-player-badge" id="count-slither">🟢 0 Oyuncu</div>
-            </div>
-            <div class="game-info">
-                <div class="game-title-row">
-                    <span class="game-title">Slither.io (Yılan Sarma!)</span>
-                </div>
-                <p class="game-desc">
-                    Yem topla, devasa boyuta büyü ve rakipleri SAR! Onları kendi vücuduna çarptırarak yok et. Boost ile hızlan ve haritanın en büyük yılanı ol!
-                </p>
-                <div class="game-tags">
-                    <span class="game-tag">Sarma Taktiği</span>
-                    <span class="game-tag">Boost Hızı</span>
-                    <span class="game-tag">Liderlik Tablosu</span>
-                    <span class="game-tag">Canlı Multiplayer</span>
-                </div>
-                <div class="game-play-btn" style="background:linear-gradient(135deg,#00e676,#00bfa5); color:#000;">
-                    ▶ SARMAYA BAŞLA
-                </div>
-            </div>
-        </a>
-
-        <!-- 5. PIXELPLACE DÜNYA HARİTASI -->
-        <a href="/pixelplace" class="game-card card-pixel" data-category="strategy">
-            <div class="game-thumb">
-                <span class="game-thumb-art">🌍</span>
-                <div class="thumb-gradient-overlay"></div>
-                <div class="genre-tag-floating" style="color:#00b0ff">CANLI PİKSEL SANATI</div>
-                <div class="live-player-badge" id="count-pixelplace">🟢 0 Oyuncu</div>
-            </div>
-            <div class="game-info">
-                <div class="game-title-row">
-                    <span class="game-title">PixelPlace (Dünya Haritası)</span>
-                </div>
-                <p class="game-desc">
-                    2048x1024 gerçek dünya haritasında sınıfla birlikte devasa piksel sanatı çiz! Korunan ülke sınırları, saydam bot paneli ve canlı bayrak koruma botları.
-                </p>
-                <div class="game-tags">
-                    <span class="game-tag">Dünya Haritası</span>
-                    <span class="game-tag">Sınır Koruması</span>
-                    <span class="game-tag">Saydam Bot Paneli</span>
-                    <span class="game-tag">34 Renk</span>
-                </div>
-                <div class="game-play-btn" style="background:linear-gradient(135deg,#00b0ff,#0077ff); color:#fff;">
-                    ▶ TUVALİ AÇ
-                </div>
-            </div>
-        </a>
-
-        <!-- 6. AGAR.IO -->
-        <a href="/agario" class="game-card card-agar" data-category="io">
-            <div class="game-thumb">
-                <span class="game-thumb-art">🔴</span>
-                <div class="thumb-gradient-overlay"></div>
-                <div class="genre-tag-floating" style="color:var(--purple)">HÜCRE BÖLÜNME</div>
-                <div class="live-player-badge" id="count-agario">🟢 0 Oyuncu</div>
-            </div>
-            <div class="game-info">
-                <div class="game-title-row">
-                    <span class="game-title">Agar.io Web (Hücre Savaşı)</span>
-                </div>
-                <p class="game-desc">
-                    Yemleri topla, devasa boyuta büyü, küçük rakipleri yut! Space ile ikiye bölün, W ile kütle fırlat, yeşil virüsleri kullanarak rakipleri patlat!
-                </p>
-                <div class="game-tags">
-                    <span class="game-tag">Space Split</span>
-                    <span class="game-tag">W Eject Kütle</span>
-                    <span class="game-tag">Virüs Taktikleri</span>
-                    <span class="game-tag">Liderlik Tablosu</span>
-                </div>
-                <div class="game-play-btn" style="background:linear-gradient(135deg,#e040fb,#7c4dff); color:#fff;">
-                    ▶ ARENAYA KATIL
-                </div>
-            </div>
-        </a>
-
-        <!-- 7. XOX ONLINE 1V1 -->
-        <a href="/xox" class="game-card card-xox" data-category="strategy">
-            <div class="game-thumb">
-                <span class="game-thumb-art">❌⭕</span>
-                <div class="thumb-gradient-overlay"></div>
-                <div class="genre-tag-floating" style="color:var(--red)">1V1 STRATEJİ</div>
-                <div class="live-player-badge" id="count-xox">🟢 0 Oyuncu</div>
-            </div>
-            <div class="game-info">
-                <div class="game-title-row">
-                    <span class="game-title">XOX Online (1v1 Düello)</span>
-                </div>
-                <p class="game-desc">
-                    Sınıftaki arkadaşlarınla anında 1v1 eşleş! 15 saniyelik hamle sayacı, sıra tabanlı canlı hamleler, dinamik skor tablosu ve yapay zeka antrenman botu.
-                </p>
-                <div class="game-tags">
-                    <span class="game-tag">1v1 Canlı Eşleşme</span>
-                    <span class="game-tag">15s Sayaç</span>
-                    <span class="game-tag">Akıllı Bot</span>
-                    <span class="game-tag">Ses Efektleri</span>
-                </div>
-                <div class="game-play-btn" style="background:linear-gradient(135deg,#ff1744,#ff5252); color:#fff;">
-                    ▶ HEMEN OYNA
-                </div>
-            </div>
-        </a>
-
-        <!-- 8. MINECRAFT (TLAUNCHER & WEB CLIENT) -->
-        <a href="/minecraft" class="game-card card-minecraft" data-category="action">
-            <div class="game-thumb">
-                <span class="game-thumb-art">⛏️</span>
-                <div class="thumb-gradient-overlay"></div>
-                <div class="genre-tag-floating" style="color:#4caf50">1.21.1 & TÜM SÜRÜMLER</div>
-                <div class="live-player-badge" id="count-minecraft">🟢 0 Oyuncu</div>
-            </div>
-            <div class="game-info">
-                <div class="game-title-row">
-                    <span class="game-title">Minecraft (TLauncher & Web)</span>
-                </div>
-                <p class="game-desc">
-                    TLauncher tarzı gelişmiş başlatıcı! İster tarayıcıda doğrudan 3D Voxel Minecraft oyna, ister tek tıkla otomatik Java 21 ve Minecraft 1.21.1 başlatıcısını bilgisayarına indir!
-                </p>
-                <div class="game-tags">
-                    <span class="game-tag">1.21.1 Tricky Trials</span>
-                    <span class="game-tag">Tüm Sürümler (1.8 - 1.21)</span>
-                    <span class="game-tag">Otomatik Java 21 İndir</span>
-                    <span class="game-tag">Tarayıcıda WebMC</span>
-                </div>
-                <div class="game-play-btn" style="background:linear-gradient(135deg,#43a047,#2e7d32); color:#fff;">
-                    ▶ BAŞLATICIYI AÇ
-                </div>
-            </div>
-        </a>
-
-        <!-- 9. ZİNDAN AVCISI (VAMPIRE SURVIVORS RPG) -->
-        <a href="/survivor" class="game-card card-survivor" data-category="solo">
-            <div class="game-thumb">
+        <!-- 6. VAMPIRE SURVIVORS RPG (ZİNDAN AVCISI) -->
+        <a href="/survivor" class="game-card card-survivor" data-category="io">
+            <div class="game-thumb" style="background: radial-gradient(circle, #2b0b3b 0%, #100518 100%);">
                 <span class="game-thumb-art">⚔️</span>
                 <div class="thumb-gradient-overlay"></div>
-                <div class="genre-tag-floating" style="color:var(--cyan)">KASILMALI RPG SURVIVOR</div>
+                <div class="genre-tag-floating" style="color:var(--cyan)">GELİŞMİŞ RPG SURVIVOR</div>
                 <div class="live-player-badge" id="count-survivor">🟢 0 Oyuncu</div>
             </div>
             <div class="game-info">
                 <div class="game-title-row">
-                    <span class="game-title">Zindan Avcısı (Vampire Survivors RPG)</span>
+                    <span class="game-title">Vampire Survivors RPG (Zindan Avcısı)</span>
                 </div>
                 <p class="game-desc">
-                    Yüzlerce canavar dalgasına karşı hayatta kal! XP cevherleri topla, döner kılıçlar, alev topları, yıldırımlar ve buz patlamalarıyla güçlen. Kalıcı demirci atölyesinde statlarını yükselt!
+                    Yüzlerce canavar dalgasına karşı hayatta kal! Karadelik, Meteor Yağmuru, Dönen Tırpan, Fırtına Bıçakları, Zehir Bulutu ve Koruma Kalkanı büyüleriyle güçlen. Kalıcı demirci yükseltmeleri!
                 </p>
                 <div class="game-tags">
-                    <span class="game-tag">Vampire Survivors Tarzı</span>
+                    <span class="game-tag">⚡ 16+ Özel Büyü &amp; Beceri</span>
+                    <span class="game-tag">🌌 Karadelik &amp; Meteor</span>
                     <span class="game-tag">Kalıcı Demirci Gelişimi</span>
-                    <span class="game-tag">Otomatik Büyü & Kılıç</span>
                     <span class="game-tag">Boss Savaşları</span>
                 </div>
                 <div class="game-play-btn" style="background:linear-gradient(135deg,#00dbff,#0077ff); color:#000;">
-                    ▶ ZİNDANA GİR
+                    ▶ ZİNDANA GİR ⚔️
                 </div>
             </div>
         </a>
 
-        <!-- 10. MEME TROLL PARKUR (TROLOLO EDITION) -->
-        <a href="/trollparkur" class="game-card card-troll" data-category="solo">
-            <div class="game-thumb">
-                <span class="game-thumb-art">🤪</span>
-                <div class="thumb-gradient-overlay"></div>
-                <div class="genre-tag-floating" style="color:#ff0055">TROLL & MEME PARKUR</div>
-                <div class="live-player-badge" id="count-trollparkur">🟢 0 Oyuncu</div>
-            </div>
-            <div class="game-info">
-                <div class="game-title-row">
-                    <span class="game-title">Meme Troll Parkur (Trololo Edition)</span>
-                </div>
-                <p class="game-desc">
-                    Her şeyin bir tuzak olduğu Cat Mario & Trap Adventure tarzı troll dünyası! Çöken zeminler, kafana çarpan görünmez bloklar, kaçan bayraklar ve arkada çalan efsanevi trololo şarkısı!
-                </p>
-                <div class="game-tags">
-                    <span class="game-tag">Trololo Müziği (WebAudio)</span>
-                    <span class="game-tag">5 Troll Bölümü</span>
-                    <span class="game-tag">Görünmez Bloklar</span>
-                    <span class="game-tag">Trollface Boss</span>
-                </div>
-                <div class="game-play-btn" style="background:linear-gradient(135deg,#ff0055,#ffd54f); color:#000;">
-                    ▶ TROLLE BAŞLA
-                </div>
-            </div>
-        </a>
-
-        <!-- 11. GEOMETRY NEON DASH (RİTİM & SİBER REFLEKS) -->
-        <a href="/geometrydash" class="game-card card-gd" data-category="action">
-            <div class="game-thumb">
-                <span class="game-thumb-art">⚡</span>
-                <div class="thumb-gradient-overlay"></div>
-                <div class="genre-tag-floating" style="color:var(--cyan)">RİTİM & SİBER REFLEKS</div>
-                <div class="live-player-badge" id="count-geometrydash">🟢 0 Oyuncu</div>
-            </div>
-            <div class="game-info">
-                <div class="game-title-row">
-                    <span class="game-title">Geometry Neon Dash (Ritim & Zıplama)</span>
-                </div>
-                <p class="game-desc">
-                    İnternetin en sevilen efsane ritim zıplama oyunu! 132 BPM elektronik synthwave müzik eşliğinde engellerden kaç, sarı zıplama halkalarını kullan ve %100 bitirmeye çalış!
-                </p>
-                <div class="game-tags">
-                    <span class="game-tag">Procedural EDM Synth</span>
-                    <span class="game-tag">4 Küp Kostümü</span>
-                    <span class="game-tag">Jump Pads & Orbs</span>
-                    <span class="game-tag">3 Seviye</span>
-                </div>
-                <div class="game-play-btn" style="background:linear-gradient(135deg,#00f0ff,#00ff66); color:#000;">
-                    ▶ RİTME KATIL
-                </div>
-            </div>
-        </a>
-
-        <!-- 12. KAFA TOPU: BEYAZ SARAY (MADE BY YUSUF KAAN) -->
-        <a href="/kafatopu" class="game-card card-kafatopu" data-category="action">
-            <div class="game-thumb">
+        <!-- 7. KAFA TOPU: BEYAZ SARAY -->
+        <a href="/kafatopu" class="game-card card-kafatopu" data-category="multi">
+            <div class="game-thumb" style="background: radial-gradient(circle, #332600 0%, #120e00 100%);">
                 <span class="game-thumb-art">⚽</span>
                 <div class="thumb-gradient-overlay"></div>
                 <div class="genre-tag-floating" style="color:#ffd700">MADE BY YUSUF KAAN</div>
@@ -513,13 +353,13 @@
                     <span class="game-title">Kafa Topu: Beyaz Saray ⚽</span>
                 </div>
                 <p class="game-desc">
-                    Yusuf Kaan'ın efsane Kafa Topu oyunu webte! Gerçekçi top ve kale fiziği, alçak ve yüksek şutlar, zıplama ve 2 kişilik klavye veya Yapay Zekaya karşı maç!
+                    Yusuf Kaan'ın efsane Kafa Topu oyunu! Gerçekçi top ve kale fiziği, alçak ve yüksek şutlar, zıplama ve 2 kişilik klavye veya Yapay Zekaya karşı maç!
                 </p>
                 <div class="game-tags">
                     <span class="game-tag">✨ Made by Yusuf Kaan</span>
                     <span class="game-tag">🎮 2 Kişilik / AI</span>
                     <span class="game-tag">Gerçekçi Fizik</span>
-                    <span class="game-tag">Konfeti & Yağmur</span>
+                    <span class="game-tag">Konfeti &amp; Yağmur</span>
                 </div>
                 <div class="game-play-btn" style="background:linear-gradient(135deg,#ffd700,#ff8c00); color:#000;">
                     ▶ MAÇA BAŞLA ⚽
@@ -527,23 +367,50 @@
             </div>
         </a>
 
-        <!-- 13. SOS OYUNU (10x10 & 25x24) -->
-        <a href="/sos" class="game-card card-sos" data-category="strategy">
-            <div class="game-thumb">
+        <!-- 8. BEYAZ SARAY (PIXELPLACE DÜNYA HARİTASI) -->
+        <a href="/pixelplace" class="game-card card-pixel" data-category="multi">
+            <div class="game-thumb" style="background: radial-gradient(circle, #08203e 0%, #05101a 100%);">
+                <span class="game-thumb-art">🌍</span>
+                <div class="thumb-gradient-overlay"></div>
+                <div class="genre-tag-floating" style="color:#00b0ff">CANLI PİKSEL TUVALİ</div>
+                <div class="live-player-badge" id="count-pixelplace">🟢 0 Oyuncu</div>
+            </div>
+            <div class="game-info">
+                <div class="game-title-row">
+                    <span class="game-title">Beyaz Saray (PixelPlace Dünya Haritası)</span>
+                </div>
+                <p class="game-desc">
+                    2048x1024 gerçek dünya haritasında sınıfla birlikte devasa piksel sanatı çiz! Korunan ülke sınırları, saydam bot paneli ve canlı anlık senkronizasyon.
+                </p>
+                <div class="game-tags">
+                    <span class="game-tag">🌍 2048x1024 Tuval</span>
+                    <span class="game-tag">Sınır Koruması</span>
+                    <span class="game-tag">Sıfır Gecikme</span>
+                    <span class="game-tag">34 Renk Paleti</span>
+                </div>
+                <div class="game-play-btn" style="background:linear-gradient(135deg,#00b0ff,#0077ff); color:#fff;">
+                    ▶ TUVALİ AÇ 🌍
+                </div>
+            </div>
+        </a>
+
+        <!-- 9. SOS OYUNU (10x10 & 25x24) -->
+        <a href="/sos" class="game-card card-sos" data-category="multi">
+            <div class="game-thumb" style="background: radial-gradient(circle, #05232d 0%, #030f14 100%);">
                 <span class="game-thumb-art">🅂🅾🅂</span>
                 <div class="thumb-gradient-overlay"></div>
-                <div class="genre-tag-floating" style="color:var(--cyan)">10x10 & 25x24 STRATEJİ</div>
+                <div class="genre-tag-floating" style="color:var(--cyan)">10x10 &amp; 25x24 STRATEJİ</div>
                 <div class="live-player-badge" id="count-sos">🟢 0 Oyuncu</div>
             </div>
             <div class="game-info">
                 <div class="game-title-row">
-                    <span class="game-title">SOS Arenası (10x10 & 25x24)</span>
+                    <span class="game-title">SOS Arenası (10x10 &amp; 25x24)</span>
                 </div>
                 <p class="game-desc">
                     Bilişim sınıfının vazgeçilmezi! 10×10 veya dev 25×24 ızgara seç, S veya O koyarak S-O-S yap, ekstra hamle kazan! Arkadaşına veya akıllı Yapay Zekaya karşı yarış.
                 </p>
                 <div class="game-tags">
-                    <span class="game-tag">10x10 & 25x24 Harita</span>
+                    <span class="game-tag">10x10 &amp; 25x24 Harita</span>
                     <span class="game-tag">🤖 Zeki Yapay Zeka</span>
                     <span class="game-tag">👑 İsteyen: Eyüp Kızıldere</span>
                     <span class="game-tag">⚡ Geliştiren: erencix</span>
@@ -554,29 +421,56 @@
             </div>
         </a>
 
-        <!-- 14. ZOMBS.IO (ZOMBİ & KULE SAVUNMASI) -->
-        <a href="/zombs" class="game-card card-zombs" data-category="action">
-            <div class="game-thumb">
-                <span class="game-thumb-art">🧟</span>
+        <!-- 10. GEOMETRY NEON DASH (RUN FROM YOUR DEMONS) -->
+        <a href="/geometrydash" class="game-card card-gd" data-category="arcade">
+            <div class="game-thumb" style="background: radial-gradient(circle, #002b33 0%, #001014 100%);">
+                <span class="game-thumb-art">⚡</span>
                 <div class="thumb-gradient-overlay"></div>
-                <div class="genre-tag-floating" style="color:#00e676">ZOMBİ & ÜS KURMA</div>
-                <div class="live-player-badge" id="count-zombs">🟢 0 Oyuncu</div>
+                <div class="genre-tag-floating" style="color:var(--cyan)">RUN FROM YOUR DEMONS</div>
+                <div class="live-player-badge" id="count-geometrydash">🟢 0 Oyuncu</div>
             </div>
             <div class="game-info">
                 <div class="game-title-row">
-                    <span class="game-title">Zombs.io (Hayatta Kalma &amp; Kule Savunması)</span>
+                    <span class="game-title">Geometry Neon Dash (Run From Your Demons)</span>
                 </div>
                 <p class="game-desc">
-                    Efsanevi zombi kule savunması! Altın kasanı kur, odun ve taş topla, savunma kuleleri ve duvarlar inşa et. Gece gelen devasa zombi ordularını püskürt!
+                    İnternetin en sevilen efsane ritim zıplama oyunu! "Run From Your Demons" resmi parkur müziği, hatasız zemin ve blok iniş fiziği, sarı zıplama halkaları ve neon portallar!
                 </p>
                 <div class="game-tags">
-                    <span class="game-tag">🏰 Üs &amp; Kule Kurma</span>
-                    <span class="game-tag">🧟 Gece Zombi Dalgaları</span>
-                    <span class="game-tag">👑 İsteyen: Onur Baran</span>
-                    <span class="game-tag">⚡ Geliştirici: erencix</span>
+                    <span class="game-tag">🎵 Run From Your Demons</span>
+                    <span class="game-tag">Düzeltilmiş Fizik</span>
+                    <span class="game-tag">Jump Pads &amp; Orbs</span>
+                    <span class="game-tag">3 Neon Bölüm</span>
                 </div>
-                <div class="game-play-btn" style="background:linear-gradient(135deg,#00e676,#0050a0); color:#000;">
-                    ▶ HEMEN SAVUNMAYA BAŞLA 🧟
+                <div class="game-play-btn" style="background:linear-gradient(135deg,#00f0ff,#00ff66); color:#000;">
+                    ▶ RİTME KATIL ⚡
+                </div>
+            </div>
+        </a>
+
+        <!-- 11. CHROME CYBER DINO RUNNER HD -->
+        <a href="/dino" class="game-card card-dino" data-category="arcade">
+            <div class="game-thumb" style="background: radial-gradient(circle, #102a10 0%, #051405 100%);">
+                <span class="game-thumb-art">🦖</span>
+                <div class="thumb-gradient-overlay"></div>
+                <div class="genre-tag-floating" style="color:#00ff88">CHROME UZANTISI EFSANESİ</div>
+                <div class="live-player-badge" id="count-dino">🟢 0 Oyuncu</div>
+            </div>
+            <div class="game-info">
+                <div class="game-title-row">
+                    <span class="game-title">Chrome Cyber Dino Runner HD</span>
+                </div>
+                <p class="game-desc">
+                    Chrome tarayıcısının ve uzantıların dünyaca 1 numaralı efsane oyunu! 60FPS ultra akıcı canvas, neon siber tema, gece/gündüz döngüsü, kaktüsler, pterodaktiller ve eğilme tuşu!
+                </p>
+                <div class="game-tags">
+                    <span class="game-tag">🦖 Efsane T-Rex</span>
+                    <span class="game-tag">60FPS HD Motor</span>
+                    <span class="game-tag">Gece/Gündüz Neon Döngü</span>
+                    <span class="game-tag">Zıpla (Space) &amp; Eğil (Aşağı)</span>
+                </div>
+                <div class="game-play-btn" style="background:linear-gradient(135deg,#00ff88,#007744); color:#000;">
+                    ▶ KOŞMAYA BAŞLA 🦖
                 </div>
             </div>
         </a>

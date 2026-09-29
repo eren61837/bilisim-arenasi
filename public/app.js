@@ -324,10 +324,33 @@
     }
   }
 
+  let pendingCanvasBuffer = null;
+
   // 6. CANVAS RENDERING & BUFFER
   function loadCanvasBuffer(u8) {
-    const w = state.roomMeta.w;
-    const h = state.roomMeta.h;
+    if (!u8 || u8.length === 0) return;
+
+    let w = state.roomMeta ? state.roomMeta.w : 2048;
+    let h = state.roomMeta ? state.roomMeta.h : 1024;
+
+    // Auto-detect dimensions if buffer size matches known room sizes
+    if (u8.length === 2048 * 1024) {
+      w = 2048; h = 1024;
+      if (state.roomMeta) { state.roomMeta.w = 2048; state.roomMeta.h = 1024; }
+    } else if (u8.length === 1600 * 900) {
+      w = 1600; h = 900;
+      if (state.roomMeta) { state.roomMeta.w = 1600; state.roomMeta.h = 900; }
+    } else if (u8.length === 1024 * 1024) {
+      w = 1024; h = 1024;
+      if (state.roomMeta) { state.roomMeta.w = 1024; state.roomMeta.h = 1024; }
+    }
+
+    if (!w || !h || w * h !== u8.length) {
+      console.warn('[PixelPlace] Buffer length mismatch, holding pending buffer...', u8.length, w, h);
+      pendingCanvasBuffer = u8;
+      return;
+    }
+
     canvas.width = w;
     canvas.height = h;
 
@@ -336,7 +359,7 @@
 
     for (let i = 0; i < u8.length; i++) {
       const colorId = u8[i];
-      const rgb = PALETTE_RGB[colorId] || [0, 0, 0];
+      const rgb = PALETTE_RGB[colorId] || [0, 131, 199];
       const idx = i * 4;
       data[idx] = rgb[0];
       data[idx + 1] = rgb[1];
@@ -617,13 +640,15 @@
   function attemptPlacePixel(x, y, showToastNotice = true) {
     if (x < 0 || x >= state.roomMeta.w || y < 0 || y >= state.roomMeta.h) return;
 
-    // GİRİŞ KONTROLÜ (Giriş yapmadan / isim belirlemeden piksel basılamaz!)
+    // GİRİŞ KONTROLÜ (İsim yoksa otomatik misafir belirle ve devam et)
     if (!state.user) {
-      openAuthModal('⚠️ Piksel basmak için lütfen bir kullanıcı adı belirleyin!');
-      if (showToastNotice) {
-        showToast('⚠️ Piksel basmak için lütfen önce bir isim girin!', 'warn');
+      const defaultName = localStorage.getItem('portal_username') || ('Oyuncu_' + Math.floor(1000 + Math.random() * 9000));
+      state.user = { username: defaultName };
+      localStorage.setItem('pixelplace_user', JSON.stringify(state.user));
+      updateUserUI();
+      if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({ type: 'auth', username: defaultName }));
       }
-      return;
     }
 
     // 1. DENİZ KONTROLÜ: Denizler ve Okyanuslar BOYANAMAZ!
@@ -725,6 +750,11 @@
   // 11. ROOM SELECTOR
   function updateRoomUI(roomId, w, h, cooldownMs, isBotAllowed) {
     state.roomMeta = { w, h, cooldownMs, isBotAllowed };
+    if (pendingCanvasBuffer) {
+      const p = pendingCanvasBuffer;
+      pendingCanvasBuffer = null;
+      loadCanvasBuffer(p);
+    }
     fetchPaintableMask(roomId);
     const titles = {
       world: '🌍 Pixels World',

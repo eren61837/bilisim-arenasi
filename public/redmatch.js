@@ -319,77 +319,134 @@
   muzzleLight.position.set(0.24, -0.16, -0.85);
   gunGroup.add(muzzleLight);
 
-  const gunDark = new THREE.MeshLambertMaterial({ color: 0x141822 });
-  const gunChrome = new THREE.MeshLambertMaterial({ color: 0x8892a0 });
-  const gunRed = new THREE.MeshBasicMaterial({ color: 0xff2255 });
-  const gunGold = new THREE.MeshBasicMaterial({ color: 0xffd54f });
-  const gunCyan = new THREE.MeshBasicMaterial({ color: 0x00e5ff });
-  const woodMat = new THREE.MeshLambertMaterial({ color: 0x5a3618 });
+  const gunDark = new THREE.MeshLambertMaterial({ color: 0x111622 });
+  const gunMetal = new THREE.MeshLambertMaterial({ color: 0x222a3a });
+  const gunChrome = new THREE.MeshLambertMaterial({ color: 0x90a4ae });
+  const gunRed = new THREE.MeshLambertMaterial({ color: 0xff1744 });
+  const gunGold = new THREE.MeshBasicMaterial({ color: 0xffd700 });
+  const gunCyanGlow = new THREE.MeshBasicMaterial({ color: 0x00e5ff });
+  const gunRedGlow = new THREE.MeshBasicMaterial({ color: 0xff1744 });
+  const woodMat = new THREE.MeshLambertMaterial({ color: 0x5d4037 });
 
-  // 1. Assault Rifle Model
+  // 1. Redmatch Assault Rifle (1-to-1 Cyber Tactical)
   function buildRifleModel() {
     const g = new THREE.Group();
-    const b = new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.08, 0.65), gunDark);
-    b.position.set(0.24, -0.2, -0.45); g.add(b);
-    const topRail = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.02, 0.5), gunRed);
-    topRail.position.set(0.24, -0.15, -0.45); g.add(topRail);
-    const mag = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.18, 0.08), gunDark);
-    mag.position.set(0.24, -0.32, -0.35); mag.rotation.x = 0.2; g.add(mag);
-    const muzzle = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.08, 8), gunRed);
-    muzzle.rotation.x = Math.PI / 2; muzzle.position.set(0.24, -0.2, -0.8); g.add(muzzle);
+    // Lower Receiver & Frame
+    const lower = new THREE.Mesh(new THREE.BoxGeometry(0.065, 0.09, 0.48), gunDark);
+    lower.position.set(0.24, -0.19, -0.42); g.add(lower);
+    // Upper Receiver (Red Accents)
+    const upper = new THREE.Mesh(new THREE.BoxGeometry(0.055, 0.05, 0.44), gunRed);
+    upper.position.set(0.24, -0.13, -0.42); g.add(upper);
+    // Top Picatinny Rail
+    const rail = new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.015, 0.38), gunMetal);
+    rail.position.set(0.24, -0.095, -0.42); g.add(rail);
+    // Holo Optic Sight
+    const optic = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.045, 0.1), gunDark);
+    optic.position.set(0.24, -0.065, -0.38); g.add(optic);
+    const opticGlass = new THREE.Mesh(new THREE.CircleGeometry(0.018, 8), gunCyanGlow);
+    opticGlass.position.set(0.24, -0.065, -0.32); g.add(opticGlass);
+    // Fluted Barrel
+    const barrel = new THREE.Mesh(new THREE.CylinderGeometry(0.018, 0.018, 0.35, 8), gunChrome);
+    barrel.rotation.x = Math.PI / 2; barrel.position.set(0.24, -0.15, -0.76); g.add(barrel);
+    // Compensator Muzzle Brake
+    const muzzle = new THREE.Mesh(new THREE.BoxGeometry(0.035, 0.035, 0.08), gunRed);
+    muzzle.position.set(0.24, -0.15, -0.92); g.add(muzzle);
+    // Curved Tactical Magazine
+    const mag = new THREE.Mesh(new THREE.BoxGeometry(0.035, 0.2, 0.085), gunMetal);
+    mag.position.set(0.24, -0.3, -0.36); mag.rotation.x = 0.22; g.add(mag);
+    // Pistol Grip
+    const grip = new THREE.Mesh(new THREE.BoxGeometry(0.045, 0.14, 0.06), gunDark);
+    grip.position.set(0.24, -0.28, -0.22); grip.rotation.x = -0.3; g.add(grip);
     return g;
   }
 
-  // 2. Shotgun Model
+  // 2. Redmatch Futuristic Shotgun (1-to-1 Heavy Pump)
   function buildShotgunModel() {
     const g = new THREE.Group();
-    const b1 = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.035, 0.6, 8), gunChrome);
-    b1.rotation.x = Math.PI / 2; b1.position.set(0.24, -0.18, -0.45); g.add(b1);
-    const pump = new THREE.Mesh(new THREE.BoxGeometry(0.09, 0.07, 0.2), gunDark);
-    pump.position.set(0.24, -0.22, -0.45); g.add(pump);
-    const body = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.1, 0.3), gunDark);
-    body.position.set(0.24, -0.2, -0.2); g.add(body);
+    // Heavy Receiver
+    const body = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.11, 0.36), gunDark);
+    body.position.set(0.24, -0.18, -0.32); g.add(body);
+    // Chrome Barrel with Heat Shield
+    const b1 = new THREE.Mesh(new THREE.CylinderGeometry(0.032, 0.032, 0.58, 8), gunChrome);
+    b1.rotation.x = Math.PI / 2; b1.position.set(0.24, -0.15, -0.66); g.add(b1);
+    // Magazine Tube Under Barrel
+    const tube = new THREE.Mesh(new THREE.CylinderGeometry(0.024, 0.024, 0.52, 8), gunMetal);
+    tube.rotation.x = Math.PI / 2; tube.position.set(0.24, -0.21, -0.63); g.add(tube);
+    // Ribbed Pump Slide
+    const pump = new THREE.Mesh(new THREE.BoxGeometry(0.09, 0.085, 0.18), gunRed);
+    pump.position.set(0.24, -0.19, -0.58); g.add(pump);
+    // Ergonomic Stock
+    const stock = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.09, 0.25), gunDark);
+    stock.position.set(0.24, -0.21, -0.06); g.add(stock);
     g.visible = false;
     return g;
   }
 
-  // 3. Sniper Rifle Model
+  // 3. Redmatch Sniper Rifle (1-to-1 High-Caliber Cyber Rail)
   function buildSniperModel() {
     const g = new THREE.Group();
-    const barrel = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.025, 0.9, 8), gunDark);
-    barrel.rotation.x = Math.PI / 2; barrel.position.set(0.24, -0.18, -0.6); g.add(barrel);
-    const scope = new THREE.Mesh(new THREE.CylinderGeometry(0.032, 0.032, 0.28, 8), gunDark);
-    scope.rotation.x = Math.PI / 2; scope.position.set(0.24, -0.11, -0.38); g.add(scope);
-    const lens = new THREE.Mesh(new THREE.CircleGeometry(0.03, 16), gunCyan);
-    lens.position.set(0.24, -0.11, -0.23); g.add(lens);
-    const stock = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.1, 0.35), gunRed);
-    stock.position.set(0.24, -0.2, -0.15); g.add(stock);
+    // Heavy Chassis Frame
+    const frame = new THREE.Mesh(new THREE.BoxGeometry(0.065, 0.09, 0.52), gunDark);
+    frame.position.set(0.24, -0.18, -0.38); g.add(frame);
+    // Extended Fluted Barrel
+    const barrel = new THREE.Mesh(new THREE.CylinderGeometry(0.022, 0.022, 0.95, 8), gunMetal);
+    barrel.rotation.x = Math.PI / 2; barrel.position.set(0.24, -0.15, -0.92); g.add(barrel);
+    // Big Rectangular Muzzle Brake
+    const muzzle = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.045, 0.12), gunRed);
+    muzzle.position.set(0.24, -0.15, -1.38); g.add(muzzle);
+    // High-Power Tactical Scope
+    const scopeBody = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.32, 8), gunDark);
+    scopeBody.rotation.x = Math.PI / 2; scopeBody.position.set(0.24, -0.08, -0.38); g.add(scopeBody);
+    // Cyan Glowing Lenses
+    const lensFront = new THREE.Mesh(new THREE.CircleGeometry(0.028, 12), gunCyanGlow);
+    lensFront.position.set(0.24, -0.08, -0.54); g.add(lensFront);
+    const lensBack = new THREE.Mesh(new THREE.CircleGeometry(0.028, 12), gunCyanGlow);
+    lensBack.position.set(0.24, -0.08, -0.22); g.add(lensBack);
+    // Skeleton Stock
+    const stock = new THREE.Mesh(new THREE.BoxGeometry(0.055, 0.11, 0.38), gunRed);
+    stock.position.set(0.24, -0.2, -0.05); g.add(stock);
     g.visible = false;
     return g;
   }
 
-  // 4. Double Barrel Model
+  // 4. Redmatch Double Barrel Shotgun (1-to-1 Sawed-Off)
   function buildDoubleModel() {
     const g = new THREE.Group();
-    const b1 = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.55, 8), gunChrome);
-    b1.rotation.x = Math.PI / 2; b1.position.set(0.21, -0.18, -0.4); g.add(b1);
-    const b2 = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.55, 8), gunChrome);
-    b2.rotation.x = Math.PI / 2; b2.position.set(0.27, -0.18, -0.4); g.add(b2);
-    const wood = new THREE.Mesh(new THREE.BoxGeometry(0.09, 0.09, 0.35), woodMat);
+    // Dual Side-by-Side Barrels
+    const b1 = new THREE.Mesh(new THREE.CylinderGeometry(0.028, 0.028, 0.58, 8), gunChrome);
+    b1.rotation.x = Math.PI / 2; b1.position.set(0.21, -0.17, -0.48); g.add(b1);
+    const b2 = new THREE.Mesh(new THREE.CylinderGeometry(0.028, 0.028, 0.58, 8), gunChrome);
+    b2.rotation.x = Math.PI / 2; b2.position.set(0.27, -0.17, -0.48); g.add(b2);
+    // Center Rib & Gold Bead Sight
+    const rib = new THREE.Mesh(new THREE.BoxGeometry(0.025, 0.015, 0.56), gunMetal);
+    rib.position.set(0.24, -0.145, -0.48); g.add(rib);
+    const bead = new THREE.Mesh(new THREE.SphereGeometry(0.012, 6, 6), gunGold);
+    bead.position.set(0.24, -0.135, -0.74); g.add(bead);
+    // Polished Walnut Break-Action Stock
+    const wood = new THREE.Mesh(new THREE.BoxGeometry(0.085, 0.1, 0.34), woodMat);
     wood.position.set(0.24, -0.2, -0.15); g.add(wood);
     g.visible = false;
     return g;
   }
 
-  // 5. Tactical Blade Model
+  // 5. Redmatch Tactical Tanto Blade (1-to-1 High-Frequency Knife)
   function buildKnifeModel() {
     const g = new THREE.Group();
-    const blade = new THREE.Mesh(new THREE.BoxGeometry(0.015, 0.06, 0.32), gunRed);
-    blade.position.set(0.24, -0.18, -0.38); g.add(blade);
-    const edge = new THREE.Mesh(new THREE.BoxGeometry(0.016, 0.01, 0.32), gunGold);
-    edge.position.set(0.24, -0.145, -0.38); g.add(edge);
-    const handle = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.025, 0.14, 8), gunDark);
+    // Carbon Fiber Tanto Blade
+    const blade = new THREE.Mesh(new THREE.BoxGeometry(0.016, 0.07, 0.35), gunDark);
+    blade.position.set(0.24, -0.17, -0.42); g.add(blade);
+    // Glowing Laser Edge
+    const edge = new THREE.Mesh(new THREE.BoxGeometry(0.018, 0.012, 0.35), gunRedGlow);
+    edge.position.set(0.24, -0.13, -0.42); g.add(edge);
+    // Gold Spine Detail
+    const spine = new THREE.Mesh(new THREE.BoxGeometry(0.018, 0.01, 0.32), gunGold);
+    spine.position.set(0.24, -0.205, -0.41); g.add(spine);
+    // Tactical Handle Grip
+    const handle = new THREE.Mesh(new THREE.CylinderGeometry(0.026, 0.026, 0.16, 8), gunMetal);
     handle.rotation.x = Math.PI / 2; handle.position.set(0.24, -0.18, -0.18); g.add(handle);
+    // Pommel Ring
+    const pommel = new THREE.Mesh(new THREE.TorusGeometry(0.024, 0.008, 6, 12), gunRedGlow);
+    pommel.position.set(0.24, -0.18, -0.09); g.add(pommel);
     g.visible = false;
     return g;
   }
@@ -411,22 +468,43 @@
   scene.add(grappleLine);
 
   /* =========================================================
-     6. BOT AI ENEMIES
+     6. BOT AI ENEMIES (1-to-1 Redmatch Capsule Cyborgs)
   ========================================================= */
   const bots = [];
   const botNames = ['Bot_Vortex', 'Bot_Apex', 'Bot_Shadow', 'Bot_Ghost', 'Bot_Kite', 'Bot_Nova', 'Bot_Strike'];
 
   function createBot(name) {
     const group = new THREE.Group();
-    // Low-poly body
-    const bodyMat = new THREE.MeshLambertMaterial({ color: 0xdde3ed });
-    const headMat = new THREE.MeshLambertMaterial({ color: 0xff2255 });
-    const torso = new THREE.Mesh(new THREE.BoxGeometry(0.8, 1.2, 0.5), bodyMat);
-    torso.position.y = 1.0;
-    group.add(torso);
-    const head = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.5, 0.5), headMat);
-    head.position.y = 1.85;
-    group.add(head);
+
+    // Redmatch Capsule Body (Cyan/Red Cyborg)
+    const bodyMat = new THREE.MeshLambertMaterial({ color: 0x2196f3 });
+    const darkArmor = new THREE.MeshLambertMaterial({ color: 0x161b22 });
+    const visorMat = new THREE.MeshBasicMaterial({ color: 0x00e5ff });
+    const jetMat = new THREE.MeshBasicMaterial({ color: 0xff9100 });
+
+    // 1. Torso Capsule
+    const torso = new THREE.Mesh(new THREE.CylinderGeometry(0.38, 0.38, 0.9, 12), bodyMat);
+    torso.position.y = 1.0; group.add(torso);
+    const topCap = new THREE.Mesh(new THREE.SphereGeometry(0.38, 12, 8), bodyMat);
+    topCap.position.y = 1.45; group.add(topCap);
+    const botCap = new THREE.Mesh(new THREE.SphereGeometry(0.38, 12, 8), bodyMat);
+    botCap.position.y = 0.55; group.add(botCap);
+
+    // 2. Glowing Visor Mask
+    const visor = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.16, 0.22), visorMat);
+    visor.position.set(0, 1.35, 0.26); group.add(visor);
+
+    // 3. Cyber Jetpack Thrusters on Back
+    const jetpack = new THREE.Mesh(new THREE.BoxGeometry(0.44, 0.5, 0.18), darkArmor);
+    jetpack.position.set(0, 1.1, -0.32); group.add(jetpack);
+    const thrusterL = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 0.16, 8), jetMat);
+    thrusterL.position.set(-0.14, 0.8, -0.32); group.add(thrusterL);
+    const thrusterR = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 0.16, 8), jetMat);
+    thrusterR.position.set(0.14, 0.8, -0.32); group.add(thrusterR);
+
+    // 4. Hand with Rifle Model
+    const botGun = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.12, 0.7), darkArmor);
+    botGun.position.set(0.45, 0.95, 0.3); group.add(botGun);
 
     // Initial position
     const rx = (Math.random() - 0.5) * 160;
@@ -490,10 +568,16 @@
 
   document.addEventListener('mousemove', (e) => {
     if (!state.isLocked || state.isDead) return;
-    const sens = 0.0022;
-    state.yaw -= e.movementX * sens;
-    state.pitch -= e.movementY * sens;
-    state.pitch = Math.max(-1.45, Math.min(1.45, state.pitch));
+    const rawX = e.movementX || e.mozMovementX || 0;
+    const rawY = e.movementY || e.mozMovementY || 0;
+    // PointerLock recentering glitch spike filter (> 80px in 1 frame)
+    if (Math.abs(rawX) > 80 || Math.abs(rawY) > 80) return;
+    const sens = 0.0015;
+    const dx = Math.max(-25, Math.min(25, rawX));
+    const dy = Math.max(-25, Math.min(25, rawY));
+    state.yaw -= dx * sens;
+    state.pitch -= dy * sens;
+    state.pitch = Math.max(-1.42, Math.min(1.42, state.pitch));
   });
 
   document.addEventListener('keydown', (e) => {
@@ -1033,7 +1117,100 @@
       }
     });
 
+    // Interpolate remote online players
+    const nowTime = Date.now();
+    remotePlayers.forEach((rp, id) => {
+      rp.group.position.lerp(rp.targetPos, 0.25);
+      if (nowTime - rp.lastSeen > 8000) {
+        scene.remove(rp.group);
+        remotePlayers.delete(id);
+      }
+    });
+
     renderer.render(scene, camera);
+  }
+
+  // --- ONLINE MULTIPLAYER WEBSOCKET ENGINE ---
+  const remotePlayers = new Map();
+  const myRmId = 'rm_' + Date.now() + '_' + Math.floor(Math.random() * 10000);
+
+  function createRemoteMesh(name) {
+    const group = new THREE.Group();
+    const bodyMat = new THREE.MeshLambertMaterial({ color: 0xff0055 });
+    const darkArmor = new THREE.MeshLambertMaterial({ color: 0x161b22 });
+    const visorMat = new THREE.MeshBasicMaterial({ color: 0xffea00 });
+
+    const torso = new THREE.Mesh(new THREE.CylinderGeometry(0.38, 0.38, 0.9, 12), bodyMat);
+    torso.position.y = 1.0; group.add(torso);
+    const topCap = new THREE.Mesh(new THREE.SphereGeometry(0.38, 12, 8), bodyMat);
+    topCap.position.y = 1.45; group.add(topCap);
+    const botCap = new THREE.Mesh(new THREE.SphereGeometry(0.38, 12, 8), bodyMat);
+    botCap.position.y = 0.55; group.add(botCap);
+
+    const visor = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.16, 0.22), visorMat);
+    visor.position.set(0, 1.35, 0.26); group.add(visor);
+
+    const botGun = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.12, 0.7), darkArmor);
+    botGun.position.set(0.45, 0.95, 0.3); group.add(botGun);
+
+    scene.add(group);
+    return group;
+  }
+
+  function initMultiplayerWS() {
+    try {
+      const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+      const wsUrl = `${protocol}//${location.host}`;
+      state.ws = new WebSocket(wsUrl);
+
+      state.ws.onopen = () => {
+        state.ws.send(JSON.stringify({ type: 'join', room: 'redmatch' }));
+        console.log('[Redmatch 3D] Online multiplayer sunucusuna bağlanıldı!');
+      };
+
+      state.ws.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          if (data.type === 'redmatch_remote_player' && data.id !== myRmId) {
+            let rp = remotePlayers.get(data.id);
+            if (!rp) {
+              const mesh = createRemoteMesh(data.username);
+              rp = {
+                id: data.id,
+                username: data.username,
+                group: mesh,
+                hp: data.hp || 100,
+                targetPos: new THREE.Vector3(data.pos.x, data.pos.y, data.pos.z),
+                lastSeen: Date.now()
+              };
+              remotePlayers.set(data.id, rp);
+            }
+            if (data.pos) rp.targetPos.set(data.pos.x, data.pos.y, data.pos.z);
+            if (data.yaw !== undefined) rp.group.rotation.y = data.yaw;
+            rp.hp = data.hp || 100;
+            rp.lastSeen = Date.now();
+          } else if (data.type === 'redmatch_kill_feed') {
+            showKillFeed(data.killer, data.victim, data.weapon, data.headshot);
+          }
+        } catch (_) {}
+      };
+
+      // 25Hz Position Broadcast
+      setInterval(() => {
+        if (state.ws && state.ws.readyState === WebSocket.OPEN && !state.isDead) {
+          state.ws.send(JSON.stringify({
+            type: 'redmatch_sync',
+            id: myRmId,
+            username: state.username,
+            pos: { x: state.pos.x, y: state.pos.y, z: state.pos.z },
+            yaw: state.yaw,
+            hp: state.hp,
+            weapon: state.currentWp,
+            grappling: state.grapple.active
+          }));
+        }
+      }, 40);
+    } catch (_) {}
   }
 
   // Window resize
@@ -1047,6 +1224,7 @@
   const usernameDisplay = document.getElementById('rm-username-display');
   if (usernameDisplay) usernameDisplay.textContent = state.username;
   updateHUD();
+  initMultiplayerWS();
   animate();
 
 })();

@@ -256,6 +256,16 @@
       }
     });
 
+    document.getElementById('btn-header-auth')?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (modal) {
+        modal.classList.remove('hidden');
+        modal.style.display = 'flex';
+        modal.style.setProperty('display', 'flex', 'important');
+        switchAuthTab('login');
+      }
+    });
+
     document.getElementById('btn-prof-logout')?.addEventListener('click', async () => {
       try { await fetch('/api/logout', { method: 'POST' }); } catch (_) {}
       localStorage.removeItem('portal_username');
@@ -386,41 +396,30 @@
         // Update game cards player counts
         if (data.games) {
           updateCount('count-cs16', data.games.cs16);
-          updateCount('count-diep', data.games.diep || data.games.deeeep);
-          updateCount('count-deeeep', data.games.deeeep || data.games.diep);
-          updateCount('count-tank', data.games.tank);
-          updateCount('count-slither', data.games.slither);
-          updateCount('count-pixelplace', data.games.pixelplace);
-          updateCount('count-agario', data.games.agario);
-          updateCount('count-xox', data.games.xox);
-          updateCount('count-minecraft', data.games.minecraft);
-          updateCount('count-survivor', data.games.survivor);
-          updateCount('count-trollparkur', data.games.trollparkur);
-          updateCount('count-geometrydash', data.games.geometrydash);
-          updateCount('count-miner', data.games.miner);
-          updateCount('count-sos', data.games.sos);
+          updateCount('count-minecraft', data.games.minecraft || data.games.eaglercraft);
           updateCount('count-kafatopu', data.games.kafatopu);
+          updateCount('count-pixelplace', data.games.pixelplace);
+          updateCount('count-sos', data.games.sos);
+          updateCount('count-geometrydash', data.games.geometrydash);
+          updateCount('count-survivor', data.games.survivor);
+          updateCount('count-diep', data.games.diep || data.games.deeeep);
           updateCount('count-zombs', data.games.zombs);
           updateCount('count-redmatch', data.games.redmatch);
+          updateCount('count-dino', data.games.dino);
 
-          // 👑 DYNAMIC POPULARITY SORTING (En çok oynanan oyunu listenin başına koyar!)
+          // 👑 DYNAMIC POPULARITY SORTING (Sadece bu 11 seçkin oyun)
           const gameEntries = [
-            { id: 'count-cs16', count: data.games.cs16 || 0, name: 'CS 1.6 & CS2 3D' },
-            { id: 'count-redmatch', count: data.games.redmatch || 0, name: 'Redmatch 3D Arena' },
-            { id: 'count-diep', count: (data.games.diep || data.games.deeeep || 0), name: 'Diep.io Tank Arenası' },
-            { id: 'count-tank', count: data.games.tank || 0, name: 'Tank Savaşı 2D' },
-            { id: 'count-slither', count: data.games.slither || 0, name: 'Slither.io Yılan' },
-            { id: 'count-pixelplace', count: data.games.pixelplace || 0, name: 'PixelPlace Dünya Haritası' },
-            { id: 'count-agario', count: data.games.agario || 0, name: 'Agar.io Hücre' },
-            { id: 'count-xox', count: data.games.xox || 0, name: 'XOX 1v1 Arena' },
-            { id: 'count-minecraft', count: data.games.minecraft || 0, name: 'Minecraft 3D & Eagler' },
-            { id: 'count-survivor', count: data.games.survivor || 0, name: 'Zindan Avcısı RPG' },
-            { id: 'count-trollparkur', count: data.games.trollparkur || 0, name: 'Meme Troll Parkur' },
+            { id: 'count-cs16', count: data.games.cs16 || 0, name: 'Counter-Strike 1.6' },
+            { id: 'count-minecraft', count: (data.games.minecraft || data.games.eaglercraft || 0), name: 'Minecraft 3D & Eagler' },
+            { id: 'count-kafatopu', count: data.games.kafatopu || 0, name: 'Kafa Topu: Beyaz Saray' },
+            { id: 'count-pixelplace', count: data.games.pixelplace || 0, name: 'Beyaz Saray (PixelPlace)' },
+            { id: 'count-sos', count: data.games.sos || 0, name: 'SOS Arenası (10x10 & 25x24)' },
             { id: 'count-geometrydash', count: data.games.geometrydash || 0, name: 'Geometry Neon Dash' },
-            { id: 'count-miner', count: data.games.miner || 0, name: 'Maden Ustası' },
-            { id: 'count-sos', count: data.games.sos || 0, name: 'SOS Oyunu (10x10)' },
-            { id: 'count-kafatopu', count: data.games.kafatopu || 0, name: 'Kafa Topu Beyaz Saray' },
-            { id: 'count-zombs', count: data.games.zombs || 0, name: 'Zombs.io Kule Savunması' }
+            { id: 'count-survivor', count: data.games.survivor || 0, name: 'Vampire Survivors RPG' },
+            { id: 'count-diep', count: (data.games.diep || data.games.deeeep || 0), name: 'Diep.io Tank Arenası' },
+            { id: 'count-zombs', count: data.games.zombs || 0, name: 'Zombs.io Kule Savunması' },
+            { id: 'count-redmatch', count: data.games.redmatch || 0, name: 'Redmatch 3D Arena' },
+            { id: 'count-dino', count: data.games.dino || 0, name: 'Chrome Cyber Dino Runner' }
           ];
 
           gameEntries.sort((a, b) => b.count - a.count);
@@ -488,7 +487,6 @@
   }
 
   // 3. Change Name Modal
-  document.getElementById('btn-user-profile')?.addEventListener('click', openRenameModal);
   if (btnChangeName) btnChangeName.addEventListener('click', (e) => { e.stopPropagation(); openRenameModal(); });
 
   function openRenameModal() {
@@ -576,16 +574,33 @@
 
   if (btnAdminAnnounce) {
     btnAdminAnnounce.addEventListener('click', () => {
-      modalAnnounce.classList.remove('hidden');
-      inAnnounceText.value = '';
-      inAnnounceText.focus();
+      if (!state.isAdmin) {
+        if (modalAdminAuth) modalAdminAuth.classList.remove('hidden');
+        if (inAdminPass) {
+          inAdminPass.value = '';
+          inAdminPass.focus();
+        }
+        return;
+      }
+      if (modalAnnounce) modalAnnounce.classList.remove('hidden');
+      if (inAnnounceText) {
+        inAnnounceText.value = '';
+        inAnnounceText.focus();
+      }
     });
   }
-  if (btnCancelAnnounce) btnCancelAnnounce.addEventListener('click', () => modalAnnounce.classList.add('hidden'));
+  if (btnCancelAnnounce) btnCancelAnnounce.addEventListener('click', () => {
+    if (modalAnnounce) modalAnnounce.classList.add('hidden');
+  });
 
   if (btnSendAnnounce) {
     btnSendAnnounce.addEventListener('click', () => {
-      const text = inAnnounceText.value.trim();
+      if (!state.isAdmin) {
+        alert('❌ Yalnızca yetkili yönetici (admin) duyuru gönderebilir!');
+        if (modalAnnounce) modalAnnounce.classList.add('hidden');
+        return;
+      }
+      const text = inAnnounceText ? inAnnounceText.value.trim() : '';
       if (text) {
         if (state.ws && state.ws.readyState === WebSocket.OPEN) {
           state.ws.send(JSON.stringify({
@@ -594,26 +609,39 @@
             author: state.username
           }));
         }
-        modalAnnounce.classList.add('hidden');
+        if (modalAnnounce) modalAnnounce.classList.add('hidden');
       }
     });
   }
 
-  // 5. Random Game Button Roulette
+  // 5. Random Game Button Roulette (Sadece 11 seçkin oyun arasından seçer)
   if (btnRandom) {
     btnRandom.addEventListener('click', () => {
       AudioEngine.playDing();
-      const games = ['/cs16', '/deeeep', '/tank', '/slither', '/pixelplace', '/agario', '/xox', '/minecraft', '/survivor', '/miner'];
+      const games = [
+        { path: '/cs16', name: 'CS 1.6' },
+        { path: '/minecraft', name: 'MINECRAFT 3D' },
+        { path: '/kafatopu', name: 'KAFA TOPU' },
+        { path: '/pixelplace', name: 'BEYAZ SARAY' },
+        { path: '/sos', name: 'SOS ARENASI' },
+        { path: '/geometrydash', name: 'GEOMETRY DASH' },
+        { path: '/survivor', name: 'VAMPIRE SURVIVORS' },
+        { path: '/diep', name: 'DIEP.IO' },
+        { path: '/zombs', name: 'ZOMBS.IO' },
+        { path: '/redmatch', name: 'REDMATCH 3D' },
+        { path: '/dino', name: 'CHROME DINO HD' }
+      ];
       btnRandom.textContent = '🎲 SEÇİLİYOR...';
       let count = 0;
       const iv = setInterval(() => {
         count++;
-        btnRandom.textContent = '🎲 ' + games[Math.floor(Math.random() * games.length)].replace('/', '').toUpperCase();
+        const g = games[Math.floor(Math.random() * games.length)];
+        btnRandom.textContent = '🎲 ' + g.name;
         if (count > 6) {
           clearInterval(iv);
           const chosen = games[Math.floor(Math.random() * games.length)];
-          btnRandom.textContent = '🚀 BAĞLANILIYOR!';
-          setTimeout(() => { window.location.href = chosen; }, 400);
+          btnRandom.textContent = '🚀 ' + chosen.name + ' BAŞLATILIYOR!';
+          setTimeout(() => { window.location.href = chosen.path; }, 400);
         }
       }, 100);
     });
@@ -703,6 +731,9 @@
       }
       else if (data.type === 'portal_announcement') {
         if (window._showPortalAnnouncement) window._showPortalAnnouncement(data.text || data.message || '');
+      }
+      else if (data.type === 'portal_error') {
+        alert(data.message || 'Yetkisiz işlem!');
       }
     };
 

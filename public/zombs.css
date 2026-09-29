@@ -1,0 +1,390 @@
+/* =========================================================
+   🧟 ZOMBS.IO - NATIVE HIGH-PERFORMANCE WEB ENGINE CSS
+   Bilişim Arenası - MEB Uyumlu & Gram Kasmayan 60FPS Motor
+========================================================= */
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+html, body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: #0d1410;
+    font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+    color: #fff;
+}
+
+/* TOP NAVIGATION BAR */
+.zombs-topbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 48px;
+    background: linear-gradient(180deg, #121c16 0%, #0a110e 100%);
+    border-bottom: 2px solid #00e676;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 16px;
+    z-index: 2000;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.7);
+}
+
+.zombs-brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.btn-zombs-nav {
+    background: rgba(0, 230, 118, 0.12);
+    color: #00e676;
+    border: 1px solid #00e676;
+    padding: 6px 14px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 800;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s ease;
+    font-family: inherit;
+}
+.btn-zombs-nav:hover {
+    background: #00e676;
+    color: #000;
+    box-shadow: 0 0 15px rgba(0, 230, 118, 0.5);
+    transform: translateY(-1px);
+}
+
+.zombs-title-text {
+    font-weight: 900;
+    font-size: 15px;
+    letter-spacing: 1px;
+    color: #00e676;
+    text-shadow: 0 0 10px rgba(0, 230, 118, 0.4);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.credits-badges {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.credit-tag {
+    font-size: 11px;
+    font-weight: 800;
+    padding: 4px 10px;
+    border-radius: 20px;
+}
+.credit-tag.req {
+    background: rgba(255, 215, 0, 0.15);
+    color: #ffd700;
+    border: 1px solid rgba(255, 215, 0, 0.45);
+}
+.credit-tag.dev {
+    background: rgba(0, 229, 255, 0.15);
+    color: #00e5ff;
+    border: 1px solid rgba(0, 229, 255, 0.45);
+}
+
+/* DAY / NIGHT WAVE BAR (TOP CENTER) */
+.wave-timer-bar {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    background: rgba(0, 0, 0, 0.65);
+    border: 1px solid rgba(0, 230, 118, 0.3);
+    padding: 4px 18px;
+    border-radius: 20px;
+}
+.wave-pill {
+    color: #ffd700;
+    font-weight: 900;
+    font-size: 13px;
+    letter-spacing: 0.5px;
+}
+.cycle-pill {
+    color: #00e5ff;
+    font-weight: 800;
+    font-size: 13px;
+}
+
+/* CANVAS VIEWPORT */
+#zombs-canvas {
+    position: fixed;
+    top: 48px;
+    left: 0;
+    width: 100vw;
+    height: calc(100vh - 48px);
+    display: block;
+    cursor: crosshair;
+    background: #111d16;
+}
+
+/* IN-GAME HUD OVERLAYS */
+.zombs-hud-resources {
+    position: fixed;
+    top: 60px;
+    left: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    z-index: 1000;
+    pointer-events: none;
+}
+.res-card {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(10, 18, 14, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 10px;
+    padding: 6px 14px;
+    min-width: 130px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+}
+.res-card.wood { border-left: 4px solid #8d6e63; }
+.res-card.stone { border-left: 4px solid #9e9e9e; }
+.res-card.gold { border-left: 4px solid #ffd700; }
+.res-card.score { border-left: 4px solid #00e676; }
+.res-icon { font-size: 18px; }
+.res-val { font-size: 15px; font-weight: 900; color: #fff; }
+
+/* HEALTH BAR (BOTTOM LEFT) */
+.zombs-hud-health {
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    pointer-events: none;
+}
+.hp-bar-bg {
+    width: 220px;
+    height: 20px;
+    background: rgba(0, 0, 0, 0.7);
+    border: 2px solid #333;
+    border-radius: 10px;
+    overflow: hidden;
+}
+.hp-bar-fill {
+    height: 100%;
+    width: 100%;
+    background: linear-gradient(90deg, #ff1744, #00e676);
+    transition: width 0.15s ease;
+}
+.hp-label {
+    font-size: 12px;
+    font-weight: 800;
+    color: #ddd;
+    text-shadow: 0 1px 4px #000;
+}
+
+/* HOTBAR / BUILDING SELECTOR (BOTTOM CENTER) */
+.zombs-hotbar {
+    position: fixed;
+    bottom: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 8px;
+    background: rgba(10, 18, 14, 0.9);
+    border: 1px solid rgba(0, 230, 118, 0.4);
+    padding: 8px 12px;
+    border-radius: 14px;
+    z-index: 1000;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(8px);
+}
+.hotbar-slot {
+    width: 64px;
+    height: 64px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 2px solid rgba(255, 255, 255, 0.12);
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    position: relative;
+}
+.hotbar-slot:hover {
+    background: rgba(0, 230, 118, 0.15);
+    border-color: #00e676;
+    transform: translateY(-3px);
+}
+.hotbar-slot.active {
+    background: rgba(0, 230, 118, 0.25);
+    border-color: #00e676;
+    box-shadow: 0 0 16px rgba(0, 230, 118, 0.5);
+    transform: translateY(-4px);
+}
+.slot-icon { font-size: 24px; margin-bottom: 2px; }
+.slot-name { font-size: 9px; font-weight: 800; color: #ccc; }
+.slot-cost { font-size: 9px; color: #ffd700; font-weight: 700; }
+.slot-num {
+    position: absolute;
+    top: 3px;
+    left: 4px;
+    font-size: 9px;
+    font-weight: 900;
+    color: #888;
+}
+
+/* SHOP & UPGRADES MODAL */
+.zombs-modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.8);
+    z-index: 3000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(6px);
+}
+.zombs-modal-backdrop.hidden {
+    display: none !important;
+}
+.zombs-modal-card {
+    background: linear-gradient(135deg, #121f18 0%, #0a120e 100%);
+    border: 2px solid #00e676;
+    border-radius: 18px;
+    padding: 28px;
+    max-width: 580px;
+    width: 92%;
+    max-height: 85vh;
+    overflow-y: auto;
+    box-shadow: 0 0 60px rgba(0, 230, 118, 0.3);
+}
+.modal-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding-bottom: 12px;
+}
+.modal-title { font-size: 22px; font-weight: 900; color: #00e676; }
+.btn-modal-close {
+    background: transparent;
+    border: none;
+    color: #888;
+    font-size: 20px;
+    cursor: pointer;
+    padding: 4px 8px;
+}
+.btn-modal-close:hover { color: #fff; }
+
+.shop-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+    gap: 12px;
+}
+.shop-item-card {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+.shop-item-title { font-size: 14px; font-weight: 800; color: #fff; }
+.shop-item-desc { font-size: 11px; color: #aaa; }
+.shop-item-cost { font-size: 12px; color: #ffd700; font-weight: 800; }
+.btn-shop-buy {
+    background: #00e676;
+    color: #000;
+    border: none;
+    border-radius: 6px;
+    padding: 8px;
+    font-weight: 900;
+    font-size: 12px;
+    cursor: pointer;
+    margin-top: 6px;
+    transition: all 0.15s ease;
+}
+.btn-shop-buy:hover {
+    background: #69f0ae;
+    box-shadow: 0 0 14px rgba(0, 230, 118, 0.6);
+}
+.btn-shop-buy:disabled {
+    background: #333;
+    color: #666;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+/* NOTIFICATIONS & TOASTS */
+.zombs-toast-banner {
+    position: fixed;
+    top: 64px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(18, 31, 24, 0.95);
+    border: 2px solid #ffd700;
+    border-radius: 20px;
+    padding: 8px 24px;
+    font-size: 14px;
+    font-weight: 900;
+    color: #ffd700;
+    z-index: 2500;
+    box-shadow: 0 0 30px rgba(255, 215, 0, 0.3);
+    animation: toastPop 0.3s ease;
+    pointer-events: none;
+}
+@keyframes toastPop {
+    from { transform: translateX(-50%) translateY(-20px); opacity: 0; }
+    to { transform: translateX(-50%) translateY(0); opacity: 1; }
+}
+
+/* GAME OVER SCREEN */
+.game-over-modal {
+    text-align: center;
+    padding: 36px 20px;
+}
+.game-over-title {
+    font-size: 36px;
+    font-weight: 900;
+    color: #ff1744;
+    text-shadow: 0 0 20px rgba(255, 23, 68, 0.6);
+    margin-bottom: 8px;
+}
+.game-over-sub {
+    font-size: 15px;
+    color: #ccc;
+    margin-bottom: 24px;
+}
+.btn-respawn {
+    background: linear-gradient(135deg, #00e676, #009624);
+    color: #000;
+    border: none;
+    border-radius: 12px;
+    padding: 14px 32px;
+    font-size: 18px;
+    font-weight: 900;
+    cursor: pointer;
+    box-shadow: 0 4px 20px rgba(0, 230, 118, 0.4);
+    transition: all 0.2s ease;
+}
+.btn-respawn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 30px rgba(0, 230, 118, 0.6);
+}

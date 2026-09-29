@@ -348,6 +348,86 @@
       desc: 'Tüm silahların vurduğu taban hasarı doğrudan yükseltir.',
       maxLvl: 5,
       getPreview: lvl => `Tüm Hasarlar +%20`
+    },
+    {
+      id: 'blackhole',
+      name: 'Kozmik Kara Delik',
+      icon: '🕳️',
+      type: 'magic',
+      typeName: 'Büyü',
+      desc: 'Düşmanları içine çeken ve parçalayan yerçekimi girdabı açar.',
+      maxLvl: 6,
+      getPreview: lvl => lvl === 0 ? 'Yeni Büyü: Çekim Girdabı' : `Girdap Boyutu & Sürekli Hasar (+Seviye ${lvl + 1})`
+    },
+    {
+      id: 'meteor',
+      name: 'Kıyamet Göktaşı',
+      icon: '☄️',
+      type: 'weapon',
+      typeName: 'Silah',
+      desc: 'Gökyüzünden devasa yanan meteorlar düşürerek alanı yakar.',
+      maxLvl: 6,
+      getPreview: lvl => lvl === 0 ? 'Yeni Silah: Yanan Göktaşı' : `Ekstra Göktaşı & Patlama Alanı (+Seviye ${lvl + 1})`
+    },
+    {
+      id: 'chaindaggers',
+      name: 'Gölge Hançerleri',
+      icon: '🗡️',
+      type: 'weapon',
+      typeName: 'Silah',
+      desc: 'Düşmanlar arasında seken ve delen süper hızlı bıçaklar fırlatır.',
+      maxLvl: 6,
+      getPreview: lvl => lvl === 0 ? 'Yeni Silah: Seken Hançer' : `Daha çok hançer ve sekme sayısı (+Seviye ${lvl + 1})`
+    },
+    {
+      id: 'toxiccloud',
+      name: 'Zehirli Sis',
+      icon: '🧪',
+      type: 'magic',
+      typeName: 'Büyü',
+      desc: 'Kahramanın arkasında genişleyen ve temas edenleri eriten zehir bulutu bırakır.',
+      maxLvl: 5,
+      getPreview: lvl => lvl === 0 ? 'Yeni Büyü: Zehir Sis Dalgası' : `Bulut Yarıçapı & Zehir Hasarı Artışı (+Seviye ${lvl + 1})`
+    },
+    {
+      id: 'scythe',
+      name: 'Azrail Tırpanı',
+      icon: '💀',
+      type: 'weapon',
+      typeName: 'Silah',
+      desc: 'Düşman sürülerini biçip geçen devasa ruh tırpanı sallar.',
+      maxLvl: 6,
+      getPreview: lvl => lvl === 0 ? 'Yeni Silah: Geniş Biçme Tırpanı' : `Devasa Menzil & Kritik Biçme Hasarı (+Seviye ${lvl + 1})`
+    },
+    {
+      id: 'shieldbubble',
+      name: 'İlahi Bariyer',
+      icon: '🛡️',
+      type: 'passive',
+      typeName: 'Kalkan',
+      desc: 'Gelen hasarları emen ve kırıldığında patlayarak düşmanları iten koruyucu küre.',
+      maxLvl: 5,
+      getPreview: lvl => `Kalkan Kapasitesi +${(lvl + 1) * 75} HP`
+    },
+    {
+      id: 'timestop',
+      name: 'Zaman Bükücü',
+      icon: '⏳',
+      type: 'magic',
+      typeName: 'Büyü',
+      desc: 'Periyodik olarak zamanı dondurur; tüm düşmanlar 3 saniye hareketsiz kalır!',
+      maxLvl: 5,
+      getPreview: lvl => lvl === 0 ? 'Yeni Büyü: Zamanı Dondur' : `Daha sık zaman donması & +1s Süre`
+    },
+    {
+      id: 'bloodvamp',
+      name: 'Vampir Dişi',
+      icon: '🩸',
+      type: 'passive',
+      typeName: 'Pasif',
+      desc: 'Öldürdüğün düşmanların ruhunu emerek canını yenilemeni sağlar.',
+      maxLvl: 5,
+      getPreview: lvl => `Her 8 Öldürmede +${lvl + 2} Can Çalma`
     }
   ];
 
@@ -464,14 +544,29 @@
       magnet: 0,
       swiftboots: 0,
       vitality: 0,
-      might: 0
+      might: 0,
+      blackhole: 0,
+      meteor: 0,
+      chaindaggers: 0,
+      toxiccloud: 0,
+      scythe: 0,
+      shieldbubble: 0,
+      timestop: 0,
+      bloodvamp: 0
     },
     // Timers
     fireballTimer: 0,
     lightningTimer: 0,
     frostnovaTimer: 0,
     holyauraTimer: 0,
-    regenTimer: 0
+    regenTimer: 0,
+    blackholeTimer: 0,
+    meteorTimer: 0,
+    chaindaggersTimer: 0,
+    toxiccloudTimer: 0,
+    scytheTimer: 0,
+    timestopTimer: 0,
+    shieldCurrentHp: 0
   };
 
   // Entities
@@ -911,6 +1006,73 @@
         }
       }
     }
+
+    // 7. Kozmik Kara Delik
+    if (player.skills.blackhole > 0) {
+      player.blackholeTimer++;
+      const cd = Math.max(70, 180 - player.skills.blackhole * 16);
+      if (player.blackholeTimer >= cd) {
+        player.blackholeTimer = 0;
+        castBlackHole(baseDmgMult);
+      }
+    }
+
+    // 8. Kıyamet Göktaşı
+    if (player.skills.meteor > 0) {
+      player.meteorTimer++;
+      const cd = Math.max(50, 140 - player.skills.meteor * 14);
+      if (player.meteorTimer >= cd) {
+        player.meteorTimer = 0;
+        castMeteorStorm(baseDmgMult);
+      }
+    }
+
+    // 9. Gölge Hançerleri
+    if (player.skills.chaindaggers > 0) {
+      player.chaindaggersTimer++;
+      const cd = Math.max(16, 50 - player.skills.chaindaggers * 5);
+      if (player.chaindaggersTimer >= cd) {
+        player.chaindaggersTimer = 0;
+        throwChainDaggers(baseDmgMult);
+      }
+    }
+
+    // 10. Zehirli Sis
+    if (player.skills.toxiccloud > 0) {
+      player.toxiccloudTimer++;
+      if (player.toxiccloudTimer >= 35) {
+        player.toxiccloudTimer = 0;
+        spawnToxicCloud(baseDmgMult);
+      }
+    }
+
+    // 11. Azrail Tırpanı
+    if (player.skills.scythe > 0) {
+      player.scytheTimer++;
+      const cd = Math.max(45, 120 - player.skills.scythe * 12);
+      if (player.scytheTimer >= cd) {
+        player.scytheTimer = 0;
+        swingDeathScythe(baseDmgMult);
+      }
+    }
+
+    // 12. Zaman Bükücü
+    if (player.skills.timestop > 0) {
+      player.timestopTimer++;
+      const cd = Math.max(300, 600 - player.skills.timestop * 45);
+      if (player.timestopTimer >= cd) {
+        player.timestopTimer = 0;
+        triggerTimeStop();
+      }
+    }
+
+    // 13. İlahi Kalkan Şarjı
+    if (player.skills.shieldbubble > 0) {
+      const maxShield = player.skills.shieldbubble * 75;
+      if (!player.shieldCurrentHp || player.shieldCurrentHp < maxShield) {
+        player.shieldCurrentHp = Math.min(maxShield, (player.shieldCurrentHp || 0) + 1);
+      }
+    }
   }
 
   function shootFireballs(dmgMult) {
@@ -1017,6 +1179,153 @@
     });
   }
 
+  function castBlackHole(dmgMult) {
+    if (enemies.length === 0) return;
+    const isEvolved = player.skills.blackhole >= 6;
+    const target = enemies[Math.floor(Math.random() * enemies.length)];
+    const bx = target.x + (Math.random() - 0.5) * 60;
+    const by = target.y + (Math.random() - 0.5) * 60;
+    const pullRadius = isEvolved ? 350 : (160 + player.skills.blackhole * 25);
+    const dmg = Math.round((isEvolved ? 35 : (12 + player.skills.blackhole * 4)) * dmgMult);
+
+    projectiles.push({
+      type: 'blackhole',
+      x: bx,
+      y: by,
+      vx: 0,
+      vy: 0,
+      radius: isEvolved ? 36 : (20 + player.skills.blackhole * 2),
+      pullRadius,
+      damage: dmg,
+      splashRadius: pullRadius,
+      life: isEvolved ? 180 : 120,
+      color: isEvolved ? '#7c4dff' : '#651fff'
+    });
+    Sfx.playTone(80, 'sawtooth', 0.4, 0.15);
+  }
+
+  function castMeteorStorm(dmgMult) {
+    if (enemies.length === 0) return;
+    const isEvolved = player.skills.meteor >= 6;
+    const count = isEvolved ? (4 + player.skills.meteor) : (1 + Math.floor(player.skills.meteor / 2));
+    for (let i = 0; i < count; i++) {
+      const target = enemies[Math.floor(Math.random() * enemies.length)];
+      if (!target) continue;
+      setTimeout(() => {
+        const mx = target.x + (Math.random() - 0.5) * 100;
+        const my = target.y + (Math.random() - 0.5) * 100;
+        projectiles.push({
+          type: 'meteor',
+          x: mx - 80,
+          y: my - 300,
+          vx: 4,
+          vy: 14,
+          radius: isEvolved ? 32 : (18 + player.skills.meteor * 2),
+          damage: Math.round((isEvolved ? 220 : (60 + player.skills.meteor * 25)) * dmgMult),
+          splashRadius: isEvolved ? 200 : (90 + player.skills.meteor * 18),
+          life: 30,
+          color: isEvolved ? '#ff1744' : '#ff9100'
+        });
+        Sfx.playTone(120, 'square', 0.25, 0.2);
+      }, i * 150);
+    }
+    state.screenShake = 8;
+  }
+
+  function throwChainDaggers(dmgMult) {
+    if (enemies.length === 0) return;
+    const isEvolved = player.skills.chaindaggers >= 6;
+    const count = isEvolved ? 8 : (2 + player.skills.chaindaggers);
+    const sorted = [...enemies].sort((a, b) => {
+      const d1 = (a.x - player.x)**2 + (a.y - player.y)**2;
+      const d2 = (b.x - player.x)**2 + (b.y - player.y)**2;
+      return d1 - d2;
+    });
+
+    for (let i = 0; i < Math.min(count, sorted.length); i++) {
+      const target = sorted[i];
+      const angle = Math.atan2(target.y - player.y, target.x - player.x) + (Math.random() - 0.5) * 0.2;
+      projectiles.push({
+        type: 'chaindagger',
+        x: player.x,
+        y: player.y,
+        vx: Math.cos(angle) * (isEvolved ? 15 : 12),
+        vy: Math.sin(angle) * (isEvolved ? 15 : 12),
+        radius: isEvolved ? 14 : 9,
+        damage: Math.round((isEvolved ? 90 : (24 + player.skills.chaindaggers * 10)) * dmgMult),
+        splashRadius: 35,
+        pierce: isEvolved ? 5 : 2,
+        life: 55,
+        color: isEvolved ? '#00e5ff' : '#e040fb'
+      });
+    }
+    Sfx.slash();
+  }
+
+  function spawnToxicCloud(dmgMult) {
+    const isEvolved = player.skills.toxiccloud >= 5;
+    const radius = isEvolved ? 160 : (60 + player.skills.toxiccloud * 18);
+    const dmg = Math.round((isEvolved ? 45 : (12 + player.skills.toxiccloud * 6)) * dmgMult);
+    projectiles.push({
+      type: 'toxiccloud',
+      x: player.x + (Math.random() - 0.5) * 20,
+      y: player.y + (Math.random() - 0.5) * 20,
+      vx: 0,
+      vy: 0,
+      radius,
+      damage: dmg,
+      splashRadius: radius,
+      life: isEvolved ? 160 : 100,
+      color: '#00e676'
+    });
+  }
+
+  function swingDeathScythe(dmgMult) {
+    const isEvolved = player.skills.scythe >= 6;
+    const count = isEvolved ? 4 : 2;
+    const baseAngle = performance.now() / 200;
+    for (let i = 0; i < count; i++) {
+      const angle = baseAngle + (i * Math.PI * 2 / count);
+      projectiles.push({
+        type: 'scythe',
+        x: player.x,
+        y: player.y,
+        angle,
+        distance: 20,
+        maxDist: isEvolved ? 320 : (160 + player.skills.scythe * 22),
+        damage: Math.round((isEvolved ? 160 : (45 + player.skills.scythe * 18)) * dmgMult),
+        splashRadius: isEvolved ? 70 : 45,
+        radius: 24,
+        life: isEvolved ? 60 : 45,
+        color: isEvolved ? '#d500f9' : '#ffffff'
+      });
+    }
+    Sfx.slash();
+    state.screenShake = 5;
+  }
+
+  function triggerTimeStop() {
+    addFloatText(player.x, player.y - 40, '⏳ ZAMAN DURDU!', '#00e5ff', 24);
+    Sfx.playTone(900, 'sine', 0.4, 0.2);
+    enemies.forEach(e => {
+      const origSpeed = e.speed;
+      e.speed = 0;
+      setTimeout(() => {
+        if (e) e.speed = origSpeed;
+      }, 3000);
+    });
+    for (let i = 0; i < 25; i++) {
+      particles.push({
+        x: player.x + (Math.random() - 0.5) * 400,
+        y: player.y + (Math.random() - 0.5) * 400,
+        vx: 0, vy: -1,
+        life: 40,
+        color: '#00e5ff',
+        size: 5
+      });
+    }
+  }
+
   // --- DAMAGE & ENEMY DEATH ---
   function damageEnemy(e, dmg, isCrit = false) {
     e.hp -= dmg;
@@ -1042,6 +1351,16 @@
 
     state.kills++;
     Sfx.gem();
+
+    // Vampirizm: Belirli öldürmelerde can yenileme
+    if (player.skills.bloodvamp > 0 && state.kills % 8 === 0) {
+      const heal = player.skills.bloodvamp * 4;
+      if (player.hp < player.maxHp) {
+        player.hp = Math.min(player.maxHp, player.hp + heal);
+        addFloatText(player.x, player.y - 30, `+${heal} HP 🩸`, '#ff1744', 18);
+        updateHUD();
+      }
+    }
 
     // Spawn XP Gem
     const xpBonus = 1 + (forgeRanks.growth * FORGE_CONFIG.find(c => c.id === 'growth').valPerRank);
@@ -1211,7 +1530,25 @@
     player.invulnTimer = 22; // ~360ms i-frame protection window
     const armorCfg = FORGE_CONFIG.find(c => c.id === 'armor');
     const armorReduction = (forgeRanks.armor || 0) * (armorCfg ? armorCfg.valPerRank : 0.05);
-    const finalDmg = Math.max(1, Math.round(dmg * (1 - armorReduction)));
+    let finalDmg = Math.max(1, Math.round(dmg * (1 - armorReduction)));
+
+    // İlahi Kalkan (Shield Bubble) hasar emilimi
+    if (player.skills.shieldbubble > 0 && player.shieldCurrentHp > 0) {
+      if (player.shieldCurrentHp >= finalDmg) {
+        player.shieldCurrentHp -= finalDmg;
+        addFloatText(player.x, player.y - 30, `🛡️ -${finalDmg} (Kalkan)`, '#00e5ff', 16);
+        return;
+      } else {
+        finalDmg -= player.shieldCurrentHp;
+        player.shieldCurrentHp = 0;
+        addFloatText(player.x, player.y - 30, '🛡️ KALKAN KIRILDI!', '#ffea00', 18);
+        enemies.forEach(e => {
+          if (Math.hypot(e.x - player.x, e.y - player.y) < 160) {
+            damageEnemy(e, 65, true);
+          }
+        });
+      }
+    }
 
     player.hp -= finalDmg;
     state.screenShake = 7;
@@ -1435,38 +1772,76 @@
       // 5. Update Projectiles
       for (let i = projectiles.length - 1; i >= 0; i--) {
         const p = projectiles[i];
-        p.x += p.vx;
-        p.y += p.vy;
         p.life--;
 
-        // Check hits with enemies
-        for (let j = 0; j < enemies.length; j++) {
-          const e = enemies[j];
-          const dist = Math.hypot(e.x - p.x, e.y - p.y);
-          if (dist < e.radius + p.radius) {
-            // Splash damage
-            enemies.forEach(target => {
-              const d = Math.hypot(target.x - p.x, target.y - p.y);
-              if (d <= p.splashRadius) {
-                damageEnemy(target, p.damage, false);
+        if (p.type === 'scythe') {
+          p.distance += 4.5;
+          p.angle += 0.16;
+          p.x = player.x + Math.cos(p.angle) * p.distance;
+          p.y = player.y + Math.sin(p.angle) * p.distance;
+          if (p.distance >= p.maxDist) p.life = 0;
+          enemies.forEach(e => {
+            if (Math.hypot(e.x - p.x, e.y - p.y) < e.radius + p.radius) {
+              damageEnemy(e, p.damage, true);
+            }
+          });
+        } else if (p.type === 'blackhole') {
+          enemies.forEach(e => {
+            const d = Math.hypot(e.x - p.x, e.y - p.y);
+            if (d < p.pullRadius && d > 10) {
+              const pullAngle = Math.atan2(p.y - e.y, p.x - e.x);
+              e.x += Math.cos(pullAngle) * 3.5;
+              e.y += Math.sin(pullAngle) * 3.5;
+              if (p.life % 20 === 0) {
+                damageEnemy(e, p.damage, false);
+              }
+            }
+          });
+        } else if (p.type === 'toxiccloud') {
+          if (p.life % 25 === 0) {
+            enemies.forEach(e => {
+              if (Math.hypot(e.x - p.x, e.y - p.y) < p.radius + e.radius) {
+                damageEnemy(e, p.damage, false);
+                e.hitFlash = 4;
               }
             });
+          }
+        } else {
+          // Standard projectiles (fireball, meteor, chaindagger)
+          p.x += p.vx;
+          p.y += p.vy;
 
-            // Explosion particles
-            for (let k = 0; k < 12; k++) {
-              particles.push({
-                x: p.x,
-                y: p.y,
-                vx: (Math.random() - 0.5) * 8,
-                vy: (Math.random() - 0.5) * 8,
-                life: 25,
-                color: p.color,
-                size: 4
+          for (let j = 0; j < enemies.length; j++) {
+            const e = enemies[j];
+            const dist = Math.hypot(e.x - p.x, e.y - p.y);
+            if (dist < e.radius + p.radius) {
+              enemies.forEach(target => {
+                const d = Math.hypot(target.x - p.x, target.y - p.y);
+                if (d <= p.splashRadius) {
+                  damageEnemy(target, p.damage, p.type === 'meteor');
+                }
               });
-            }
 
-            p.life = 0;
-            break;
+              const sparkCount = p.type === 'meteor' ? 24 : 10;
+              for (let k = 0; k < sparkCount; k++) {
+                particles.push({
+                  x: p.x,
+                  y: p.y,
+                  vx: (Math.random() - 0.5) * (p.type === 'meteor' ? 12 : 8),
+                  vy: (Math.random() - 0.5) * (p.type === 'meteor' ? 12 : 8),
+                  life: 25,
+                  color: p.color,
+                  size: p.type === 'meteor' ? 6 : 4
+                });
+              }
+
+              if (p.pierce && p.pierce > 1) {
+                p.pierce--;
+              } else {
+                p.life = 0;
+                break;
+              }
+            }
           }
         }
 
@@ -1884,14 +2259,67 @@
     // 5. Draw Projectiles
     projectiles.forEach(p => {
       ctx.save();
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
-      ctx.fillStyle = p.color;
-      ctx.shadowColor = p.color;
-      ctx.shadowBlur = 15;
-      ctx.fill();
+      if (p.type === 'blackhole') {
+        // Deep purple swirl with black center
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.radius * 1.5, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(124, 77, 255, 0.25)';
+        ctx.shadowColor = '#651fff';
+        ctx.shadowBlur = 20;
+        ctx.fill();
+
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+        ctx.fillStyle = '#05020a';
+        ctx.strokeStyle = '#d500f9';
+        ctx.lineWidth = 3;
+        ctx.fill();
+        ctx.stroke();
+      } else if (p.type === 'scythe') {
+        // Crescent blade
+        ctx.translate(p.x, p.y);
+        ctx.rotate(p.angle + Math.PI / 2);
+        ctx.beginPath();
+        ctx.arc(0, 0, p.radius, -Math.PI / 2, Math.PI / 2, false);
+        ctx.lineTo(-4, 0);
+        ctx.closePath();
+        ctx.fillStyle = p.color;
+        ctx.shadowColor = '#e040fb';
+        ctx.shadowBlur = 18;
+        ctx.fill();
+      } else if (p.type === 'toxiccloud') {
+        // Poison gas
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(0, 230, 118, 0.22)';
+        ctx.shadowColor = '#00e676';
+        ctx.shadowBlur = 15;
+        ctx.fill();
+      } else {
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+        ctx.fillStyle = p.color;
+        ctx.shadowColor = p.color;
+        ctx.shadowBlur = 16;
+        ctx.fill();
+      }
       ctx.restore();
     });
+
+    // Draw Shield Bubble around Player
+    if (player.skills.shieldbubble > 0 && player.shieldCurrentHp > 0) {
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(player.x, player.y, player.radius + 18, 0, Math.PI * 2);
+      ctx.strokeStyle = '#00e5ff';
+      ctx.lineWidth = 3;
+      ctx.shadowColor = '#00e5ff';
+      ctx.shadowBlur = 16;
+      ctx.fillStyle = 'rgba(0, 229, 255, 0.12)';
+      ctx.fill();
+      ctx.stroke();
+      ctx.restore();
+    }
 
     // 6. Draw Spinning Swords (Döner Bıçaklar)
     if (player.skills.swords > 0) {

@@ -799,6 +799,8 @@ exit
   else if (pathname === '/kafatopu') safePath = '/kafatopu.html';
   else if (pathname === '/zombs') safePath = '/zombs.html';
   else if (pathname === '/redmatch') safePath = '/redmatch.html';
+  else if (pathname === '/dino') safePath = '/dino.html';
+  else if (pathname === '/eaglercraft') safePath = '/eaglercraft.html';
   else if (safePath === '/' || safePath === '\\') safePath = '/index.html';
 
   // Check both PUBLIC_DIR and root (__dirname), pick whichever exists and is newer!
@@ -1372,7 +1374,8 @@ function broadcastOnlineCount() {
 wss.on('connection', (ws, req) => {
   connectedClients.add(ws);
   ws.room = 'world';
-  ws.user = null;
+  const guestNum = Math.floor(1000 + Math.random() * 9000);
+  ws.user = { id: 0, username: 'Oyuncu_' + guestNum, role: 'guest', pixels_placed: 0 };
   ws.lastPixelTime = 0;
 
   // Initial Room Assignment
@@ -1655,13 +1658,10 @@ wss.on('connection', (ws, req) => {
 });
 
 function handlePixelPlacement(ws, x, y, c) {
-  // STRICT AUTH CHECK: Giriş yapmadan / isim seçmeden piksel basılamaz!
+  // AUTH CHECK: Misafir ismi otomatik ata
   if (!ws.user) {
-    ws.send(JSON.stringify({
-      type: 'auth_required',
-      msg: 'Piksel basmak için lütfen önce bir isim belirleyin!'
-    }));
-    return;
+    const guestNum = Math.floor(1000 + Math.random() * 9000);
+    ws.user = { id: 0, username: 'Oyuncu_' + guestNum, role: 'guest', pixels_placed: 0 };
   }
 
   const room = ROOMS[ws.room] || ROOMS.world;

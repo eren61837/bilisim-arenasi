@@ -639,21 +639,18 @@ body {
   filter: brightness(1.1);
 }
 
-/* CARD ACCENT THEMES */
+/* CARD ACCENT THEMES (11 CURATED GAMES) */
 .card-cs { --card-color: #ffb300; --card-glow: rgba(255, 179, 0, 0.4); }
-.card-diep { --card-color: #00dbff; --card-glow: rgba(0, 219, 255, 0.4); }
-.card-deeeep { --card-color: #00e5ff; --card-glow: rgba(0, 229, 255, 0.4); }
-.card-tank { --card-color: #ff9100; --card-glow: rgba(255, 145, 0, 0.4); }
-.card-slither { --card-color: #00e676; --card-glow: rgba(0, 230, 118, 0.4); }
-.card-pixel { --card-color: #00b0ff; --card-glow: rgba(0, 176, 255, 0.4); }
-.card-agar { --card-color: #e040fb; --card-glow: rgba(224, 64, 251, 0.4); }
-.card-xox { --card-color: #ff1744; --card-glow: rgba(255, 23, 68, 0.4); }
 .card-minecraft { --card-color: #4caf50; --card-glow: rgba(76, 175, 80, 0.5); }
-.card-miner { --card-color: #ffd54f; --card-glow: rgba(255, 213, 79, 0.4); }
-.card-troll { --card-color: #ff0055; --card-glow: rgba(255, 0, 85, 0.5); }
-.card-gd { --card-color: #00f0ff; --card-glow: rgba(0, 240, 255, 0.5); }
-.card-sos { --card-color: #00dbff; --card-glow: rgba(0, 219, 255, 0.4); }
+.card-redmatch { --card-color: #ff2255; --card-glow: rgba(255, 34, 85, 0.5); }
+.card-diep { --card-color: #00dbff; --card-glow: rgba(0, 219, 255, 0.4); }
 .card-zombs { --card-color: #00e676; --card-glow: rgba(0, 230, 118, 0.4); }
+.card-survivor { --card-color: #9c27b0; --card-glow: rgba(156, 39, 176, 0.5); }
+.card-kafatopu { --card-color: #ffd700; --card-glow: rgba(255, 215, 0, 0.5); }
+.card-pixel { --card-color: #00b0ff; --card-glow: rgba(0, 176, 255, 0.4); }
+.card-sos { --card-color: #00dbff; --card-glow: rgba(0, 219, 255, 0.4); }
+.card-gd { --card-color: #00f0ff; --card-glow: rgba(0, 240, 255, 0.5); }
+.card-dino { --card-color: #00ff88; --card-glow: rgba(0, 255, 136, 0.5); }
 
 /* =====================================================
    GLOBAL CLASSROOM CHAT SECTION

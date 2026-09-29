@@ -1615,6 +1615,12 @@
   tabCsWasm?.addEventListener('click', () => setEngineMode('wasm'));
   tabCsLocal?.addEventListener('click', () => setEngineMode('local'));
 
+  document.getElementById('btn-play-cs-online')?.addEventListener('click', () => {
+    setEngineMode('wasm');
+    const blocker = document.getElementById('cs-blocker');
+    if (blocker) blocker.classList.add('hidden');
+  });
+
   // Fullscreen button
   document.getElementById('btn-cs-fullscreen')?.addEventListener('click', () => {
     if (!document.fullscreenElement) {

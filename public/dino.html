@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>🦖 CHROME DINO RUNNER - Bilişim Arenası</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🦖</text></svg>">
+    <link rel="stylesheet" href="dino.css">
+</head>
+<body>
+
+    <!-- TOPBAR -->
+    <header class="dino-topbar">
+        <div class="dino-brand">
+            <a href="/" class="btn-dino-back">🏠 PORTALE DÖN</a>
+            <div class="dino-title">
+                <span>🦖</span> CHROME DINO RUNNER HD
+            </div>
+        </div>
+
+        <div class="dino-scores">
+            <div class="score-pill hi">HI <span id="high-score-val">00000</span></div>
+            <div class="score-pill"><span id="score-val">00000</span></div>
+        </div>
+    </header>
+
+    <!-- MAIN VIEWPORT -->
+    <main id="dino-container">
+        <canvas id="dino-canvas"></canvas>
+
+        <!-- START / GAME OVER OVERLAY -->
+        <div id="dino-overlay" class="dino-overlay">
+            <div class="dino-menu-card">
+                <div class="dino-menu-logo">🦖 🌵 ⚡</div>
+                <h1 class="dino-menu-title" id="overlay-title">CHROME CYBER DINO</h1>
+                <p class="dino-menu-sub" id="overlay-sub">Chrome'un en sevilen efsane çevrimdışı dinozor macerası!</p>
+                <button id="btn-dino-start" class="btn-dino-start">BAŞLAMAK İÇİN TIKLA (SPACE) ▶</button>
+                <div class="dino-controls-hint">
+                    <span>⚡ <strong>BOŞLUK / ▲ YUKARI / TIKLA:</strong> Zıpla</span>
+                    <span>🛡️ <strong>▼ AŞAĞI:</strong> Eğil (Pterodaktillerin altından geç!)</span>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="dino.js"></script>
+    <script src="overlay-back.js"></script>
+</body>
+</html>

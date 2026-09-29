@@ -185,19 +185,22 @@
         beatStep = (beatStep + 1) % 64;
     }
 
+    const bgmAudio = document.getElementById('gd-bgm');
+
     function startMusic() {
         initAudio();
-        if (isMusicPlaying) return;
+        if (bgmAudio) {
+            bgmAudio.muted = isMuted;
+            bgmAudio.currentTime = 0;
+            bgmAudio.play().catch(() => {});
+        }
         isMusicPlaying = true;
-        beatStep = 0;
-        musicInterval = setInterval(scheduleBeat, STEP_TIME * 1000);
     }
 
     function stopMusic() {
         isMusicPlaying = false;
-        if (musicInterval) {
-            clearInterval(musicInterval);
-            musicInterval = null;
+        if (bgmAudio) {
+            bgmAudio.pause();
         }
     }
 
@@ -304,6 +307,7 @@
     btnToggleMusic.addEventListener('click', () => {
         isMuted = !isMuted;
         musicLabel.textContent = isMuted ? "Müzik: KAPALI" : "Müzik: AÇIK";
+        if (bgmAudio) bgmAudio.muted = isMuted;
     });
 
     btnFullscreen.addEventListener('click', () => {
@@ -493,6 +497,10 @@
         progressFill.style.width = '0%';
         percentText.textContent = '0%';
         attemptCountEl.textContent = attempts.toString();
+        if (isPlaying && bgmAudio) {
+            bgmAudio.currentTime = 0;
+            bgmAudio.play().catch(() => {});
+        }
     }
 
     function startGame() {
@@ -506,6 +514,9 @@
         if (isDead) return;
         isDead = true;
         sfxCrash();
+        if (bgmAudio) {
+            bgmAudio.pause();
+        }
         attempts++;
         try { localStorage.setItem('gd_attempts', attempts.toString()); } catch(e){}
         attemptCountEl.textContent = attempts.toString();
@@ -653,14 +664,25 @@
 
         for (const b of blocks) {
             if (px + ps > b.x && px < b.x + b.w && py + ps > b.y && py < b.y + b.h) {
-                // Check if landing on top
-                const prevY = py - player.vy;
-                if (prevY + ps <= b.y + 12 && player.vy >= 0) {
+                // If it's ground, it's ALWAYS safe landing on top!
+                if (b.type === 'ground') {
                     player.y = b.y - ps;
                     player.vy = 0;
                     player.isGrounded = true;
-                } else if (px + ps - SPEED <= b.x + 6) {
+                    continue;
+                }
+                // Check if landing on top of block
+                const prevY = py - player.vy;
+                if ((prevY + ps <= b.y + 16 || py + ps - b.y <= 16) && player.vy >= 0) {
+                    player.y = b.y - ps;
+                    player.vy = 0;
+                    player.isGrounded = true;
+                } else if (px + ps - b.x <= SPEED + 8 && py + ps > b.y + 8) {
                     // Crashed into side of block!
+                    triggerCrash();
+                    return;
+                } else if (py < b.y + b.h && py + ps > b.y) {
+                    // Hit underside or stuck
                     triggerCrash();
                     return;
                 }
@@ -676,10 +698,12 @@
             }
         }
 
-        // Spike Collisions (Triangle Hitbox)
+        // Spike Collisions (Fair geometry hitbox)
         for (const sp of spikes) {
-            // AABB preliminary check with slight forgiveness (3px margin)
-            if (px + ps - 4 > sp.x && px + 4 < sp.x + sp.w && py + ps - 2 > sp.y && py + 4 < sp.y + sp.h) {
+            const marginX = 7;
+            const marginTop = 6;
+            if (px + ps - marginX > sp.x && px + marginX < sp.x + sp.w &&
+                py + ps > sp.y + marginTop && py + 4 < sp.y + sp.h) {
                 triggerCrash();
                 return;
             }
