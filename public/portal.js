@@ -407,10 +407,12 @@
           updateCount('count-redmatch', data.games.redmatch);
           updateCount('count-dino', data.games.dino);
           updateCount('count-sumo', data.games.sumo);
+          updateCount('count-stickwar', data.games.stickwar);
 
           // 👑 DYNAMIC POPULARITY SORTING (Seçkin oyunlar)
           const gameEntries = [
             { id: 'count-cs16', count: data.games.cs16 || 0, name: 'Counter-Strike 1.6' },
+            { id: 'count-stickwar', count: data.games.stickwar || 0, name: 'Stick War: Legacy' },
             { id: 'count-minecraft', count: (data.games.minecraft || data.games.eaglercraft || 0), name: 'Minecraft 3D & Eagler' },
             { id: 'count-sumo', count: data.games.sumo || 0, name: 'Ahmet Hakan: Kutu Sumo' },
             { id: 'count-kafatopu', count: data.games.kafatopu || 0, name: 'Kafa Topu: Beyaz Saray' },
@@ -622,6 +624,7 @@
       AudioEngine.playDing();
       const games = [
         { path: '/cs16', name: 'CS 1.6' },
+        { path: '/stickwar', name: 'STICK WAR: LEGACY' },
         { path: '/minecraft', name: 'MINECRAFT 3D' },
         { path: '/kafatopu', name: 'KAFA TOPU' },
         { path: '/pixelplace', name: 'BEYAZ SARAY' },

@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>⚔️ Stick War: Legacy Web - Bilişim Arenası</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚔️</text></svg>">
+    <link rel="stylesheet" href="stickwar.css">
+</head>
+<body>
+
+    <!-- TOP GAME BAR / HUD -->
+    <header class="sw-top-bar">
+        <!-- BRAND & NAVIGATION -->
+        <div class="sw-brand">
+            <a href="/" class="btn-sw-nav">🏠 Portale Dön</a>
+            <span class="sw-title">⚔️ STICK WAR: LEGACY</span>
+        </div>
+
+        <!-- CURRENT MUSIC BADGE -->
+        <div class="sw-music-badge" id="sw-music-badge" title="Dinamik Savaş Müziği">
+            <span class="sw-music-eq"><span></span><span></span><span></span><span></span></span>
+            <div class="sw-music-info">
+                <span class="sw-music-label">MÜZİK:</span>
+                <span class="sw-music-track" id="sw-track-name">Run From Your Demons (Savunma)</span>
+            </div>
+            <button class="btn-sw-icon" id="btn-sw-mute" title="Sesi Aç/Kapat">🔊</button>
+        </div>
+
+        <!-- RESOURCE COUNTERS -->
+        <div class="sw-resources">
+            <div class="res-item res-gold">
+                <span class="res-icon">🟡</span>
+                <span class="res-val" id="res-gold-val">500</span>
+            </div>
+            <div class="res-item res-pop">
+                <span class="res-icon">👥</span>
+                <span class="res-val" id="res-pop-val">2 / 20</span>
+            </div>
+        </div>
+
+        <!-- STATUE HP STATUS (MINI HEADER BARS) -->
+        <div class="sw-statue-bars">
+            <div class="statue-bar-box order-statue">
+                <div class="sb-label">🛡️ BİZİM HEYKEL: <span id="hp-statue-order">3000 / 3000</span></div>
+                <div class="sb-track"><div class="sb-fill order-fill" id="fill-statue-order" style="width: 100%;"></div></div>
+            </div>
+            <div class="statue-bar-box chaos-statue">
+                <div class="sb-label">💀 DÜŞMAN HEYKEL: <span id="hp-statue-chaos">3000 / 3000</span></div>
+                <div class="sb-track"><div class="sb-fill chaos-fill" id="fill-statue-chaos" style="width: 100%;"></div></div>
+            </div>
+        </div>
+
+        <!-- ACTIONS -->
+        <div class="sw-actions">
+            <button class="btn-sw-nav" id="btn-sw-upgrades">🔨 Yükseltmeler</button>
+            <button class="btn-sw-nav" id="btn-sw-restart">🔄 Yeniden Başlat</button>
+            <button class="btn-sw-nav" id="btn-sw-fullscreen">⛶ Tam Ekran</button>
+        </div>
+    </header>
+
+    <!-- FORMATION & UNIT SPAWN BAR (SUB-HEADER) -->
+    <div class="sw-command-panel">
+        <!-- ARMY FORMATION ORDERS (MUSIC TIED!) -->
+        <div class="formation-buttons">
+            <button class="btn-formation active" id="btn-order-defend" title="Birlikler heykelin önünü korur. (Müzik: Run From Your Demons)">
+                <span class="f-icon">🛡️</span>
+                <span class="f-text">SAVUN</span>
+            </button>
+            <button class="btn-formation" id="btn-order-attack" title="Tüm ordu hücuma geçer! (Müzik: Hymn For The Weekend)">
+                <span class="f-icon">⚔️</span>
+                <span class="f-text">SALDIR</span>
+            </button>
+            <button class="btn-formation" id="btn-order-retreat" title="Tüm birlikler kaleye sığınır. (Müzik: Run From Your Demons)">
+                <span class="f-icon">🏰</span>
+                <span class="f-text">KALEYE SIĞIN</span>
+            </button>
+        </div>
+
+        <!-- UNIT RECRUITMENT BUTTONS -->
+        <div class="unit-recruit-group">
+            <button class="btn-recruit" id="btn-spawn-miner" data-cost="150" data-pop="1">
+                <div class="rec-avatar">⛏️</div>
+                <div class="rec-info">
+                    <span class="rec-name">Madenci</span>
+                    <span class="rec-cost">🟡 150</span>
+                </div>
+                <span class="rec-pop-tag">+1</span>
+            </button>
+            <button class="btn-recruit" id="btn-spawn-sword" data-cost="125" data-pop="1">
+                <div class="rec-avatar">🗡️</div>
+                <div class="rec-info">
+                    <span class="rec-name">Kılıçlı</span>
+                    <span class="rec-cost">🟡 125</span>
+                </div>
+                <span class="rec-pop-tag">+1</span>
+            </button>
+            <button class="btn-recruit" id="btn-spawn-archer" data-cost="300" data-pop="1">
+                <div class="rec-avatar">🏹</div>
+                <div class="rec-info">
+                    <span class="rec-name">Okçu</span>
+                    <span class="rec-cost">🟡 300</span>
+                </div>
+                <span class="rec-pop-tag">+1</span>
+            </button>
+            <button class="btn-recruit" id="btn-spawn-spear" data-cost="500" data-pop="2">
+                <div class="rec-avatar">🛡️</div>
+                <div class="rec-info">
+                    <span class="rec-name">Mızrakçı</span>
+                    <span class="rec-cost">🟡 500</span>
+                </div>
+                <span class="rec-pop-tag">+2</span>
+            </button>
+            <button class="btn-recruit" id="btn-spawn-mage" data-cost="1200" data-pop="3">
+                <div class="rec-avatar">🧙</div>
+                <div class="rec-info">
+                    <span class="rec-name">Büyücü</span>
+                    <span class="rec-cost">🟡 1200</span>
+                </div>
+                <span class="rec-pop-tag">+3</span>
+            </button>
+            <button class="btn-recruit" id="btn-spawn-giant" data-cost="1500" data-pop="4">
+                <div class="rec-avatar">👹</div>
+                <div class="rec-info">
+                    <span class="rec-name">Dev</span>
+                    <span class="rec-cost">🟡 1500</span>
+                </div>
+                <span class="rec-pop-tag">+4</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- MINIMAP OVERLAY (TOP CENTER) -->
+    <div class="sw-minimap-container" id="minimap-container">
+        <canvas id="minimap-canvas" width="300" height="40"></canvas>
+        <div class="minimap-view-window" id="minimap-lens"></div>
+    </div>
+
+    <!-- MANUAL UNIT CONTROL OVERLAY (WHEN A SOLDIER IS SELECTED) -->
+    <div class="sw-control-card hidden" id="sw-manual-card">
+        <div class="mc-avatar" id="mc-avatar">🗡️</div>
+        <div class="mc-details">
+            <div class="mc-title" id="mc-name">Kılıçlı Kontrol Ediliyor</div>
+            <div class="mc-controls">
+                <span>[A / D] Hareket</span> • 
+                <span>[SPACE / Sol Tık] Saldırı</span> • 
+                <span id="mc-secondary-hint">[S / Sağ Tık] Savunma</span> • 
+                <span id="mc-special-hint">[Q / F] Özel Yetenek</span>
+            </div>
+        </div>
+        <button class="btn-mc-release" id="btn-mc-release">✕ Komutan Moduna Dön (ESC)</button>
+    </div>
+
+    <!-- MAIN BATTLEFIELD CANVAS -->
+    <div class="canvas-viewport" id="canvas-viewport">
+        <canvas id="stickwar-canvas"></canvas>
+    </div>
+
+    <!-- UPGRADES MODAL -->
+    <div class="sw-modal-backdrop hidden" id="modal-upgrades">
+        <div class="sw-modal-card">
+            <div class="sm-header">
+                <h2>🔨 DEMİRCİ & ORDU YÜKSELTMELERİ</h2>
+                <button class="btn-sm-close" id="btn-close-upgrades">✕</button>
+            </div>
+            <div class="upgrades-grid">
+                <div class="upgrade-item" id="upg-miner-bag">
+                    <div class="upg-icon">⛏️</div>
+                    <div class="upg-info">
+                        <h3>Madenci Çantası</h3>
+                        <p>Madenciler her seferde +10 altın daha fazla taşır (Toplam 25 altın/sefer).</p>
+                    </div>
+                    <button class="btn-buy-upgrade" data-upgrade="minerBag" data-cost="300">🟡 300 Satın Al</button>
+                </div>
+                <div class="upgrade-item" id="upg-sword-damage">
+                    <div class="upg-icon">🗡️</div>
+                    <div class="upg-info">
+                        <h3>Keskin Kılıçlar</h3>
+                        <p>Kılıçlı askerlerin saldırı hasarı %30 artar ve hareket hızı yükselir.</p>
+                    </div>
+                    <button class="btn-buy-upgrade" data-upgrade="swordDamage" data-cost="400">🟡 400 Satın Al</button>
+                </div>
+                <div class="upgrade-item" id="upg-fire-arrows">
+                    <div class="upg-icon">🏹</div>
+                    <div class="upg-info">
+                        <h3>Alevli Oklar</h3>
+                        <p>Okçuların okları düşmanları yakarak zamanla yanma hasarı verir.</p>
+                    </div>
+                    <button class="btn-buy-upgrade" data-upgrade="fireArrows" data-cost="600">🟡 600 Satın Al</button>
+                </div>
+                <div class="upgrade-item" id="upg-iron-shield">
+                    <div class="upg-icon">🛡️</div>
+                    <div class="upg-info">
+                        <h3>Demir Kalkanlar</h3>
+                        <p>Mızrakçılar kalkan duvarı açtığında hasarın %90'ını engeller.</p>
+                    </div>
+                    <button class="btn-buy-upgrade" data-upgrade="ironShield" data-cost="750">🟡 750 Satın Al</button>
+                </div>
+                <div class="upgrade-item" id="upg-statue-armor">
+                    <div class="upg-icon">🏛️</div>
+                    <div class="upg-info">
+                        <h3>Kutsal Heykel Güçlendirmesi</h3>
+                        <p>Heykelin canını anında +1000 artırır ve maksimum sağlığını yükseltir.</p>
+                    </div>
+                    <button class="btn-buy-upgrade" data-upgrade="statueArmor" data-cost="900">🟡 900 Satın Al</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- GAME OVER / VICTORY MODAL -->
+    <div class="sw-modal-backdrop hidden" id="modal-gameover">
+        <div class="sw-modal-card gameover-card">
+            <h1 class="go-title" id="go-title">🏆 ZAFER KAZANILDI!</h1>
+            <p class="go-desc" id="go-desc">Kaos İmparatorluğu'nun heykeli yerle bir edildi. İnaworta topraklarına düzen getirildi!</p>
+            <div class="go-stats">
+                <div class="go-stat-item">Öldürülen Düşman: <b id="go-kills">0</b></div>
+                <div class="go-stat-item">Kazanılan Altın: <b id="go-gold">0</b></div>
+                <div class="go-stat-item">Savaş Süresi: <b id="go-time">00:00</b></div>
+            </div>
+            <div class="go-buttons">
+                <button class="btn-sw-primary" id="btn-go-restart">⚔️ Yeniden Savaş</button>
+                <a href="/" class="btn-sw-secondary">🏠 Portale Dön</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- AUDIO ELEMENTS FOR DYNAMIC COMBAT MUSIC -->
+    <audio id="audio-attack" src="music/hymn_for_the_weekend.mp3" preload="auto" loop></audio>
+    <audio id="audio-defend" src="music/run_from_your_demons.mp3" preload="auto" loop></audio>
+
+    <script src="stickwar.js"></script>
+</body>
+</html>

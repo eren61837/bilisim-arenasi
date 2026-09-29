@@ -801,6 +801,7 @@ exit
   else if (pathname === '/redmatch') safePath = '/redmatch.html';
   else if (pathname === '/dino') safePath = '/dino.html';
   else if (pathname === '/sumo') safePath = '/sumo.html';
+  else if (pathname === '/stickwar') safePath = '/stickwar.html';
   else if (pathname === '/eaglercraft') safePath = '/eaglercraft.html';
   else if (safePath === '/' || safePath === '\\') safePath = '/index.html';
 

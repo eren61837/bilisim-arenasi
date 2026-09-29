@@ -1896,7 +1896,7 @@ function initGamesManager(wss, db) {
   return {
     getLanIp,
     getStats() {
-      let csCount = 0, diepCount = 0, mcCount = 0, survivorCount = 0, gdCount = 0, pixelCount = 0, sosCount = 0, kafatopuCount = 0, zombsCount = 0, redmatchCount = 0, dinoCount = 0, sumoCount = 0;
+      let csCount = 0, diepCount = 0, mcCount = 0, survivorCount = 0, gdCount = 0, pixelCount = 0, sosCount = 0, kafatopuCount = 0, zombsCount = 0, redmatchCount = 0, dinoCount = 0, sumoCount = 0, stickwarCount = 0;
       let realHumanTotal = 0;
       wss.clients.forEach(c => {
         if (c.readyState === WebSocket.OPEN && !c.isBot) {
@@ -1912,6 +1912,7 @@ function initGamesManager(wss, db) {
           else if (c.room === 'redmatch') redmatchCount++;
           else if (c.room === 'dino') dinoCount++;
           else if (c.room === 'sumo') sumoCount++;
+          else if (c.room === 'stickwar') stickwarCount++;
           else if (c.room === 'world' || c.room === 'turkey' || c.room === 'pixelplace') pixelCount++;
         }
       });
@@ -1930,7 +1931,8 @@ function initGamesManager(wss, db) {
           zombs: zombsCount,
           redmatch: redmatchCount,
           dino: dinoCount,
-          sumo: sumoCount
+          sumo: sumoCount,
+          stickwar: stickwarCount
         }
       };
     },
