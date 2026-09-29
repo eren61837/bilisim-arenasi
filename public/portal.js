@@ -663,8 +663,9 @@
       const filter = btn.dataset.filter;
 
       gameCards.forEach(card => {
-        const cat = card.dataset.category;
-        if (filter === 'all' || cat === filter) {
+        const cat = card.dataset.category || '';
+        const cats = cat.split(/\s+/);
+        if (filter === 'all' || cats.includes(filter) || cat === filter) {
           card.style.display = 'flex';
           card.style.animation = 'cardPopIn 0.3s ease';
         } else {
@@ -776,6 +777,18 @@
       }
     });
   }
+
+  // Quick Emoji Reactions
+  document.querySelectorAll('.btn-chat-emoji').forEach(btn => {
+    btn.addEventListener('click', () => {
+      AudioEngine.playClick();
+      const emoji = btn.dataset.emoji;
+      if (chatInput && emoji) {
+        chatInput.value = (chatInput.value ? chatInput.value + ' ' : '') + emoji;
+        chatInput.focus();
+      }
+    });
+  });
 
   function esc(s) {
     return String(s).replace(/[&<>'"]/g, t => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[t] || t));

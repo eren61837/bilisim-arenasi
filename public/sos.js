@@ -184,15 +184,26 @@ const ctx = canvas.getContext('2d');
 const linesCanvas = document.getElementById('lines-canvas');
 const lctx = linesCanvas.getContext('2d');
 
+function updateCellSize(size) {
+    const maxW = Math.min(window.innerWidth - 32, 700);
+    const maxH = Math.min(window.innerHeight - 240, 700);
+    const maxAvailable = Math.min(maxW, maxH);
+    cellSize = Math.max(18, Math.floor(maxAvailable / size));
+}
+
 function initCanvas() {
     const size = gameState.size;
+    updateCellSize(size);
     canvas.width = size * cellSize;
     canvas.height = size * cellSize;
     linesCanvas.width = canvas.width;
     linesCanvas.height = canvas.height;
     
-    // Add click listener
-    canvas.addEventListener('click', handleGridClick);
+    // Add click listener if not added
+    if (!canvas._hasClickListener) {
+        canvas.addEventListener('click', handleGridClick);
+        canvas._hasClickListener = true;
+    }
     
     drawGrid();
 }

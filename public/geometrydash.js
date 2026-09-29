@@ -709,13 +709,19 @@
             }
         }
 
-        // Progress Calculation
+        // Progress Calculation & High Score Persistence
         const progress = Math.min(100, Math.max(0, Math.floor((player.x / levelLength) * 100)));
         progressFill.style.width = `${progress}%`;
-        percentText.textContent = `${progress}%`;
+        const best = parseInt(localStorage.getItem('gd_best_level_' + currentLevel) || '0', 10);
+        if (progress > best) {
+            localStorage.setItem('gd_best_level_' + currentLevel, progress.toString());
+        }
+        const currentBest = Math.max(progress, best);
+        percentText.textContent = `${progress}% (Rekor: %${currentBest})`;
 
         // Victory Check
         if (player.x >= levelLength) {
+            localStorage.setItem('gd_best_level_' + currentLevel, '100');
             triggerVictory();
         }
 

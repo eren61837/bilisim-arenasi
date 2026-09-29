@@ -162,8 +162,9 @@
         <div class="category-buttons">
             <button class="btn-cat-tab active" data-filter="all">🔥 Tümü (12)</button>
             <button class="btn-cat-tab" data-filter="fps">🔫 3D &amp; FPS</button>
+            <button class="btn-cat-tab" data-filter="strategy">⚔️ Strateji &amp; Savaş</button>
             <button class="btn-cat-tab" data-filter="io">🛡️ .IO &amp; Hayatta Kalma</button>
-            <button class="btn-cat-tab" data-filter="multi">⚽ Çok Oyunculu &amp; Zeka</button>
+            <button class="btn-cat-tab" data-filter="multi">⚽ Çok Oyunculu &amp; Düello</button>
             <button class="btn-cat-tab" data-filter="arcade">⚡ Ritim &amp; Arcade</button>
         </div>
     </div>
@@ -172,7 +173,7 @@
     <div class="games-grid" id="games-grid">
 
         <!-- 1. CS 1.6 WEB 3D -->
-        <a href="/cs16" class="game-card card-cs" data-category="fps">
+        <a href="/cs16" class="game-card card-cs" data-category="fps multi">
             <div class="game-thumb">
                 <span class="game-thumb-art">🔫</span>
                 <div class="thumb-gradient-overlay"></div>
@@ -280,7 +281,7 @@
         </a>
 
         <!-- 5. ZOMBS.IO (ZOMBİ & KULE SAVUNMASI) -->
-        <a href="/zombs" class="game-card card-zombs" data-category="io">
+        <a href="/zombs" class="game-card card-zombs" data-category="io strategy">
             <div class="game-thumb" style="background: radial-gradient(circle, #0e2b14 0%, #061208 100%);">
                 <span class="game-thumb-art">🧟</span>
                 <div class="thumb-gradient-overlay"></div>
@@ -307,7 +308,7 @@
         </a>
 
         <!-- 6. VAMPIRE SURVIVORS RPG (ZİNDAN AVCISI) -->
-        <a href="/survivor" class="game-card card-survivor" data-category="io">
+        <a href="/survivor" class="game-card card-survivor" data-category="io arcade">
             <div class="game-thumb" style="background: radial-gradient(circle, #2b0b3b 0%, #100518 100%);">
                 <span class="game-thumb-art">⚔️</span>
                 <div class="thumb-gradient-overlay"></div>
@@ -334,7 +335,7 @@
         </a>
 
         <!-- 7. KAFA TOPU: BEYAZ SARAY -->
-        <a href="/kafatopu" class="game-card card-kafatopu" data-category="multi">
+        <a href="/kafatopu" class="game-card card-kafatopu" data-category="multi arcade">
             <div class="game-thumb" style="background: radial-gradient(circle, #332600 0%, #120e00 100%);">
                 <span class="game-thumb-art">⚽</span>
                 <div class="thumb-gradient-overlay"></div>
@@ -361,7 +362,7 @@
         </a>
 
         <!-- 8. SOS OYUNU (10x10 & 25x24) -->
-        <a href="/sos" class="game-card card-sos" data-category="multi">
+        <a href="/sos" class="game-card card-sos" data-category="multi strategy">
             <div class="game-thumb" style="background: radial-gradient(circle, #05232d 0%, #030f14 100%);">
                 <span class="game-thumb-art">🅂🅾🅂</span>
                 <div class="thumb-gradient-overlay"></div>
@@ -442,7 +443,7 @@
         </a>
 
         <!-- 12. AHMET HAKAN: KUTU SUMO RAGDOLL ARENASI -->
-        <a href="/sumo" class="game-card card-sumo" data-category="multi">
+        <a href="/sumo" class="game-card card-sumo" data-category="multi arcade">
             <div class="game-thumb" style="background: radial-gradient(circle, #3b1208 0%, #140502 100%);">
                 <span class="game-thumb-art">🥊</span>
                 <div class="thumb-gradient-overlay"></div>
@@ -469,7 +470,7 @@
         </a>
 
         <!-- 13. STICK WAR: LEGACY -->
-        <a href="/stickwar" class="game-card card-stickwar" data-category="strategy">
+        <a href="/stickwar" class="game-card card-stickwar" data-category="strategy arcade">
             <div class="game-thumb" style="background: radial-gradient(circle, #382900 0%, #120e03 100%);">
                 <span class="game-thumb-art">⚔️</span>
                 <div class="thumb-gradient-overlay"></div>
@@ -510,6 +511,19 @@
 
         <div id="portal-chat-messages" class="portal-chat-messages">
             <div class="portal-chat-line" style="color:#888; text-align:center; padding:10px 0;">Sohbet yükleniyor...</div>
+        </div>
+
+        <div class="chat-quick-emojis" id="chat-quick-emojis">
+            <span class="emoji-tip">⚡ Hızlı Tepki:</span>
+            <button type="button" class="btn-chat-emoji" data-emoji="🔥">🔥</button>
+            <button type="button" class="btn-chat-emoji" data-emoji="⚔️">⚔️</button>
+            <button type="button" class="btn-chat-emoji" data-emoji="👑">👑</button>
+            <button type="button" class="btn-chat-emoji" data-emoji="😂">😂</button>
+            <button type="button" class="btn-chat-emoji" data-emoji="🚀">🚀</button>
+            <button type="button" class="btn-chat-emoji" data-emoji="💀">💀</button>
+            <button type="button" class="btn-chat-emoji" data-emoji="⚽">⚽</button>
+            <button type="button" class="btn-chat-emoji" data-emoji="🥊">🥊</button>
+            <button type="button" class="btn-chat-emoji" data-emoji="🎯">🎯</button>
         </div>
 
         <form id="portal-chat-form" class="portal-chat-form">

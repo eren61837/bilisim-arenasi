@@ -113,6 +113,25 @@
                     osc.stop(now + idx * 0.1 + 0.35);
                 });
             } catch (_) {}
+        },
+        superShot() {
+            if (!this.enabled) return;
+            try {
+                this.init();
+                if (!this.ctx) return;
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(520, now);
+                osc.frequency.exponentialRampToValueAtTime(70, now + 0.38);
+                gain.gain.setValueAtTime(0.4, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.38);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(now);
+                osc.stop(now + 0.38);
+            } catch (_) {}
         }
     };
 
@@ -208,6 +227,7 @@
             this.isKicking = false;
             this.kickType = null;
             this.kickTimer = 0;
+            this.superMeter = 0;
         }
 
         resetPosition() {
@@ -218,6 +238,7 @@
             this.footAngle = 0;
             this.isKicking = false;
             this.kickTimer = 0;
+            this.superMeter = Math.max(0, this.superMeter - 15);
         }
 
         move(dx) {
@@ -242,7 +263,20 @@
             SoundFX.kick(kickType === 'high');
         }
 
+        triggerSuperShot(direction) {
+            if (this.superMeter < 100) return false;
+            this.superMeter = 0;
+            SoundFX.superShot();
+            ball.isFire = true;
+            ball.fireTimer = 75;
+            ball.velX = 33 * direction;
+            ball.velY = -8.0;
+            screenShake = 14;
+            return true;
+        }
+
         update() {
+            this.superMeter = Math.min(100, this.superMeter + 0.05);
             this.velY += GRAVITY;
             this.y += this.velY;
 
@@ -323,6 +357,9 @@
             this.velX = 0;
             this.velY = 0;
             this.trail = [];
+            this.isFire = false;
+            this.fireTimer = 0;
+            this.fireParticles = [];
         }
 
         resetPosition() {
@@ -331,9 +368,37 @@
             this.velX = 0;
             this.velY = 0;
             this.trail = [];
+            this.isFire = false;
+            this.fireTimer = 0;
+            this.fireParticles = [];
         }
 
         update() {
+            if (this.isFire) {
+                this.fireTimer--;
+                if (this.fireTimer <= 0) this.isFire = false;
+                for (let k = 0; k < 3; k++) {
+                    this.fireParticles.push({
+                        x: this.x + (Math.random() - 0.5) * 16,
+                        y: this.y + (Math.random() - 0.5) * 16,
+                        vx: -this.velX * 0.15 + (Math.random() - 0.5) * 3,
+                        vy: -this.velY * 0.15 + (Math.random() - 0.5) * 3,
+                        life: 1.0,
+                        decay: 0.05 + Math.random() * 0.04,
+                        size: 5 + Math.random() * 7,
+                        color: Math.random() > 0.35 ? '#ff3d00' : '#ffea00'
+                    });
+                }
+            }
+
+            for (let i = this.fireParticles.length - 1; i >= 0; i--) {
+                const fp = this.fireParticles[i];
+                fp.x += fp.vx;
+                fp.y += fp.vy;
+                fp.life -= fp.decay;
+                if (fp.life <= 0) this.fireParticles.splice(i, 1);
+            }
+
             if (Math.abs(this.velX) > 1.0 || Math.abs(this.velY) > 1.0) {
                 this.trail.push({ x: this.x, y: this.y, radius: this.radius, alpha: 180 });
                 if (this.trail.length > 8) this.trail.shift();
@@ -375,11 +440,33 @@
         }
 
         draw(ctx) {
+            // Alev partikülleri
+            for (const fp of this.fireParticles) {
+                ctx.fillStyle = fp.color;
+                ctx.globalAlpha = Math.max(0, fp.life);
+                ctx.beginPath();
+                ctx.arc(fp.x, fp.y, fp.size * fp.life, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            ctx.globalAlpha = 1.0;
+
             // Altın kuyruk efekti
             for (const t of this.trail) {
-                ctx.fillStyle = `rgba(255, 215, 0, ${Math.max(0, t.alpha / 255)})`;
+                ctx.fillStyle = this.isFire ? `rgba(255, 69, 0, ${Math.max(0, t.alpha / 255)})` : `rgba(255, 215, 0, ${Math.max(0, t.alpha / 255)})`;
                 ctx.beginPath();
                 ctx.arc(t.x, t.y, t.radius, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            // Alev halesi (Radial glow)
+            if (this.isFire) {
+                const grad = ctx.createRadialGradient(this.x, this.y, 4, this.x, this.y, this.radius * 2.2);
+                grad.addColorStop(0, 'rgba(255, 230, 0, 0.95)');
+                grad.addColorStop(0.5, 'rgba(255, 60, 0, 0.7)');
+                grad.addColorStop(1, 'rgba(255, 0, 0, 0)');
+                ctx.fillStyle = grad;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius * 2.2, 0, Math.PI * 2);
                 ctx.fill();
             }
 
@@ -413,8 +500,12 @@
     const crossbarLeft = { left: 0, right: GOAL_WIDTH, top: GROUND_Y - GOAL_HEIGHT, bottom: GROUND_Y - GOAL_HEIGHT + 16 };
     const crossbarRight = { left: WIDTH - GOAL_WIDTH, right: WIDTH, top: GROUND_Y - GOAL_HEIGHT, bottom: GROUND_Y - GOAL_HEIGHT + 16 };
 
-    // Buton Koordinatları (Orijinal Menü)
-    const btnStartRect = { x: WIDTH / 2 - 130, y: HEIGHT / 2 + 20, w: 260, h: 65 };
+    let isVsAI = true;
+    let screenShake = 0;
+
+    // Buton Koordinatları (Menü: 1 Oyuncu AI & 2 Oyuncu)
+    const btnVsAiRect = { x: WIDTH / 2 - 240, y: HEIGHT / 2 + 15, w: 480, h: 54 };
+    const btn2PlayerRect = { x: WIDTH / 2 - 240, y: HEIGHT / 2 + 80, w: 480, h: 54 };
     const btnRestartRect = { x: WIDTH / 2 - 210, y: HEIGHT / 2 + 50, w: 190, h: 50 };
     const btnMenuRect = { x: WIDTH / 2 + 20, y: HEIGHT / 2 + 50, w: 190, h: 50 };
 
@@ -474,13 +565,17 @@
         SoundFX.init();
 
         if (currentState === STATE_PLAYING && (Date.now() - countdownStartTicks >= 3000)) {
-            // Oyuncu 1 Şutlar
+            // Oyuncu 1 Şutlar & Süper Şut
             if (e.code === 'KeyN') p1.kick('low');
             if (e.code === 'KeyM') p1.kick('high');
+            if (e.code === 'Space' || e.code === 'KeyB') p1.triggerSuperShot(1);
 
-            // Oyuncu 2 Klavye Şut Alternatifleri (Mouse olmayanlar için J & K)
-            if (e.code === 'KeyJ') p2.kick('high');
-            if (e.code === 'KeyK') p2.kick('low');
+            // Oyuncu 2 Şutlar (İnsan modu)
+            if (!isVsAI) {
+                if (e.code === 'KeyJ') p2.kick('high');
+                if (e.code === 'KeyK') p2.kick('low');
+                if (e.code === 'KeyL' || e.code === 'Numpad0') p2.triggerSuperShot(-1);
+            }
         }
 
         if (e.code === 'F11') {
@@ -505,13 +600,19 @@
         const my = (e.clientY - rect.top) * (HEIGHT / rect.height);
 
         if (currentState === STATE_MENU) {
-            if (mx >= btnStartRect.x && mx <= btnStartRect.x + btnStartRect.w &&
-                my >= btnStartRect.y && my <= btnStartRect.y + btnStartRect.h) {
+            if (mx >= btnVsAiRect.x && mx <= btnVsAiRect.x + btnVsAiRect.w &&
+                my >= btnVsAiRect.y && my <= btnVsAiRect.y + btnVsAiRect.h) {
+                isVsAI = true;
+                resetGame();
+                currentState = STATE_PLAYING;
+            } else if (mx >= btn2PlayerRect.x && mx <= btn2PlayerRect.x + btn2PlayerRect.w &&
+                       my >= btn2PlayerRect.y && my <= btn2PlayerRect.y + btn2PlayerRect.h) {
+                isVsAI = false;
                 resetGame();
                 currentState = STATE_PLAYING;
             }
         } else if (currentState === STATE_PLAYING) {
-            if (Date.now() - countdownStartTicks >= 3000) {
+            if (Date.now() - countdownStartTicks >= 3000 && !isVsAI) {
                 // Oyuncu 2: Sol Tık = Yüksek, Sağ Tık = Alçak
                 if (e.button === 0) p2.kick('high');
                 if (e.button === 2) p2.kick('low');
@@ -610,6 +711,7 @@
 
                 ball.velX = ball.velX * 0.3 + nx * 5.5 + fwdBoost;
                 ball.velY = ball.velY * 0.3 + ny * 5.5;
+                p.superMeter = Math.min(100, p.superMeter + 14);
                 SoundFX.bounce();
             }
 
@@ -628,6 +730,7 @@
                     }
                     p.isKicking = false;
                     p.footAngle = 0;
+                    p.superMeter = Math.min(100, p.superMeter + 18);
                     SoundFX.kick(p.kickType === 'high');
                 }
             }
@@ -729,12 +832,54 @@
         ctx.fillStyle = '#1e90ff';
         ctx.fillText('🔵 OYUNCU 2:', WIDTH - 511, baseY + 8);
         ctx.fillStyle = '#fff';
-        ctx.fillText('Hareket: [YÖN] | Şut: [Sol Tık/J] Yüksek, [Sağ Tık/K] Alçak', WIDTH - 511, baseY + 30);
+        const p2Desc = isVsAI ? '🤖 Otonom Yapay Zeka (Refleksler & Otomatik Süper Şut)'
+                              : 'Hareket: [YÖN] | Şut: [Sol Tık/J] Yüksek, [Sağ Tık/K] Alçak | 🔥 [L/0] Süper';
+        ctx.fillText(p2Desc, WIDTH - 511, baseY + 30);
+    }
+
+    // P1 & P2 Süper Güç Çubukları
+    function drawSuperBars() {
+        // P1 Bar (Sol Üst)
+        const p1W = (p1.superMeter / 100) * 180;
+        ctx.fillStyle = 'rgba(0,0,0,0.65)';
+        ctx.fillRect(40, 22, 180, 22);
+        ctx.fillStyle = p1.superMeter >= 100 ? '#ff3d00' : '#ffa000';
+        ctx.fillRect(40, 22, p1W, 22);
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(40, 22, 180, 22);
+        ctx.fillStyle = '#fff';
+        ctx.font = 'bold 12px Arial, sans-serif';
+        ctx.textAlign = 'left';
+        ctx.fillText(p1.superMeter >= 100 ? '🔥 SÜPER ŞUT: HAZIR! [SPACE]' : `🔥 SÜPER GÜÇ: %${Math.floor(p1.superMeter)}`, 40, 58);
+
+        // P2 Bar (Sağ Üst)
+        const p2W = (p2.superMeter / 100) * 180;
+        ctx.fillStyle = 'rgba(0,0,0,0.65)';
+        ctx.fillRect(WIDTH - 220, 22, 180, 22);
+        ctx.fillStyle = p2.superMeter >= 100 ? '#00e5ff' : '#0091ea';
+        ctx.fillRect(WIDTH - 220 + (180 - p2W), 22, p2W, 22);
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(WIDTH - 220, 22, 180, 22);
+        ctx.fillStyle = '#fff';
+        ctx.textAlign = 'right';
+        const p2Label = isVsAI ? (p2.superMeter >= 100 ? '🤖 SÜPER ŞUT HAZIR!' : `🤖 AI SÜPER: %${Math.floor(p2.superMeter)}`)
+                              : (p2.superMeter >= 100 ? '🔥 SÜPER ŞUT: HAZIR! [L/0]' : `🔥 P2 SÜPER: %${Math.floor(p2.superMeter)}`);
+        ctx.fillText(p2Label, WIDTH - 40, 58);
     }
 
     // Ana Oyun Döngüsü
     function gameLoop() {
         requestAnimationFrame(gameLoop);
+
+        ctx.save();
+        if (screenShake > 0) {
+            const sx = (Math.random() - 0.5) * screenShake;
+            const sy = (Math.random() - 0.5) * screenShake;
+            ctx.translate(sx, sy);
+            screenShake = Math.max(0, screenShake - 1);
+        }
 
         if (currentState === STATE_MENU) {
             // Menü Arka Planı (menu_bg.jpg)
@@ -745,20 +890,22 @@
                 ctx.fillRect(0, 0, WIDTH, HEIGHT);
             }
 
-            // Orijinal "OYUNA BAŞLA" Butonu
-            drawButton('OYUNA BAŞLA', btnStartRect);
+            // Menü Butonları
+            drawButton('🤖 1 OYUNCU (YAPAY ZEKAYA KARŞI)', btnVsAiRect);
+            drawButton('👥 2 OYUNCU (AYNI KLAVYE)', btn2PlayerRect);
 
             // Başlık & Yapımcı İmzası
             ctx.fillStyle = '#ffd700';
-            ctx.font = 'bold 22px Arial, sans-serif';
+            ctx.font = 'bold 24px Arial, sans-serif';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'top';
             ctx.fillText('⭐ MADE BY YUSUF KAAN ⭐', WIDTH / 2, 40);
 
             ctx.fillStyle = 'rgba(255,255,255,0.7)';
             ctx.font = '14px Arial, sans-serif';
-            ctx.fillText('Sistem Entegrasyonu: Halil Eren', WIDTH / 2, 70);
+            ctx.fillText('Sistem Entegrasyonu: Halil Eren • Süper Şut & Yapay Zeka', WIDTH / 2, 72);
 
+            ctx.restore();
             return;
         }
 
@@ -786,6 +933,7 @@
 
         if (currentState === STATE_PLAYING) {
             drawAnimatedControls(countdownMs);
+            drawSuperBars();
 
             if (countdownMs >= 3000) {
                 if (matchStartTicks === 0) matchStartTicks = now;
@@ -799,14 +947,47 @@
                     SoundFX.whistle();
                 }
 
-                // Hareket Tuşları
+                // 1. Oyuncu Hareket
                 if (keys['KeyA']) p1.move(-1);
                 if (keys['KeyD']) p1.move(1);
                 if (keys['KeyW']) p1.jump();
 
-                if (keys['ArrowLeft']) p2.move(-1);
-                if (keys['ArrowRight']) p2.move(1);
-                if (keys['ArrowUp']) p2.jump();
+                // 2. Oyuncu (AI veya İnsan)
+                if (isVsAI) {
+                    const aiCenter = p2.x + p2.width / 2;
+                    const ballX = ball.x;
+                    const ballY = ball.y;
+
+                    let targetX = ballX + 25;
+                    if (ballX < WIDTH * 0.45) {
+                        targetX = WIDTH - 240;
+                    }
+
+                    if (aiCenter < targetX - 12) {
+                        p2.move(1);
+                    } else if (aiCenter > targetX + 12) {
+                        p2.move(-1);
+                    }
+
+                    if (ballX > WIDTH * 0.35 && Math.abs(ballX - aiCenter) < 160 && ballY < GROUND_Y - 75) {
+                        if (Math.random() < 0.35) p2.jump();
+                    }
+
+                    const distToBall = Math.hypot(ballX - aiCenter, ballY - (p2.y + p2.height / 2));
+                    if (distToBall < 125 && ballX < aiCenter) {
+                        if (p2.superMeter >= 100 && Math.random() < 0.7) {
+                            p2.triggerSuperShot(-1);
+                        } else if (ballY < p2.y + 45) {
+                            p2.kick('high');
+                        } else {
+                            p2.kick('low');
+                        }
+                    }
+                } else {
+                    if (keys['ArrowLeft']) p2.move(-1);
+                    if (keys['ArrowRight']) p2.move(1);
+                    if (keys['ArrowUp']) p2.jump();
+                }
 
                 p1.update();
                 p2.update();
@@ -937,6 +1118,8 @@
             drawButton('Tekrar Başlat', btnRestartRect);
             drawButton('Ana Menü', btnMenuRect);
         }
+
+        ctx.restore();
     }
 
     // Ses Aç/Kapat Butonu
