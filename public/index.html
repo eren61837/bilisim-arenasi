@@ -16,47 +16,40 @@
 <div class="ambient-glow orb-2"></div>
 <div class="ambient-glow orb-3"></div>
 
-<!-- WELCOME & AUTH MODAL: GLOBAL LOGIN / REGISTER / GUEST SYSTEM -->
-<div id="modal-welcome" class="welcome-modal-backdrop" style="display:none;">
+<!-- MANDATORY LOGIN & REGISTRATION MODAL (ZORUNLU GİRİŞ) -->
+<div id="modal-welcome" class="welcome-modal-backdrop" style="display:flex;">
   <div class="welcome-modal">
-    <div class="welcome-logo">🎮</div>
-    <h1 class="welcome-title">BİLİŞİM ARENASINA<br>HOŞ GELDİN!</h1>
-    <div style="display:inline-block; background:rgba(0,219,255,0.15); color:#00dbff; border:1px solid #00dbff; padding:4px 14px; border-radius:20px; font-size:12px; font-weight:800; margin-bottom:14px;">👑 Sistem Geliştirici: Halil Eren</div>
+    <div class="welcome-logo">🔐</div>
+    <h1 class="welcome-title">BİLİŞİM ARENASINA<br>GİRİŞ ZORUNLUDUR</h1>
+    <div style="display:inline-block; background:rgba(255,152,0,0.15); color:#ff9800; border:1px solid #ff9800; padding:4px 14px; border-radius:20px; font-size:11px; font-weight:800; margin-bottom:14px;">🛡️ Tüm Oyuncular Kayıtlı veya Giriş Yapmış Olmalıdır</div>
 
     <!-- AUTH TABS -->
-    <div class="auth-tabs" style="display:flex; gap:6px; background:rgba(0,0,0,0.5); padding:4px; border-radius:10px; margin-bottom:18px; border:1px solid rgba(255,255,255,0.1);">
-      <button type="button" class="auth-tab-btn active" id="tab-auth-guest" style="flex:1; padding:8px 6px; border:none; border-radius:6px; background:#00dbff; color:#000; font-weight:900; font-size:12px; cursor:pointer;">🚀 Hızlı Giriş</button>
-      <button type="button" class="auth-tab-btn" id="tab-auth-login" style="flex:1; padding:8px 6px; border:none; border-radius:6px; background:transparent; color:#aaa; font-weight:700; font-size:12px; cursor:pointer;">🔑 Giriş Yap</button>
-      <button type="button" class="auth-tab-btn" id="tab-auth-register" style="flex:1; padding:8px 6px; border:none; border-radius:6px; background:transparent; color:#aaa; font-weight:700; font-size:12px; cursor:pointer;">📝 Kayıt Ol</button>
+    <div class="auth-tabs" style="display:flex; gap:6px; background:rgba(0,0,0,0.6); padding:4px; border-radius:10px; margin-bottom:18px; border:1px solid rgba(255,255,255,0.15);">
+      <button type="button" class="auth-tab-btn active" id="tab-auth-login" style="flex:1; padding:10px 8px; border:none; border-radius:6px; background:#00e676; color:#000; font-weight:900; font-size:13px; cursor:pointer;">🔑 Giriş Yap</button>
+      <button type="button" class="auth-tab-btn" id="tab-auth-register" style="flex:1; padding:10px 8px; border:none; border-radius:6px; background:transparent; color:#aaa; font-weight:700; font-size:13px; cursor:pointer;">📝 Kayıt Ol</button>
     </div>
 
-    <!-- 1. HIZLI GİRİŞ (MİSAFİR) -->
-    <div id="auth-panel-guest" class="auth-panel">
-      <p class="welcome-sub" style="margin-bottom:12px;">Şifresiz oyna! Oyuncu adını seç, anında tüm oyunlara katıl.</p>
-      <input type="text" id="welcome-name-input" class="welcome-name-input" placeholder="Oyuncu adın... (örn: ProGamer, Eren)" maxlength="20" autocomplete="off">
-      <div id="welcome-name-error" class="welcome-name-error" style="display:none;">En az 2 karakter gir!</div>
-      <button id="welcome-start-btn" class="welcome-start-btn">OYUNA GİR! 🚀</button>
-    </div>
-
-    <!-- 2. GİRİŞ YAP (HESAPLI) -->
-    <div id="auth-panel-login" class="auth-panel" style="display:none;">
-      <p class="welcome-sub" style="margin-bottom:12px;">Kayıtlı hesabınla giriş yap, rütbeni ve skorlarını koru!</p>
+    <!-- 1. GİRİŞ YAP (HESAPLI) -->
+    <div id="auth-panel-login" class="auth-panel" style="display:block;">
+      <p class="welcome-sub" style="margin-bottom:12px;">Kayıtlı hesabınla giriş yap, tüm oyunlara anında bağlan!</p>
       <input type="text" id="login-identifier-input" class="welcome-name-input" placeholder="Kullanıcı adın..." maxlength="30" autocomplete="username">
       <input type="password" id="login-password-input" class="welcome-name-input" placeholder="Şifren..." maxlength="50" autocomplete="current-password" style="margin-top:8px;">
       <div id="login-error" class="welcome-name-error" style="display:none;">Hata mesajı</div>
-      <button id="login-submit-btn" class="welcome-start-btn" style="background:linear-gradient(135deg, #00e676, #009624);">GİRİŞ YAP ⚡</button>
+      <button id="login-submit-btn" class="welcome-start-btn" style="background:linear-gradient(135deg, #00e676, #009624);">GİRİŞ YAP VE OYNA ⚡</button>
+      <p style="margin-top:12px; font-size:12px; color:#888;">Hesabın yok mu? <a href="#" id="link-go-register" style="color:#ff9800; font-weight:800; text-decoration:none;">Buradan 5 saniyede Kayıt Ol</a></p>
     </div>
 
-    <!-- 3. KAYIT OL (YENİ HESAP) -->
+    <!-- 2. KAYIT OL (YENİ HESAP) -->
     <div id="auth-panel-register" class="auth-panel" style="display:none;">
-      <p class="welcome-sub" style="margin-bottom:12px;">Yeni bir hesap aç, ismini başkası alamasın!</p>
-      <input type="text" id="reg-username-input" class="welcome-name-input" placeholder="İstediğin kullanıcı adı..." maxlength="20" autocomplete="username">
-      <input type="password" id="reg-password-input" class="welcome-name-input" placeholder="Şifren (en az 4 karakter)..." maxlength="50" autocomplete="new-password" style="margin-top:8px;">
+      <p class="welcome-sub" style="margin-bottom:12px;">Yeni hesap oluştur, kullanıcı adını rezerve et ve savaşa katıl!</p>
+      <input type="text" id="reg-username-input" class="welcome-name-input" placeholder="Kullanıcı adın (en az 2 karakter)..." maxlength="20" autocomplete="username">
+      <input type="password" id="reg-password-input" class="welcome-name-input" placeholder="Şifren (en az 3 karakter)..." maxlength="50" autocomplete="new-password" style="margin-top:8px;">
       <div id="reg-error" class="welcome-name-error" style="display:none;">Hata mesajı</div>
-      <button id="reg-submit-btn" class="welcome-start-btn" style="background:linear-gradient(135deg, #ff9800, #e65100);">HESAP OLUŞTUR 🛡️</button>
+      <button id="reg-submit-btn" class="welcome-start-btn" style="background:linear-gradient(135deg, #ff9800, #e65100);">HESAP OLUŞTUR VE GİR 🚀</button>
+      <p style="margin-top:12px; font-size:12px; color:#888;">Zaten hesabın var mı? <a href="#" id="link-go-login" style="color:#00e676; font-weight:800; text-decoration:none;">Buradan Giriş Yap</a></p>
     </div>
 
-    <p class="welcome-hint" style="margin-top:14px; font-size:11px; color:#777;">Tüm oyunlarda seçtiğin isim otomatik geçerli olur 🎮</p>
+    <p class="welcome-hint" style="margin-top:14px; font-size:11px; color:#666;">👑 Sistem: Halil Eren • MEB Uyumlu Çok Oyunculu Portal</p>
   </div>
 </div>
 
@@ -140,11 +133,11 @@
         <div class="hero-left">
             <h2>🚀 EFSANE OYUN ARENASINA HOŞ GELDİN</h2>
             <p>
-                İndirme yok, kurulum yok! Linke tıklayarak doğrudan arkadaşlarınla <strong>Counter-Strike 1.6</strong>, <strong>Ahmet Hakan Kutu Sumo</strong>, <strong>Minecraft 3D</strong>, <strong>Redmatch 3D Arena</strong>, <strong>Diep.io Tank</strong>, <strong>Zombs.io Üs Savunması</strong>, <strong>Vampire Survivors RPG</strong>, <strong>Kafa Topu Beyaz Saray</strong>, <strong>Beyaz Saray PixelPlace</strong>, <strong>SOS Arenası</strong>, <strong>Geometry Dash</strong> ve <strong>Chrome Cyber Dino Runner</strong> oyna!
+                İndirme yok, kurulum yok! Linke tıklayarak doğrudan arkadaşlarınla <strong>Counter-Strike 1.6</strong>, <strong>Ahmet Hakan Kutu Sumo</strong>, <strong>Stick War: Legacy</strong>, <strong>Minecraft 3D</strong>, <strong>Redmatch 3D Arena</strong>, <strong>Diep.io Tank</strong>, <strong>Zombs.io Üs Savunması</strong>, <strong>Vampire Survivors RPG</strong>, <strong>Kafa Topu</strong>, <strong>SOS Arenası</strong>, <strong>Geometry Dash</strong> ve <strong>Chrome Cyber Dino Runner</strong> oyna!
             </p>
             <div class="hero-badges-row">
                 <div class="hero-badge-item">⚡ <strong>Sıfır Gecikme</strong> (Yerel 60FPS)</div>
-                <div class="hero-badge-item">🎮 <strong>12 Efsane Oyun</strong> (Özenle Geliştirilmiş)</div>
+                <div class="hero-badge-item">🎮 <strong>12 Seçkin Oyun</strong> (Ultra Optimize)</div>
                 <div class="hero-badge-item" style="border-color:#ffd700; color:#ffd700">👑 <strong>Geliştirici: Halil Eren</strong></div>
                 <div class="hero-badge-item">🛡️ <strong>MEB Uyumlu &amp; Güvenli</strong></div>
             </div>
@@ -367,34 +360,7 @@
             </div>
         </a>
 
-        <!-- 8. BEYAZ SARAY (PIXELPLACE DÜNYA HARİTASI) -->
-        <a href="/pixelplace" class="game-card card-pixel" data-category="multi">
-            <div class="game-thumb" style="background: radial-gradient(circle, #08203e 0%, #05101a 100%);">
-                <span class="game-thumb-art">🌍</span>
-                <div class="thumb-gradient-overlay"></div>
-                <div class="genre-tag-floating" style="color:#00b0ff">CANLI PİKSEL TUVALİ</div>
-                <div class="live-player-badge" id="count-pixelplace">🟢 0 Oyuncu</div>
-            </div>
-            <div class="game-info">
-                <div class="game-title-row">
-                    <span class="game-title">Beyaz Saray (PixelPlace Dünya Haritası)</span>
-                </div>
-                <p class="game-desc">
-                    2048x1024 gerçek dünya haritasında sınıfla birlikte devasa piksel sanatı çiz! Korunan ülke sınırları, saydam bot paneli ve canlı anlık senkronizasyon.
-                </p>
-                <div class="game-tags">
-                    <span class="game-tag">🌍 2048x1024 Tuval</span>
-                    <span class="game-tag">Sınır Koruması</span>
-                    <span class="game-tag">Sıfır Gecikme</span>
-                    <span class="game-tag">34 Renk Paleti</span>
-                </div>
-                <div class="game-play-btn" style="background:linear-gradient(135deg,#00b0ff,#0077ff); color:#fff;">
-                    ▶ TUVALİ AÇ 🌍
-                </div>
-            </div>
-        </a>
-
-        <!-- 9. SOS OYUNU (10x10 & 25x24) -->
+        <!-- 8. SOS OYUNU (10x10 & 25x24) -->
         <a href="/sos" class="game-card card-sos" data-category="multi">
             <div class="game-thumb" style="background: radial-gradient(circle, #05232d 0%, #030f14 100%);">
                 <span class="game-thumb-art">🅂🅾🅂</span>

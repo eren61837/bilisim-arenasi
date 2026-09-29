@@ -33,29 +33,23 @@
     if (!modal) return;
 
     // Tabs & Panels
-    const tabGuest = document.getElementById('tab-auth-guest');
     const tabLogin = document.getElementById('tab-auth-login');
     const tabRegister = document.getElementById('tab-auth-register');
-    const panelGuest = document.getElementById('auth-panel-guest');
     const panelLogin = document.getElementById('auth-panel-login');
     const panelRegister = document.getElementById('auth-panel-register');
 
     function switchAuthTab(activeTab) {
-      [tabGuest, tabLogin, tabRegister].forEach(t => {
+      [tabLogin, tabRegister].forEach(t => {
         if (!t) return;
         t.style.background = 'transparent';
         t.style.color = '#aaa';
         t.classList.remove('active');
       });
-      [panelGuest, panelLogin, panelRegister].forEach(p => {
+      [panelLogin, panelRegister].forEach(p => {
         if (p) p.style.display = 'none';
       });
 
-      if (activeTab === 'guest') {
-        if (tabGuest) { tabGuest.style.background = '#00dbff'; tabGuest.style.color = '#000'; tabGuest.classList.add('active'); }
-        if (panelGuest) panelGuest.style.display = 'block';
-        document.getElementById('welcome-name-input')?.focus();
-      } else if (activeTab === 'login') {
+      if (activeTab === 'login') {
         if (tabLogin) { tabLogin.style.background = '#00e676'; tabLogin.style.color = '#000'; tabLogin.classList.add('active'); }
         if (panelLogin) panelLogin.style.display = 'block';
         document.getElementById('login-identifier-input')?.focus();
@@ -66,15 +60,22 @@
       }
     }
 
-    tabGuest?.addEventListener('click', () => switchAuthTab('guest'));
     tabLogin?.addEventListener('click', () => switchAuthTab('login'));
     tabRegister?.addEventListener('click', () => switchAuthTab('register'));
+
+    document.getElementById('link-go-register')?.addEventListener('click', (e) => {
+      e.preventDefault();
+      switchAuthTab('register');
+    });
+    document.getElementById('link-go-login')?.addEventListener('click', (e) => {
+      e.preventDefault();
+      switchAuthTab('login');
+    });
 
     // Success login helper
     function onAuthSuccess(username, token, isRegistered) {
       localStorage.setItem('portal_username', username);
       localStorage.setItem('portal_game_username', username);
-      localStorage.setItem('pixelplace_user', JSON.stringify({ username }));
       if (token) localStorage.setItem('session_token', token);
       localStorage.setItem('portal_is_registered', isRegistered ? 'true' : 'false');
 
@@ -93,18 +94,17 @@
     }
 
     const isBanned = existing && isNameProfane(existing);
-    const isDefaultAuto = existing && (existing.startsWith('Kral_') || existing.startsWith('Misafir_'));
+    const hasValidAuth = (localStorage.getItem('portal_is_registered') === 'true' || localStorage.getItem('session_token')) && existing && existing.length >= 2 && !isBanned;
 
-    if (existing && existing.length >= 2 && !isBanned && !isDefaultAuto) {
+    if (hasValidAuth) {
       modal.classList.add('hidden');
       modal.style.display = 'none';
-      if (!localStorage.getItem('pixelplace_user')) {
-        localStorage.setItem('pixelplace_user', JSON.stringify({ username: existing }));
-      }
+      modal.setAttribute('style', 'display: none !important;');
     } else {
       modal.classList.remove('hidden');
       modal.style.display = 'flex';
-      setTimeout(() => document.getElementById('welcome-name-input')?.focus(), 150);
+      modal.setAttribute('style', 'display: flex !important;');
+      switchAuthTab('login');
     }
 
     // 1. Guest Start
@@ -193,8 +193,8 @@
         if (errReg) { errReg.style.display = 'block'; errReg.textContent = 'Uygunsuz kelime içeremez!'; }
         return;
       }
-      if (!pw || pw.length < 4) {
-        if (errReg) { errReg.style.display = 'block'; errReg.textContent = 'Şifre en az 4 karakter olmalı!'; }
+      if (!pw || pw.length < 3) {
+        if (errReg) { errReg.style.display = 'block'; errReg.textContent = 'Şifre en az 3 karakter olmalı!'; }
         return;
       }
       if (errReg) errReg.style.display = 'none';
@@ -236,9 +236,9 @@
       const bType = document.getElementById('prof-badge-type');
       if (dName) dName.textContent = curUser;
       if (bType) {
-        bType.textContent = isReg ? '⭐ Kayıtlı Üye (Güvenli)' : '🟢 Misafir Oyuncu';
-        bType.style.color = isReg ? '#ffd54f' : '#00dbff';
-        bType.style.borderColor = isReg ? '#ffd54f' : '#00dbff';
+        bType.textContent = isReg ? '⭐ Kayıtlı Üye (Güvenli)' : '🟢 Hesaplı Oyuncu';
+        bType.style.color = '#ffd54f';
+        bType.style.borderColor = '#ffd54f';
       }
       if (modalProfile) modalProfile.style.display = 'flex';
     });
@@ -252,7 +252,8 @@
       if (modal) {
         modal.classList.remove('hidden');
         modal.style.display = 'flex';
-        switchAuthTab('guest');
+        modal.setAttribute('style', 'display: flex !important;');
+        switchAuthTab('register');
       }
     });
 
@@ -261,7 +262,7 @@
       if (modal) {
         modal.classList.remove('hidden');
         modal.style.display = 'flex';
-        modal.style.setProperty('display', 'flex', 'important');
+        modal.setAttribute('style', 'display: flex !important;');
         switchAuthTab('login');
       }
     });
@@ -270,13 +271,13 @@
       try { await fetch('/api/logout', { method: 'POST' }); } catch (_) {}
       localStorage.removeItem('portal_username');
       localStorage.removeItem('portal_game_username');
-      localStorage.removeItem('pixelplace_user');
       localStorage.removeItem('session_token');
       localStorage.removeItem('portal_is_registered');
       if (modalProfile) modalProfile.style.display = 'none';
       if (modal) {
         modal.classList.remove('hidden');
         modal.style.display = 'flex';
+        modal.setAttribute('style', 'display: flex !important;');
         switchAuthTab('login');
       }
     });
@@ -398,7 +399,6 @@
           updateCount('count-cs16', data.games.cs16);
           updateCount('count-minecraft', data.games.minecraft || data.games.eaglercraft);
           updateCount('count-kafatopu', data.games.kafatopu);
-          updateCount('count-pixelplace', data.games.pixelplace);
           updateCount('count-sos', data.games.sos);
           updateCount('count-geometrydash', data.games.geometrydash);
           updateCount('count-survivor', data.games.survivor);
@@ -416,7 +416,6 @@
             { id: 'count-minecraft', count: (data.games.minecraft || data.games.eaglercraft || 0), name: 'Minecraft 3D & Eagler' },
             { id: 'count-sumo', count: data.games.sumo || 0, name: 'Ahmet Hakan: Kutu Sumo' },
             { id: 'count-kafatopu', count: data.games.kafatopu || 0, name: 'Kafa Topu: Beyaz Saray' },
-            { id: 'count-pixelplace', count: data.games.pixelplace || 0, name: 'Beyaz Saray (PixelPlace)' },
             { id: 'count-sos', count: data.games.sos || 0, name: 'SOS Arenası (10x10 & 25x24)' },
             { id: 'count-geometrydash', count: data.games.geometrydash || 0, name: 'Geometry Neon Dash' },
             { id: 'count-survivor', count: data.games.survivor || 0, name: 'Vampire Survivors RPG' },
@@ -627,7 +626,6 @@
         { path: '/stickwar', name: 'STICK WAR: LEGACY' },
         { path: '/minecraft', name: 'MINECRAFT 3D' },
         { path: '/kafatopu', name: 'KAFA TOPU' },
-        { path: '/pixelplace', name: 'BEYAZ SARAY' },
         { path: '/sos', name: 'SOS ARENASI' },
         { path: '/geometrydash', name: 'GEOMETRY DASH' },
         { path: '/survivor', name: 'VAMPIRE SURVIVORS' },
@@ -796,16 +794,16 @@
     window.addEventListener('resize', onResize);
     onResize();
 
-    // Reduced from 45 to 20 particles
-    const COUNT = 20;
+    // Reduced to 12 particles for ultra-low CPU and battery usage
+    const COUNT = 12;
     const particles = [];
     for (let i = 0; i < COUNT; i++) {
       particles.push({
         x: Math.random() * cvs.width,
         y: Math.random() * cvs.height,
-        vx: (Math.random() - 0.5) * 0.4,
-        vy: (Math.random() - 0.5) * 0.4,
-        r: 1.5 + Math.random() * 1.5
+        vx: (Math.random() - 0.5) * 0.3,
+        vy: (Math.random() - 0.5) * 0.3,
+        r: 1.5 + Math.random() * 1.2
       });
     }
 
@@ -815,7 +813,7 @@
       mousePos.y = e.clientY;
     });
 
-    // 30fps cap: don't run at 60fps unnecessarily (saves ~50% CPU)
+    // 30fps cap: don't run at 60fps unnecessarily (saves ~75% CPU)
     let lastFrame = 0;
     function loop(now) {
       requestAnimationFrame(loop);
@@ -838,17 +836,17 @@
         cx.fillStyle = 'rgba(0, 219, 255, 0.45)';
         cx.fill();
 
-        // Connect lines only within 70px (reduced from 120px)
+        // Connect lines only within 55px (minimal O(N) operations)
         for (let j = i + 1; j < particles.length; j++) {
           const p2 = particles[j];
           const dx = p.x - p2.x;
           const dy = p.y - p2.y;
-          const dist = Math.sqrt(dx * dx + dy * dy); // faster than hypot
-          if (dist < 70) {
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          if (dist < 55) {
             cx.beginPath();
             cx.moveTo(p.x, p.y);
             cx.lineTo(p2.x, p2.y);
-            cx.strokeStyle = `rgba(0, 219, 255, ${0.15 * (1 - dist / 70)})`;
+            cx.strokeStyle = `rgba(0, 219, 255, ${0.15 * (1 - dist / 55)})`;
             cx.lineWidth = 0.7;
             cx.stroke();
           }

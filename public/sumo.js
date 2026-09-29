@@ -1279,11 +1279,58 @@
     drawPixelText(ctx, `${gameSettings.k1.ad}: ${skor1}`, 10, 6, C_RED, 1);
     drawPixelText(ctx, `${gameSettings.k2.ad}: ${skor2}`, W - 10, 6, '#5cc4e4', 1, 'right');
 
+    // YAPIMCILAR KÜNYESİ (Ahmet Baki ve Hakan Samet)
+    drawPixelText(ctx, "YAPIMCILAR: AHMET BAKI & HAKAN SAMET", W / 2, H - 7, '#ffd700', 1, 'center');
+
     // Süper Güç Barları
     const p1Fill = document.getElementById('p1-super-fill');
     const p2Fill = document.getElementById('p2-super-fill');
     if (p1Fill) p1Fill.style.width = `${p1.superMeter}%`;
     if (p2Fill) p2Fill.style.width = `${p2.superMeter}%`;
+  }
+
+  // RETRO 90S ARCADE LOADING SCREEN MOTORU
+  function initLoadingScreen() {
+    const screen = document.getElementById('sumo-loading-screen');
+    const fill = document.getElementById('sumo-loading-bar-fill');
+    const status = document.getElementById('sumo-loading-status');
+    if (!screen || !fill) return;
+
+    let progress = 0;
+    const interval = setInterval(() => {
+      progress += Math.floor(Math.random() * 16 + 12);
+      if (progress >= 100) {
+        progress = 100;
+        clearInterval(interval);
+        fill.style.width = '100%';
+        if (status) status.textContent = 'Arena hazır! Yapımcılar: Ahmet Baki ve Hakan Samet %100';
+
+        // 8-bit retro açılış sesi
+        try {
+          const actx = new (window.AudioContext || window.webkitAudioContext)();
+          const osc = actx.createOscillator();
+          const g = actx.createGain();
+          osc.connect(g);
+          g.connect(actx.destination);
+          osc.frequency.setValueAtTime(260, actx.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(780, actx.currentTime + 0.16);
+          g.gain.setValueAtTime(0.2, actx.currentTime);
+          g.gain.linearRampToValueAtTime(0.01, actx.currentTime + 0.16);
+          osc.start(actx.currentTime);
+          osc.stop(actx.currentTime + 0.16);
+        } catch (_) {}
+
+        setTimeout(() => {
+          screen.classList.add('fade-out');
+          setTimeout(() => {
+            if (screen.parentNode) screen.parentNode.removeChild(screen);
+          }, 600);
+        }, 500);
+      } else {
+        fill.style.width = `${progress}%`;
+        if (status) status.textContent = `Verlet ragdoll fizik motoru yükleniyor... %${progress}`;
+      }
+    }, 110);
   }
 
   // UI Düğmeleri
@@ -1335,6 +1382,7 @@
   });
 
   // Başlat
+  initLoadingScreen();
   turBaslat();
   oyunDongusu();
 })();

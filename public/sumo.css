@@ -557,3 +557,114 @@ body, html {
 }
 
 .hidden { display: none !important; }
+
+/* RETRO 90S ARCADE LOADING SCREEN */
+.sumo-loading-backdrop {
+    position: fixed;
+    inset: 0;
+    background: radial-gradient(circle, #1a0f0d 0%, #060202 100%);
+    z-index: 99999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 0.5s ease, visibility 0.5s ease;
+}
+
+.sumo-loading-backdrop.fade-out {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+}
+
+.sumo-loading-box {
+    background: rgba(20, 10, 8, 0.95);
+    border: 3px solid #ff3d00;
+    border-radius: 18px;
+    padding: 36px 32px;
+    text-align: center;
+    max-width: 480px;
+    width: 90%;
+    box-shadow: 0 0 50px rgba(255, 61, 0, 0.4), inset 0 0 20px rgba(255, 61, 0, 0.2);
+    animation: loadingBoxPulse 2s infinite alternate;
+}
+
+@keyframes loadingBoxPulse {
+    0% { box-shadow: 0 0 30px rgba(255, 61, 0, 0.3); }
+    100% { box-shadow: 0 0 60px rgba(255, 61, 0, 0.7); }
+}
+
+.sumo-loading-logo {
+    font-size: 54px;
+    margin-bottom: 10px;
+    animation: logoBounce 0.8s ease-in-out infinite alternate;
+}
+
+@keyframes logoBounce {
+    0% { transform: translateY(0) scale(1); }
+    100% { transform: translateY(-8px) scale(1.1); }
+}
+
+.sumo-loading-title {
+    font-size: 24px;
+    font-weight: 900;
+    letter-spacing: 2px;
+    color: #fff;
+    margin-bottom: 4px;
+    text-shadow: 0 0 15px rgba(255, 61, 0, 0.8);
+}
+
+.sumo-loading-subtitle {
+    font-size: 13px;
+    color: #aaa;
+    margin-bottom: 20px;
+}
+
+.sumo-credits-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(255, 215, 0, 0.12);
+    border: 1px solid #ffd700;
+    border-radius: 20px;
+    padding: 6px 16px;
+    margin-bottom: 24px;
+}
+
+.sc-badge {
+    color: #ffd700;
+    font-weight: 900;
+    font-size: 12px;
+    letter-spacing: 0.5px;
+}
+
+.sc-names {
+    color: #fff;
+    font-weight: 800;
+    font-size: 13px;
+    letter-spacing: 0.5px;
+}
+
+.sumo-loading-bar-wrap {
+    width: 100%;
+    height: 12px;
+    background: rgba(0, 0, 0, 0.7);
+    border-radius: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    overflow: hidden;
+    margin-bottom: 12px;
+}
+
+.sumo-loading-bar-fill {
+    width: 0%;
+    height: 100%;
+    background: linear-gradient(90deg, #ff3d00, #ff9100, #ffd700);
+    box-shadow: 0 0 12px rgba(255, 61, 0, 0.8);
+    transition: width 0.15s ease-out;
+}
+
+.sumo-loading-status {
+    font-size: 11px;
+    color: #888;
+    font-family: monospace;
+    font-weight: 700;
+}

@@ -118,9 +118,9 @@ function findUserBySession(token) {
 }
 
 const OFFICIAL_BOT = {
-  enabled: true,
-  repairSpeedMs: 4000,
-  doodlesEnabled: true
+  enabled: false,
+  repairSpeedMs: 999999,
+  doodlesEnabled: false
 };
 let worldCountryPixels = [];
 
@@ -231,19 +231,8 @@ function initRoomCanvases() {
   }
 }
 
-initRoomCanvases();
-
-// Periodic Auto-Save Every 30 seconds
-setInterval(() => {
-  for (const [roomId, room] of Object.entries(ROOMS)) {
-    if (room.buffer) {
-      const file = path.join(DATA_DIR, `canvas_${roomId}.bin`);
-      fs.writeFile(file, room.buffer, (err) => {
-        if (err) console.error(`Error saving canvas ${roomId}:`, err);
-      });
-    }
-  }
-}, 30000);
+// PixelPlace canvas buffers disabled to optimize RAM for Render free tier (20+ concurrent players)
+// initRoomCanvases();
 
 // -------------------------------------------------------------
 // 3. HTTP SERVER & API ROUTES
@@ -641,8 +630,8 @@ exit
         if (!username || username.trim().length < 2 || username.trim().length > 20) {
           return sendJson(res, 400, { error: 'Kullanıcı adı 2 ile 20 karakter arasında olmalıdır.' });
         }
-        if (!password || password.length < 4) {
-          return sendJson(res, 400, { error: 'Şifre en az 4 karakter olmalıdır.' });
+        if (!password || password.length < 3) {
+          return sendJson(res, 400, { error: 'Şifre en az 3 karakter olmalıdır.' });
         }
 
         const cleanUsername = username.trim();
@@ -783,8 +772,7 @@ exit
 
   // STATIC FILE SERVING & CLEAN URLS
   let safePath = path.normalize(pathname).replace(/^(\.\.[\/\\])+/, '');
-  if (pathname === '/pixelplace') safePath = '/pixelplace.html';
-  else if (pathname === '/xox') safePath = '/xox.html';
+  if (pathname === '/xox') safePath = '/xox.html';
   else if (pathname === '/cs16') safePath = '/cs16.html';
   else if (pathname === '/agario') safePath = '/agario.html';
   else if (pathname === '/papermap' || pathname === '/slither') safePath = '/slither.html';
@@ -845,12 +833,23 @@ exit
   fs.createReadStream(filePath).pipe(res);
 });
 
-// -------------------------------------------------------------
-// 4. WEBSOCKET REAL-TIME SERVER
-// -------------------------------------------------------------
-const wss = new WebSocketServer({ server });
+// Highly optimized WebSocket Server for Render 512MB RAM free tier
+const wss = new WebSocketServer({ 
+  server, 
+  perMessageDeflate: false,
+  maxPayload: 1024 * 64
+});
 const gamesManager = initGamesManager(wss, db);
 const connectedClients = new Set();
+
+// Automatic dead connection cleanup heartbeat every 30s
+setInterval(() => {
+  wss.clients.forEach(ws => {
+    if (ws.isAlive === false) return ws.terminate();
+    ws.isAlive = false;
+    ws.ping();
+  });
+}, 30000);
 
 function broadcastToRoom(roomId, message, senderWs = null) {
   const data = typeof message === 'string' ? message : JSON.stringify(message);
@@ -858,19 +857,14 @@ function broadcastToRoom(roomId, message, senderWs = null) {
     if (client.readyState === WebSocket.OPEN && client.room === roomId) {
       if (!senderWs || client !== senderWs) {
         client.send(data);
-        if (client.isSocketIo && message && message.type === 'p') {
-          client.send(`42["p",[${message.x},${message.y},${message.c},1]]`);
-        }
       }
     }
   }
 }
 
-// ================================================================
-// ================================================================
-// PIXELPLACE WORLDWIDE MEME PAINTERS (TÜM DÜNYAYI BOYAYAN MEME SANATÇILARI)
-// ================================================================
+// PixelPlace bots disabled to maximize CPU and memory efficiency
 setTimeout(() => {
+  if (!OFFICIAL_BOT.enabled) return;
   const WORLD = ROOMS.world;
   if (!WORLD || !WORLD.buffer) return;
 
