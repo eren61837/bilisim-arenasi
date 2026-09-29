@@ -216,7 +216,7 @@
     // ------------------------------------------------------------------------
     const ROAD_WIDTH = 22.0;
     const HALF_ROAD = ROAD_WIDTH / 2.0;
-    const BARRIER_HEIGHT = 2.4;
+    const BARRIER_HEIGHT = 3.6;
     const CAR_WIDTH = 2.3;
     const MAX_LATERAL = HALF_ROAD - CAR_WIDTH * 0.55; // Maximum lateral offset before hitting steel barrier
 
@@ -528,6 +528,42 @@
         scene.add(leftRail);
         scene.add(rightRail);
 
+        // Vertical Steel Support Posts with LED Beacons along both barriers ("Demir Sur")
+        const postGeo = new THREE.CylinderGeometry(0.35, 0.35, BARRIER_HEIGHT + 0.6, 8);
+        const postMat = new THREE.MeshStandardMaterial({ color: 0x37474f, metalness: 0.9, roughness: 0.2 });
+        const leftBeaconMat = new THREE.MeshBasicMaterial({ color: 0x00e5ff });
+        const rightBeaconMat = new THREE.MeshBasicMaterial({ color: 0xff3d00 });
+        const beaconGeo = new THREE.SphereGeometry(0.28, 8, 8);
+
+        for (let i = 0; i <= SEGMENTS; i += 6) {
+            const u = i / SEGMENTS;
+            const frame = getTrackFrameAt(u);
+            const pt = frame.pt;
+            const norm = frame.normal;
+
+            // Left Post & Beacon
+            const leftPostPos = new THREE.Vector3().copy(pt).addScaledVector(norm, HALF_ROAD + 1.25);
+            leftPostPos.y = (BARRIER_HEIGHT + 0.6) / 2;
+            const lp = new THREE.Mesh(postGeo, postMat);
+            lp.position.copy(leftPostPos);
+            scene.add(lp);
+
+            const lb = new THREE.Mesh(beaconGeo, leftBeaconMat);
+            lb.position.set(leftPostPos.x, BARRIER_HEIGHT + 0.6, leftPostPos.z);
+            scene.add(lb);
+
+            // Right Post & Beacon
+            const rightPostPos = new THREE.Vector3().copy(pt).addScaledVector(norm, -(HALF_ROAD + 1.25));
+            rightPostPos.y = (BARRIER_HEIGHT + 0.6) / 2;
+            const rp = new THREE.Mesh(postGeo, postMat);
+            rp.position.copy(rightPostPos);
+            scene.add(rp);
+
+            const rb = new THREE.Mesh(beaconGeo, rightBeaconMat);
+            rb.position.set(rightPostPos.x, BARRIER_HEIGHT + 0.6, rightPostPos.z);
+            scene.add(rb);
+        }
+
         // Start / Finish Line 3D Overhead Gantry Arch
         buildStartFinishGantry();
     }
@@ -829,61 +865,80 @@
         }
 
         updatePlayerControls(dt, keys) {
-            const topSpeed = (this.isNitro && this.nitro > 0) ? this.maxNitroSpeed : this.maxNormalSpeed;
+            // 1. Process Nitro Request FIRST (works from 0 km/h, at any speed!)
+            const nitroPressed = (keys.nitro || keys.screenNitro || keys.keyN) && this.nitro > 0.5;
+            this.isNitro = nitroPressed;
 
-            // Throttle & Brake
-            if (keys.up) {
-                let acc = this.accelRate;
-                if (this.isNitro && this.nitro > 0) {
-                    acc *= 1.45;
-                    this.nitro = Math.max(0, this.nitro - 18 * dt);
-                }
-                this.speed = Math.min(topSpeed, this.speed + acc * dt);
-            } else if (keys.down) {
-                this.speed = Math.max(-12, this.speed - this.brakeRate * dt);
+            const topSpeed = this.isNitro ? this.maxNitroSpeed : this.maxNormalSpeed;
+
+            // 2. Throttle, Brake & Active Rocket Boost
+            if (this.isNitro) {
+                // Active rocket boost surges forward even without holding W!
+                const nitroBurst = this.accelRate * 1.9 + 28.0;
+                this.speed = Math.min(topSpeed, this.speed + nitroBurst * dt);
+                this.nitro = Math.max(0, this.nitro - 22.0 * dt);
+
+                // Flash and pulse nitro button
+                const nitroBtn = document.getElementById('btn-screen-nitro');
+                if (nitroBtn) nitroBtn.classList.add('active-nitro');
             } else {
-                // Smooth rolling resistance
-                this.speed *= Math.pow(0.988, dt * 60);
-                if (Math.abs(this.speed) < 0.2) this.speed = 0;
+                const nitroBtn = document.getElementById('btn-screen-nitro');
+                if (nitroBtn) nitroBtn.classList.remove('active-nitro');
+
+                if (keys.up) {
+                    this.speed = Math.min(topSpeed, this.speed + this.accelRate * dt);
+                } else if (keys.down) {
+                    this.speed = Math.max(-14, this.speed - this.brakeRate * dt);
+                } else {
+                    // Smooth rolling resistance
+                    this.speed *= Math.pow(0.988, dt * 60);
+                    if (Math.abs(this.speed) < 0.2) this.speed = 0;
+                }
+
+                // Slowly recharge nitro when cruising
+                this.nitro = Math.min(100, this.nitro + 7.5 * dt);
             }
 
-            // Steering
-            const speedRatio = Math.min(1.0, Math.abs(this.speed) / 28.0);
-            const steerSensitivity = 16.0 * speedRatio;
+            // 3. Progressive Steering
+            const speedRatio = Math.min(1.0, Math.abs(this.speed) / 26.0);
+            const steerSensitivity = 16.5 * speedRatio;
 
             if (keys.left) {
                 this.lateralVel += steerSensitivity * dt;
-                this.steerAngle = Math.max(-0.45, this.steerAngle - 2.8 * dt);
+                this.steerAngle = Math.max(-0.45, this.steerAngle - 3.2 * dt);
             } else if (keys.right) {
                 this.lateralVel -= steerSensitivity * dt;
-                this.steerAngle = Math.min(0.45, this.steerAngle + 2.8 * dt);
+                this.steerAngle = Math.min(0.45, this.steerAngle + 3.2 * dt);
             } else {
-                this.steerAngle *= Math.pow(0.85, dt * 60);
+                this.steerAngle *= Math.pow(0.82, dt * 60);
             }
 
-            // Drift / Handbrake (Space)
-            this.isDrifting = keys.handbrake && Math.abs(this.speed) > 18.0;
+            // 4. Drift / Handbrake (Space)
+            this.isDrifting = keys.handbrake && Math.abs(this.speed) > 16.0;
             if (this.isDrifting) {
-                this.speed *= Math.pow(0.985, dt * 60);
-                this.driftAngle = THREE.MathUtils.lerp(this.driftAngle, (keys.left ? -0.35 : (keys.right ? 0.35 : 0)), 0.12);
-                this.nitro = Math.min(100, this.nitro + 16 * dt); // Refill nitro on drift!
-                this.driftScore += Math.floor(Math.abs(this.speed) * 4 * dt);
+                this.speed *= Math.pow(0.986, dt * 60);
+                this.driftAngle = THREE.MathUtils.lerp(this.driftAngle, (keys.left ? -0.38 : (keys.right ? 0.38 : 0)), 0.14);
+                this.nitro = Math.min(100, this.nitro + 22.0 * dt); // Big nitro recharge on drift!
+                this.driftScore += Math.floor(Math.abs(this.speed) * 5 * dt);
             } else {
-                this.driftAngle *= Math.pow(0.82, dt * 60);
+                this.driftAngle *= Math.pow(0.80, dt * 60);
             }
 
-            // Nitro Boost (Shift)
-            this.isNitro = keys.nitro && this.nitro > 2 && this.speed > 10;
+            // 5. Visual Nitro Flame: Dynamic Pulsing Scale & Light
+            if (this.view.nitroFlame) {
+                this.view.nitroFlame.visible = this.isNitro;
+                if (this.isNitro) {
+                    const flicker = 1.0 + Math.random() * 0.4;
+                    this.view.nitroFlame.scale.set(flicker, 1.4 + Math.random() * 0.8, flicker);
+                }
+            }
 
-            // Visual Nitro Flame
-            this.view.nitroFlame.visible = this.isNitro;
-
-            // Quick Recovery / Reset Track (R)
+            // 6. Quick Recovery / Reset Track (R)
             if (keys.reset) {
                 this.lateralOffset = 0;
                 this.lateralVel = 0;
                 this.driftAngle = 0;
-                this.speed = Math.min(this.speed, 25);
+                this.speed = Math.max(15, Math.min(this.speed, 25));
                 keys.reset = false;
             }
         }
@@ -971,30 +1026,71 @@
         right: false,
         handbrake: false,
         nitro: false,
+        screenNitro: false,
         reset: false
     };
 
     window.addEventListener('keydown', e => {
         initAudio();
         const code = e.code;
-        if (code === 'KeyW' || code === 'ArrowUp') keys.up = true;
-        if (code === 'KeyS' || code === 'ArrowDown') keys.down = true;
-        if (code === 'KeyA' || code === 'ArrowLeft') keys.left = true;
-        if (code === 'KeyD' || code === 'ArrowRight') keys.right = true;
+        const key = e.key ? e.key.toLowerCase() : '';
+        if (code === 'KeyW' || code === 'ArrowUp' || key === 'w') keys.up = true;
+        if (code === 'KeyS' || code === 'ArrowDown' || key === 's') keys.down = true;
+        if (code === 'KeyA' || code === 'ArrowLeft' || key === 'a') keys.left = true;
+        if (code === 'KeyD' || code === 'ArrowRight' || key === 'd') keys.right = true;
         if (code === 'Space') keys.handbrake = true;
-        if (code === 'ShiftLeft' || code === 'ShiftRight') keys.nitro = true;
-        if (code === 'KeyR') keys.reset = true;
+        if (code === 'ShiftLeft' || code === 'ShiftRight' || key === 'shift' || code === 'KeyN' || key === 'n' || code === 'KeyE' || key === 'e' || code === 'KeyF' || key === 'f') {
+            keys.nitro = true;
+        }
+        if (code === 'KeyC' || key === 'c') {
+            state.cameraMode = ((state.cameraMode || 0) + 1) % 2;
+        }
+        if (code === 'KeyR' || key === 'r') keys.reset = true;
     });
 
     window.addEventListener('keyup', e => {
         const code = e.code;
-        if (code === 'KeyW' || code === 'ArrowUp') keys.up = false;
-        if (code === 'KeyS' || code === 'ArrowDown') keys.down = false;
-        if (code === 'KeyA' || code === 'ArrowLeft') keys.left = false;
-        if (code === 'KeyD' || code === 'ArrowRight') keys.right = false;
+        const key = e.key ? e.key.toLowerCase() : '';
+        if (code === 'KeyW' || code === 'ArrowUp' || key === 'w') keys.up = false;
+        if (code === 'KeyS' || code === 'ArrowDown' || key === 's') keys.down = false;
+        if (code === 'KeyA' || code === 'ArrowLeft' || key === 'a') keys.left = false;
+        if (code === 'KeyD' || code === 'ArrowRight' || key === 'd') keys.right = false;
         if (code === 'Space') keys.handbrake = false;
-        if (code === 'ShiftLeft' || code === 'ShiftRight') keys.nitro = false;
+        if (code === 'ShiftLeft' || code === 'ShiftRight' || key === 'shift' || code === 'KeyN' || key === 'n' || code === 'KeyE' || key === 'e' || code === 'KeyF' || key === 'f') {
+            keys.nitro = false;
+        }
     });
+
+    // Touch & Mouse Interactive Nitro Buttons
+    function setupNitroControls() {
+        const btn = document.getElementById('btn-screen-nitro');
+        const gauge = document.getElementById('hud-gauge-clickable');
+
+        function startNitro(e) {
+            if (e) e.preventDefault();
+            initAudio();
+            keys.screenNitro = true;
+        }
+
+        function endNitro(e) {
+            if (e) e.preventDefault();
+            keys.screenNitro = false;
+        }
+
+        if (btn) {
+            btn.addEventListener('pointerdown', startNitro);
+            btn.addEventListener('pointerup', endNitro);
+            btn.addEventListener('pointercancel', endNitro);
+            btn.addEventListener('pointerleave', endNitro);
+        }
+        if (gauge) {
+            gauge.addEventListener('pointerdown', startNitro);
+            gauge.addEventListener('pointerup', endNitro);
+            gauge.addEventListener('pointercancel', endNitro);
+            gauge.addEventListener('pointerleave', endNitro);
+        }
+    }
+    setupNitroControls();
 
     // Metallic Sparks from Steel Barrier Collisions
     const sparkParticles = [];
@@ -1070,30 +1166,40 @@
         const carPos = playerCar.view.carGroup.position;
         const forward = new THREE.Vector3(0, 0, 1).applyQuaternion(playerCar.view.carGroup.quaternion);
 
-        // Chase camera positioned behind and above the car
-        const followDist = 8.8 + (playerCar.speed / playerCar.maxNitroSpeed) * 3.5;
-        const followHeight = 3.6;
+        if (state.cameraMode === 1) {
+            // Hood / Bumper 1st-Person Immersive Camera
+            desiredCamPos.copy(carPos)
+                .addScaledVector(forward, 1.6)
+                .add(new THREE.Vector3(0, 1.3, 0));
+            desiredLookTarget.copy(carPos)
+                .addScaledVector(forward, 22.0)
+                .add(new THREE.Vector3(0, 1.0, 0));
+        } else {
+            // Chase 3rd-Person Camera
+            const followDist = 8.6 + (playerCar.speed / playerCar.maxNitroSpeed) * 3.8;
+            const followHeight = 3.6;
 
-        desiredCamPos.copy(carPos)
-            .subScaledVector(forward, followDist)
-            .add(new THREE.Vector3(0, followHeight, 0));
+            desiredCamPos.copy(carPos)
+                .subScaledVector(forward, followDist)
+                .add(new THREE.Vector3(0, followHeight, 0));
+            desiredLookTarget.copy(carPos)
+                .addScaledVector(forward, 6.0)
+                .add(new THREE.Vector3(0, 1.2, 0));
+        }
 
-        // Camera Shake on barrier crash
+        // Camera Shake on barrier crash or extreme nitro
         if (cameraShake > 0) {
             desiredCamPos.x += (Math.random() - 0.5) * cameraShake * 1.5;
             desiredCamPos.y += (Math.random() - 0.5) * cameraShake * 1.5;
             cameraShake = Math.max(0, cameraShake - dt * 2.5);
         }
 
-        camera.position.lerp(desiredCamPos, Math.min(1.0, 10.0 * dt));
-
-        // Look slightly ahead of the car
-        desiredLookTarget.copy(carPos).addScaledVector(forward, 6.0).add(new THREE.Vector3(0, 1.2, 0));
+        camera.position.lerp(desiredCamPos, Math.min(1.0, 12.0 * dt));
         camera.lookAt(desiredLookTarget);
 
-        // Dynamic FOV kicking back during Nitro
-        const targetFov = playerCar.isNitro ? 78 : 65;
-        camera.fov = THREE.MathUtils.lerp(camera.fov, targetFov, 8.0 * dt);
+        // Dynamic FOV kicking back during Nitro for extreme speed sensation!
+        const targetFov = playerCar.isNitro ? 84 : (state.cameraMode === 1 ? 75 : 65);
+        camera.fov = THREE.MathUtils.lerp(camera.fov, targetFov, 9.0 * dt);
         camera.updateProjectionMatrix();
     }
 

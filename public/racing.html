@@ -141,13 +141,20 @@
         </div>
 
         <!-- SPEEDOMETER & NITRO GAUGE -->
-        <div class="hud-speed-gauge">
+        <div class="hud-speed-gauge" id="hud-gauge-clickable" title="Nitroyu köklemek için tıkla veya basılı tut!">
             <div class="speed-number"><span id="hud-speed">0</span> <small>KM/H</small></div>
             <div class="nitro-bar-wrap">
                 <div class="nitro-bar-fill" id="hud-nitro-bar" style="width:100%;"></div>
             </div>
-            <div class="nitro-label">⚡ NİTRO [SHIFT]</div>
+            <div class="nitro-label">⚡ NİTRO GÖSTERGESİ [SHIFT / N]</div>
         </div>
+
+        <!-- ON-SCREEN INTERACTIVE NITRO BUTTON -->
+        <button id="btn-screen-nitro" class="hud-nitro-btn" title="NİTRO BOOST [Basılı Tut veya SHIFT / N]">
+            <span class="nitro-btn-icon">⚡</span>
+            <span class="nitro-btn-txt">NİTRO BOOST</span>
+            <span class="nitro-btn-sub">[SHIFT / N]</span>
+        </button>
 
         <!-- DRIFT NOTIFICATION -->
         <div id="hud-drift-notice" class="drift-notice">🔥 +150 DRIFT!</div>
@@ -162,9 +169,10 @@
             <div class="key-tip"><kbd>W</kbd> / <kbd>↑</kbd> Gaz</div>
             <div class="key-tip"><kbd>S</kbd> / <kbd>↓</kbd> Fren / Geri</div>
             <div class="key-tip"><kbd>A</kbd> <kbd>D</kbd> / <kbd>←</kbd> <kbd>→</kbd> Direksiyon</div>
-            <div class="key-tip"><kbd>SPACE</kbd> Drift & El Freni</div>
-            <div class="key-tip"><kbd>SHIFT</kbd> Nitro Boost 🚀</div>
-            <div class="key-tip"><kbd>R</kbd> Piste Geri Dön</div>
+            <div class="key-tip"><kbd>SPACE</kbd> Drift</div>
+            <div class="key-tip key-tip-nitro"><kbd>SHIFT</kbd> / <kbd>N</kbd> ⚡ NİTRO BOOST</div>
+            <div class="key-tip"><kbd>C</kbd> Kamera Değiştir</div>
+            <div class="key-tip"><kbd>R</kbd> Sıfırla</div>
         </footer>
     </div>
 

@@ -334,6 +334,83 @@
                 osc.start(now);
                 osc.stop(now + 0.6);
             }
+        },
+
+        playVoice(unitType) {
+            if (this.isMuted) return;
+            if ('speechSynthesis' in window) {
+                try {
+                    window.speechSynthesis.cancel();
+                    const voiceMap = {
+                        miner: 'Miner ready!',
+                        sword: 'Swordwrath!',
+                        archer: 'Archidons!',
+                        spear: 'Speartons!',
+                        mage: 'Magikill!',
+                        giant: 'Giant!'
+                    };
+                    const text = voiceMap[unitType];
+                    if (!text) return;
+                    const u = new SpeechSynthesisUtterance(text);
+                    u.rate = 1.25;
+                    u.pitch = unitType === 'giant' ? 0.6 : (unitType === 'spear' ? 0.85 : 1.1);
+                    u.volume = 0.85;
+                    window.speechSynthesis.speak(u);
+                } catch (_) {}
+            }
+        },
+
+        playOrderFanfare(mode) {
+            if (this.isMuted) return;
+            if (!this.ctx) {
+                try { this.ctx = new (window.AudioContext || window.webkitAudioContext)(); } catch (_) { return; }
+            }
+            const now = this.ctx.currentTime;
+            if (mode === 'attack') {
+                // Brass War Horn Fanfare (triad: C4 -> E4 -> G4 -> C5)
+                [261.6, 329.6, 392.0, 523.2].forEach((freq, i) => {
+                    const osc = this.ctx.createOscillator();
+                    const g = this.ctx.createGain();
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(freq, now + i * 0.12);
+                    g.gain.setValueAtTime(0, now + i * 0.12);
+                    g.gain.linearRampToValueAtTime(0.25, now + i * 0.12 + 0.04);
+                    g.gain.exponentialRampToValueAtTime(0.01, now + i * 0.12 + 0.35);
+                    osc.connect(g);
+                    g.connect(this.ctx.destination);
+                    osc.start(now + i * 0.12);
+                    osc.stop(now + i * 0.12 + 0.35);
+                });
+            } else if (mode === 'defend') {
+                // Heavy War Drums
+                [0, 0.15, 0.3, 0.45].forEach((t, i) => {
+                    const osc = this.ctx.createOscillator();
+                    const g = this.ctx.createGain();
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(140 - i * 15, now + t);
+                    osc.frequency.exponentialRampToValueAtTime(35, now + t + 0.18);
+                    g.gain.setValueAtTime(0.35, now + t);
+                    g.gain.exponentialRampToValueAtTime(0.01, now + t + 0.18);
+                    osc.connect(g);
+                    g.connect(this.ctx.destination);
+                    osc.start(now + t);
+                    osc.stop(now + t + 0.18);
+                });
+            } else if (mode === 'retreat') {
+                // Retreat bugle (High -> Low drop)
+                [587.3, 440.0, 349.2].forEach((freq, i) => {
+                    const osc = this.ctx.createOscillator();
+                    const g = this.ctx.createGain();
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(freq, now + i * 0.14);
+                    g.gain.setValueAtTime(0.2, now + i * 0.14);
+                    g.gain.exponentialRampToValueAtTime(0.01, now + i * 0.14 + 0.28);
+                    osc.connect(g);
+                    g.connect(this.ctx.destination);
+                    osc.start(now + i * 0.14);
+                    osc.stop(now + i * 0.14 + 0.28);
+                });
+            }
         }
     };
 
@@ -358,13 +435,13 @@
         mana: 150,
         maxMana: 500,
         pop: 0,
-        maxPop: 20,
-        isStickWar2Mode: true,
+        maxPop: 50,
+        isStickWar2Mode: false,
         rageTimer: 0,
 
         enemyGold: 500,
         enemyPop: 0,
-        enemyMaxPop: 20,
+        enemyMaxPop: 50,
         enemyAIState: 'defend',
         enemySpawnTimer: 0,
 
@@ -660,12 +737,13 @@
                     return;
                 }
                 if (this.pop + cfg.pop > this.maxPop) {
-                    this.addFloatingText(this.camX + this.width / 2, 200, 'Nüfus Dolu! (20/20)', '#ff5252');
+                    this.addFloatingText(this.camX + this.width / 2, 200, `Nüfus Sınırı Dolu! (${this.pop}/${this.maxPop})`, '#ff5252');
                     return;
                 }
                 this.gold -= cfg.cost;
                 if (cfg.mana) this.mana -= cfg.mana;
                 this.spawnUnit('order', unitTypeKey);
+                SoundManager.playVoice(unitTypeKey);
                 this.updateUI();
             } else {
                 if (this.enemyGold >= cfg.cost && (this.enemyPop + cfg.pop <= this.enemyMaxPop)) {
@@ -882,6 +960,9 @@
             document.querySelectorAll('.btn-formation').forEach(b => b.classList.remove('active'));
             const activeBtn = document.getElementById('btn-order-' + mode);
             if (activeBtn) activeBtn.classList.add('active');
+
+            // Play authentic war horn / drum / retreat brass fanfare
+            SoundManager.playOrderFanfare(mode);
 
             // CRITICAL USER REQUIREMENT:
             // "saldırı yaparken hymn for weekejnd çalsın savunmada yada en gerideyken run from your demons çalsın"
