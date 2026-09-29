@@ -230,9 +230,10 @@
         <!-- SERVER / ENGINE SWITCHER -->
         <div class="cs-servers-group">
             <span style="font-size:11px; color:#888; font-weight:700; margin-right:4px;">SUNUCU:</span>
-            <button class="cs-server-btn active" id="btn-srv-csjs" onclick="switchServer('csjs')">⚡ Doğrudan Oyna (CSJS Dust2)</button>
-            <button class="cs-server-btn" id="btn-srv-servers" onclick="switchServer('servers')">🌐 Canlı Sunucu Listesi (Play-CS)</button>
-            <button class="cs-server-btn" id="btn-srv-playcs" onclick="switchServer('playcs')">🎯 Play-CS Ana Lobi</button>
+            <button class="cs-server-btn active" id="btn-srv-csjs" onclick="switchServer('csjs')">⚡ Doğrudan Oyna (CSJS)</button>
+            <button class="cs-server-btn" id="btn-srv-private" onclick="switchServer('private')">🔒 Özel Bilişim Odası (Sadece Biz)</button>
+            <button class="cs-server-btn" id="btn-srv-servers" onclick="switchServer('servers')">🌐 Canlı Sunucu Listesi</button>
+            <button class="cs-server-btn" id="btn-srv-poki" onclick="switchServer('poki')">🎮 Poki 3D FPS Arenası</button>
         </div>
 
         <!-- ACTIONS -->
@@ -278,8 +279,9 @@
     <script>
         const SERVERS = {
             csjs: 'https://csjs.live/',
+            private: 'https://play-cs.com/en/servers',
             servers: 'https://play-cs.com/en/servers',
-            playcs: 'https://play-cs.com/'
+            poki: 'https://combat.online/'
         };
 
         const frame = document.getElementById('cs-game-frame');
@@ -317,6 +319,10 @@
             if (loader) loader.style.display = 'flex';
             if (SERVERS[key]) {
                 frame.src = SERVERS[key];
+            }
+
+            if (key === 'private') {
+                alert('🎯 Özel Bilişim Arenası Odası:\nSunucu listesinden "Create Game" butonuna basıp oda adı ve şifre belirleyerek sadece sınıf/okul arkadaşlarınızla kafa kafaya oynayabilirsiniz!');
             }
         }
 

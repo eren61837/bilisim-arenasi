@@ -813,15 +813,16 @@
 
     const raycaster = new THREE.Raycaster();
     raycaster.setFromCamera(new THREE.Vector2(0, 0), camera);
-    const intersects = raycaster.intersectObjects(scene.children, false);
+    const intersects = raycaster.intersectObjects(scene.children, true);
 
-    // Filter for valid building/wall hit within 70 meters
-    const validHit = intersects.find(it => it.distance < 75 && it.object !== ground);
+    // Filter for valid building/wall/floor surface hit within 110 meters (excluding lines and self)
+    const validHit = intersects.find(it => it.distance < 110 && it.object !== grappleLine && !it.object.userData?.isBot);
 
     if (validHit) {
       state.grapple.active = true;
       state.grapple.point.copy(validHit.point);
       grappleLine.visible = true;
+      state.onGround = false;
       RMAudio.grappleLaunch();
     }
   }
@@ -831,7 +832,8 @@
       state.grapple.active = false;
       grappleLine.visible = false;
       // Slingshot momentum boost (preserve and multiply velocity for epic air swings)
-      state.vel.multiplyScalar(1.30);
+      state.vel.multiplyScalar(1.28);
+      if (state.vel.y > 0) state.vel.y += 4;
     }
   }
 
@@ -1000,7 +1002,7 @@
       state.vel.x += moveDir.x * accel * dt * speedMult;
       state.vel.z += moveDir.z * accel * dt * speedMult;
 
-      const friction = state.onGround ? 0.86 : 0.98;
+      const friction = (state.onGround && !state.grapple.active) ? 0.86 : 0.985;
       state.vel.x *= friction;
       state.vel.z *= friction;
 
@@ -1016,23 +1018,26 @@
 
       // 2. Grapple Pull Physics (Elastic spring pull with momentum)
       if (state.grapple.active) {
-        const pullDir = state.grapple.point.clone().sub(state.pos);
-        const dist = pullDir.length();
-        pullDir.normalize();
+        const pullVec = state.grapple.point.clone().sub(state.pos);
+        const dist = pullVec.length();
 
-        const pullForce = Math.min(Math.max(dist * 2.8, 30), 62);
-        state.vel.addScaledVector(pullDir, pullForce * dt);
-        // Counter gravity while grappling to allow soaring arcs
-        state.vel.y += 18 * dt;
+        if (dist > 1.8) {
+          const pullDir = pullVec.clone().normalize();
+          // Dynamic pull force: snappy and powerful
+          const pullSpeed = Math.min(Math.max(dist * 3.8, 50), 85);
+          state.vel.addScaledVector(pullDir, pullSpeed * dt);
 
-        // Update 3D Cable line
-        const gunTip = camera.position.clone().add(new THREE.Vector3(0.2, -0.2, -0.4).applyEuler(camera.rotation));
-        const positions = grappleLine.geometry.attributes.position.array;
-        positions[0] = gunTip.x; positions[1] = gunTip.y; positions[2] = gunTip.z;
-        positions[3] = state.grapple.point.x; positions[4] = state.grapple.point.y; positions[5] = state.grapple.point.z;
-        grappleLine.geometry.attributes.position.needsUpdate = true;
+          // Counter gravity and lift player up into the air
+          state.vel.y += 32 * dt;
+          state.onGround = false;
 
-        if (dist < 2.5) {
+          // Update 3D Cable line
+          const gunTip = camera.position.clone().add(new THREE.Vector3(0.2, -0.2, -0.4).applyEuler(camera.rotation));
+          const positions = grappleLine.geometry.attributes.position.array;
+          positions[0] = gunTip.x; positions[1] = gunTip.y; positions[2] = gunTip.z;
+          positions[3] = state.grapple.point.x; positions[4] = state.grapple.point.y; positions[5] = state.grapple.point.z;
+          grappleLine.geometry.attributes.position.needsUpdate = true;
+        } else {
           releaseGrapple();
         }
       }
@@ -1046,64 +1051,85 @@
         }
       });
 
-      // 4. Position Update & Strict AABB Collisions against Arena Buildings
+      // 4. Substepped Position Update & Rock-Solid Collision (No Wall Clipping / Tunneling)
       const pRad = 0.55;
+      const SUBSTEPS = 3;
+      const sdt = dt / SUBSTEPS;
 
-      // X Axis Movement & Collision
-      state.pos.x += state.vel.x * dt;
-      for (const col of colliders) {
-        if (state.pos.x + pRad > col.min.x && state.pos.x - pRad < col.max.x &&
-            state.pos.z + pRad > col.min.z && state.pos.z - pRad < col.max.z &&
-            state.pos.y > col.min.y && state.pos.y - 1.5 < col.max.y) {
-          if (state.vel.x > 0) state.pos.x = col.min.x - pRad;
-          else if (state.vel.x < 0) state.pos.x = col.max.x + pRad;
-          state.vel.x = 0;
-        }
-      }
-
-      // Z Axis Movement & Collision
-      state.pos.z += state.vel.z * dt;
-      for (const col of colliders) {
-        if (state.pos.x + pRad > col.min.x && state.pos.x - pRad < col.max.x &&
-            state.pos.z + pRad > col.min.z && state.pos.z - pRad < col.max.z &&
-            state.pos.y > col.min.y && state.pos.y - 1.5 < col.max.y) {
-          if (state.vel.z > 0) state.pos.z = col.min.z - pRad;
-          else if (state.vel.z < 0) state.pos.z = col.max.z + pRad;
-          state.vel.z = 0;
-        }
-      }
-
-      // Y Axis Movement & Rooftop Landing
-      state.pos.y += state.vel.y * dt;
       let onColRoof = false;
-      for (const col of colliders) {
-        if (state.pos.x + pRad > col.min.x && state.pos.x - pRad < col.max.x &&
-            state.pos.z + pRad > col.min.z && state.pos.z - pRad < col.max.z) {
-          // Landing on roof
-          if (state.vel.y <= 0 && state.pos.y - 1.6 <= col.max.y && state.pos.y - 1.6 >= col.max.y - 1.2) {
-            state.pos.y = col.max.y + 1.6;
-            state.vel.y = 0;
-            state.onGround = true;
-            onColRoof = true;
-            break;
-          } else if (state.vel.y > 0 && state.pos.y >= col.min.y && state.pos.y - 1.6 < col.min.y) {
-            // Hitting ceiling / underside
-            state.pos.y = col.min.y - 0.05;
-            state.vel.y = 0;
+
+      for (let step = 0; step < SUBSTEPS; step++) {
+        // --- X Axis Movement & Collision ---
+        state.pos.x += state.vel.x * sdt;
+        for (const col of colliders) {
+          const feetY = state.pos.y - 1.6;
+          const headY = state.pos.y + 0.2;
+          if (feetY < col.max.y - 0.1 && headY > col.min.y) {
+            if (state.pos.x + pRad > col.min.x && state.pos.x - pRad < col.max.x &&
+                state.pos.z + pRad > col.min.z && state.pos.z - pRad < col.max.z) {
+              const overlapLeft = (state.pos.x + pRad) - col.min.x;
+              const overlapRight = col.max.x - (state.pos.x - pRad);
+              if (overlapLeft < overlapRight) {
+                state.pos.x = col.min.x - pRad;
+                if (state.vel.x > 0) state.vel.x = 0;
+              } else {
+                state.pos.x = col.max.x + pRad;
+                if (state.vel.x < 0) state.vel.x = 0;
+              }
+            }
           }
         }
-      }
 
-      // Ground limit
-      if (!onColRoof && state.pos.y <= 1.6) {
-        state.pos.y = 1.6;
-        state.vel.y = 0;
-        state.onGround = true;
-      }
+        // --- Z Axis Movement & Collision ---
+        state.pos.z += state.vel.z * sdt;
+        for (const col of colliders) {
+          const feetY = state.pos.y - 1.6;
+          const headY = state.pos.y + 0.2;
+          if (feetY < col.max.y - 0.1 && headY > col.min.y) {
+            if (state.pos.x + pRad > col.min.x && state.pos.x - pRad < col.max.x &&
+                state.pos.z + pRad > col.min.z && state.pos.z - pRad < col.max.z) {
+              const overlapFront = (state.pos.z + pRad) - col.min.z;
+              const overlapBack = col.max.z - (state.pos.z - pRad);
+              if (overlapFront < overlapBack) {
+                state.pos.z = col.min.z - pRad;
+                if (state.vel.z > 0) state.vel.z = 0;
+              } else {
+                state.pos.z = col.max.z + pRad;
+                if (state.vel.z < 0) state.vel.z = 0;
+              }
+            }
+          }
+        }
 
-      // Arena Bound Limits
-      state.pos.x = Math.max(-105, Math.min(105, state.pos.x));
-      state.pos.z = Math.max(-105, Math.min(105, state.pos.z));
+        // --- Y Axis Movement & Rooftop / Ceiling Collision ---
+        state.pos.y += state.vel.y * sdt;
+        for (const col of colliders) {
+          if (state.pos.x + pRad > col.min.x && state.pos.x - pRad < col.max.x &&
+              state.pos.z + pRad > col.min.z && state.pos.z - pRad < col.max.z) {
+            const feetY = state.pos.y - 1.6;
+            if (state.vel.y <= 0 && feetY <= col.max.y && feetY >= col.max.y - 2.5) {
+              state.pos.y = col.max.y + 1.6;
+              state.vel.y = 0;
+              state.onGround = true;
+              onColRoof = true;
+            } else if (state.vel.y > 0 && state.pos.y >= col.min.y && state.pos.y - 1.6 < col.min.y) {
+              state.pos.y = col.min.y - 0.05;
+              state.vel.y = 0;
+            }
+          }
+        }
+
+        // Ground limit
+        if (!onColRoof && state.pos.y <= 1.6) {
+          state.pos.y = 1.6;
+          state.vel.y = 0;
+          state.onGround = true;
+        }
+
+        // Arena Bound Limits
+        state.pos.x = Math.max(-105, Math.min(105, state.pos.x));
+        state.pos.z = Math.max(-105, Math.min(105, state.pos.z));
+      }
 
       // Camera Sync
       camera.position.copy(state.pos);

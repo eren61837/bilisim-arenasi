@@ -160,6 +160,7 @@
             </div>
 
             <div class="gameover-actions">
+                <button class="btn-gameover-forge" id="btn-go-char">👤 KAHRAMAN DEĞİŞTİR</button>
                 <button class="btn-gameover-forge" id="btn-go-forge">🔨 DEMİRCİDE GELİŞ</button>
                 <button class="btn-gameover-play" id="btn-go-restart">⚔️ YENİDEN SAVAŞ</button>
             </div>
@@ -194,6 +195,23 @@
             <div class="sc-actions">
                 <button class="btn-next-stage" id="btn-sc-next">SONRAKİ AŞAMAYA GEÇ ➡️</button>
                 <button class="btn-continue-endless" id="btn-sc-continue">Sonsuz Modda Devam Et ⚔️</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: CHARACTER SELECTION SCREEN (KAHRAMAN SEÇİM MENÜSÜ) -->
+    <div class="modal-overlay active" id="modal-char-select">
+        <div class="char-select-box">
+            <div class="char-select-header">
+                <span class="cs-badge">⚔️ VAMPIRE SURVIVORS RPG</span>
+                <h2>KAHRAMANINI SEÇ</h2>
+                <p>Zindanın karanlık yaratıklarına karşı savaşacak savaşçını belirle</p>
+            </div>
+            <div class="char-cards-grid" id="char-cards-grid">
+                <!-- Generated dynamically via JS -->
+            </div>
+            <div class="char-select-footer">
+                <button class="btn-start-survivor" id="btn-start-with-char">BU KAHRAMANLA ZİNDANA GİR! ⚔️</button>
             </div>
         </div>
     </div>

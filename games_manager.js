@@ -1897,7 +1897,7 @@ function initGamesManager(wss, db) {
     getLanIp,
     getStats() {
       let csCount = 0, diepCount = 0, mcCount = 0, survivorCount = 0, gdCount = 0, sosCount = 0, kafatopuCount = 0, zombsCount = 0, redmatchCount = 0, dinoCount = 0, sumoCount = 0, stickwarCount = 0;
-      let racingCount = 0, subwayCount = 0, templeCount = 0, garticCount = 0, pythonCount = 0;
+      let racingCount = 0, subwayCount = 0, garticCount = 0, pythonCount = 0;
       let realHumanTotal = 0;
       wss.clients.forEach(c => {
         if (c.readyState === WebSocket.OPEN && !c.isBot) {
@@ -1916,7 +1916,6 @@ function initGamesManager(wss, db) {
           else if (c.room === 'stickwar') stickwarCount++;
           else if (c.room === 'racing') racingCount++;
           else if (c.room === 'subway') subwayCount++;
-          else if (c.room === 'templerun') templeCount++;
           else if (c.room === 'gartic') garticCount++;
           else if (c.room === 'python') pythonCount++;
         }
@@ -1939,7 +1938,6 @@ function initGamesManager(wss, db) {
           stickwar: stickwarCount,
           racing: racingCount,
           subway: subwayCount,
-          templerun: templeCount,
           gartic: garticCount,
           python: pythonCount
         }

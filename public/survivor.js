@@ -514,8 +514,78 @@
     currentStageId: 1,
     stageCleared: false,
     swarmSpawned: false,
-    bossSpawned: false
+    bossSpawned: false,
+    selectedCharId: 'antonio'
   };
+
+  // 5 BALANCED VAMPIRE SURVIVORS HEROES
+  const CHARACTERS = [
+    {
+      id: 'antonio',
+      name: 'Antonio Belpaese',
+      title: 'Kadim Kılıç Ustası',
+      avatar: '🗡️',
+      color: '#00e5ff',
+      hpBonus: 25,
+      speedBonus: 1.0,
+      mightBonus: 0.15,
+      startingWeapon: 'swords',
+      extraSkills: { swords: 1 },
+      desc: '+25 Can, +15% Fiziksel Hasar. Dönen kutsal kılıçlarla savaşa başlar.'
+    },
+    {
+      id: 'imelda',
+      name: 'Imelda Belpaese',
+      title: 'Arkan Büyücüsü',
+      avatar: '🪄',
+      color: '#bf5af2',
+      hpBonus: 0,
+      speedBonus: 1.05,
+      mightBonus: 0.1,
+      startingWeapon: 'fireball',
+      extraSkills: { fireball: 1, magnet: 1 },
+      desc: '+30% XP Mıknatıs Alanı, +10% Büyü Hasarı. Patlayan alev toplarıyla başlar.'
+    },
+    {
+      id: 'pasqualina',
+      name: 'Pasqualina',
+      title: 'Yıldırım Nişancısı',
+      avatar: '⚡',
+      color: '#ffd700',
+      hpBonus: 10,
+      speedBonus: 1.25,
+      mightBonus: 0.05,
+      startingWeapon: 'lightning',
+      extraSkills: { lightning: 1, swiftboots: 1 },
+      desc: '+25% Hareket Hızı, Seri Dash. Gök gürültüsü ve yıldırım çağırır.'
+    },
+    {
+      id: 'gennaro',
+      name: 'Gennaro Belpaese',
+      title: 'Gölge Suikastçisi',
+      avatar: '🗡️💨',
+      color: '#ff3366',
+      hpBonus: 15,
+      speedBonus: 1.15,
+      mightBonus: 0.20,
+      startingWeapon: 'chaindaggers',
+      extraSkills: { chaindaggers: 1, toxiccloud: 1 },
+      desc: '+20% Kritik Güç, Ekstra Mermi. Seken hançerler ve zehir bulutu saçar.'
+    },
+    {
+      id: 'arcanist',
+      name: 'Kozmik Arcanist',
+      title: 'Boyut Lordu',
+      avatar: '🌌',
+      color: '#00e676',
+      hpBonus: 20,
+      speedBonus: 1.0,
+      mightBonus: 0.15,
+      startingWeapon: 'blackhole',
+      extraSkills: { blackhole: 1, holyaura: 1 },
+      desc: '+40% Alan Büyüklüğü, Can Çalma. Kozmik karadelik ve kutsal ışık halkası yayar.'
+    }
+  ];
 
   // Player
   const player = {
@@ -889,16 +959,18 @@
     const curStage = getCurrentStage();
     if (hudStageName) hudStageName.textContent = `Aşama ${curStage.id}: ${curStage.name}`;
 
-    // Calculate stats from forge upgrades
+    // Calculate stats from forge upgrades & active character
+    const activeChar = CHARACTERS.find(c => c.id === state.selectedCharId) || CHARACTERS[0];
     const hpBonus = forgeRanks.maxHp * FORGE_CONFIG.find(c => c.id === 'maxHp').valPerRank;
     const speedBonus = 1 + (forgeRanks.speed * FORGE_CONFIG.find(c => c.id === 'speed').valPerRank);
     const reviveCount = forgeRanks.revive;
 
     player.x = 0;
     player.y = 0;
-    player.maxHp = 100 + hpBonus;
+    player.color = activeChar.color || '#00e5ff';
+    player.maxHp = 100 + hpBonus + (activeChar.hpBonus || 0);
     player.hp = player.maxHp;
-    player.speed = 3.6 * speedBonus;
+    player.speed = 3.6 * speedBonus * (activeChar.speedBonus || 1.0);
     player.level = 1;
     player.xp = 0;
     player.xpNeeded = 10;
@@ -907,9 +979,16 @@
     player.dashDuration = 0;
     player.invulnTimer = 0;
 
-    // Reset in-run skills
+    // Reset in-run skills & assign character starter weapons
     for (const key of Object.keys(player.skills)) {
-      player.skills[key] = (key === 'swords') ? 1 : 0;
+      player.skills[key] = 0;
+    }
+    if (activeChar.extraSkills) {
+      for (const [k, v] of Object.entries(activeChar.extraSkills)) {
+        player.skills[k] = v;
+      }
+    } else {
+      player.skills.swords = 1;
     }
 
     enemies = [];
@@ -927,11 +1006,13 @@
   }
 
   // --- SPAWNING SYSTEM (WAVES & PROGRESSION) ---
+  const MAX_ENEMIES = 130;
   let spawnTimer = 0;
   function updateSpawning() {
+    if (enemies.length >= MAX_ENEMIES) return; // Anti-freeze: prevents enemy overpopulation
     spawnTimer++;
     // Spawn rate increases over time
-    const interval = Math.max(12, Math.floor(55 - Math.min(42, state.time / 7)));
+    const interval = Math.max(14, Math.floor(55 - Math.min(42, state.time / 7)));
 
     if (spawnTimer >= interval) {
       spawnTimer = 0;
@@ -1975,11 +2056,18 @@
       // 3. Spawning
       updateSpawning();
 
-      // 4. Update Enemies
-      enemies.forEach(e => {
+      // 4. Update Enemies (Anti-freeze: capped and cleaned up)
+      for (let i = enemies.length - 1; i >= 0; i--) {
+        const e = enemies[i];
         const dx = player.x - e.x;
         const dy = player.y - e.y;
         const dist = Math.hypot(dx, dy);
+
+        // Despawn far off-screen non-boss enemies
+        if (dist > 2200 && !e.isBoss && e.type !== 'boss') {
+          enemies.splice(i, 1);
+          continue;
+        }
 
         if (dist > 0) {
           e.x += (dx / dist) * e.speed;
@@ -1992,7 +2080,7 @@
         if (dist < player.radius + e.radius) {
           hurtPlayer(e.dmg || (e.isBoss ? 28 : 8));
         }
-      });
+      }
 
       // 5. Update Projectiles
       for (let i = projectiles.length - 1; i >= 0; i--) {
@@ -2237,6 +2325,11 @@
       // Screen shake decay
       if (state.screenShake > 0) state.screenShake *= 0.88;
       if (state.screenShake < 0.2) state.screenShake = 0;
+
+      // Anti-freeze: Cap transient entity arrays
+      if (floatTexts.length > 30) floatTexts.splice(0, floatTexts.length - 30);
+      if (particles.length > 80) particles.splice(0, particles.length - 80);
+      if (gems.length > 130) gems.splice(0, gems.length - 130);
 
       updateHUD();
     }
@@ -2907,8 +3000,58 @@
   window.addEventListener('keydown', startBgmOnce, { once: true });
   window.addEventListener('click', startBgmOnce, { once: true });
 
-  // Start initial run
-  startRun();
+  // --- CHARACTER SELECTION CONTROLLER ---
+  const modalCharSelect = document.getElementById('modal-char-select');
+  const charCardsGrid = document.getElementById('char-cards-grid');
+  const btnStartWithChar = document.getElementById('btn-start-with-char');
+  const btnGoChar = document.getElementById('btn-go-char');
+
+  function initCharacterSelect() {
+    if (!charCardsGrid) return;
+    charCardsGrid.innerHTML = '';
+
+    CHARACTERS.forEach(c => {
+      const card = document.createElement('div');
+      card.className = `char-card ${c.id === state.selectedCharId ? 'selected' : ''}`;
+      card.setAttribute('data-char', c.id);
+
+      const wName = UPGRADE_POOL.find(u => u.id === c.startingWeapon)?.name || 'Kutsal Silah';
+      card.innerHTML = `
+        <div class="char-avatar">${c.avatar}</div>
+        <div class="char-name" style="color:${c.color}">${c.name}</div>
+        <div class="char-title">${c.title}</div>
+        <div class="char-weapon">
+          <span>⚔️</span> Başlangıç: ${wName}
+        </div>
+        <div class="char-perks">${c.desc}</div>
+      `;
+
+      card.addEventListener('click', () => {
+        state.selectedCharId = c.id;
+        document.querySelectorAll('.char-card').forEach(cd => cd.classList.remove('selected'));
+        card.classList.add('selected');
+        Sfx.hit();
+      });
+
+      charCardsGrid.appendChild(card);
+    });
+
+    btnStartWithChar?.addEventListener('click', () => {
+      if (modalCharSelect) modalCharSelect.classList.remove('active');
+      startRun();
+    });
+
+    btnGoChar?.addEventListener('click', () => {
+      if (modalGameover) modalGameover.classList.remove('active');
+      if (modalCharSelect) modalCharSelect.classList.add('active');
+    });
+  }
+
+  // Initialize character selector
+  initCharacterSelect();
+
+  // Show Character Select on start, do NOT start run until hero selected!
+  if (modalCharSelect) modalCharSelect.classList.add('active');
   requestAnimationFrame(gameLoop);
 
 })();

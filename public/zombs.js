@@ -125,7 +125,8 @@
     arrow: { name: 'Ok Kulesi', icon: '🏹', cost: { wood: 30, stone: 15, gold: 10 }, hp: 280, maxHp: 280, range: 240, rate: 650, lastFire: 0, color: '#00e5ff' },
     cannon: { name: 'Top Kulesi', icon: '💣', cost: { wood: 45, stone: 40, gold: 25 }, hp: 400, maxHp: 400, range: 280, rate: 1300, lastFire: 0, color: '#ff1744' },
     goldmine: { name: 'Altın Madeni', icon: '💰', cost: { wood: 40, stone: 25, gold: 0 }, hp: 220, maxHp: 220, genRate: 2, lastGen: 0, color: '#ffb300' },
-    healer: { name: 'Şifa Çadırı', icon: '💖', cost: { wood: 50, stone: 50, gold: 20 }, hp: 350, maxHp: 350, range: 180, rate: 1000, lastHeal: 0, color: '#e91e63' }
+    healer: { name: 'Şifa Çadırı', icon: '💖', cost: { wood: 50, stone: 50, gold: 20 }, hp: 350, maxHp: 350, range: 180, rate: 1000, lastHeal: 0, color: '#e91e63' },
+    demolish: { name: 'Yık / Geri Al', icon: '🔨', cost: { wood: 0, stone: 0, gold: 0 }, hp: 0, maxHp: 0, isDemolish: true, color: '#ff4444' }
   };
 
   // Entities
@@ -261,6 +262,10 @@
 
     // Build Mode Hotkeys (B or 5 toggles build mode)
     if (code === 'KeyB') toggleBuildMode();
+    if (code === 'KeyX') {
+      if (!state.buildMode) toggleBuildMode(true);
+      selectBuilding('demolish');
+    }
 
     if (state.buildMode) {
       if (code === 'Digit5') selectBuilding('stash');
@@ -272,6 +277,7 @@
       if (code === 'Minus') selectBuilding('cannon');
       if (code === 'Equal') selectBuilding('goldmine');
       if (code === 'KeyH') selectBuilding('healer');
+      if (code === 'KeyX') selectBuilding('demolish');
     }
 
     if (code === 'Escape') {
@@ -310,8 +316,11 @@
         }
       }
     } else if (e.button === 2) {
-      // Right click cancels build mode
-      if (state.buildMode) toggleBuildMode(false);
+      // Right click: if in build mode, dismantle target building under cursor, or cancel build mode
+      if (state.buildMode) {
+        const demolished = tryDemolishBuilding();
+        if (!demolished) toggleBuildMode(false);
+      }
     }
   });
 
@@ -405,9 +414,54 @@
     if (modalShop) modalShop.classList.add('hidden');
   }
 
+  // --- BUILDING DEMOLISH & RECYCLE ---
+  function tryDemolishBuilding(targetBuilding) {
+    if (state.isDead || state.isShopOpen) return false;
+    if (!targetBuilding) {
+      const mx = state.mouse.worldX;
+      const my = state.mouse.worldY;
+      targetBuilding = buildings.find(b => Math.hypot(b.x - mx, b.y - my) <= (b.radius || 20) + 16);
+    }
+    if (!targetBuilding) return false;
+
+    if (targetBuilding.type === 'stash') {
+      showToast('⚠️ Altın Kasasını yıkamazsın! Üssün kalbi.');
+      return false;
+    }
+
+    const bInfo = BUILDING_TYPES[targetBuilding.type];
+    const refundWood = Math.floor(((bInfo && bInfo.cost && bInfo.cost.wood) || 0) * 0.7);
+    const refundStone = Math.floor(((bInfo && bInfo.cost && bInfo.cost.stone) || 0) * 0.7);
+    const refundGold = Math.floor(((bInfo && bInfo.cost && bInfo.cost.gold) || 0) * 0.7);
+
+    state.wood += refundWood;
+    state.stone += refundStone;
+    state.gold += refundGold;
+    updateHUD();
+
+    let refundMsg = '🔨 Yıkıldı!';
+    if (refundWood > 0 || refundStone > 0 || refundGold > 0) {
+      refundMsg = `+${refundWood}🌲 +${refundStone}🪨` + (refundGold > 0 ? ` +${refundGold}💰` : '');
+    }
+    spawnFloatingText(refundMsg, targetBuilding.x, targetBuilding.y, '#00ff88');
+    spawnParticles(targetBuilding.x, targetBuilding.y, '#ff5252', 16);
+    AudioEngine.hit();
+
+    const idx = buildings.indexOf(targetBuilding);
+    if (idx !== -1) {
+      buildings.splice(idx, 1);
+    }
+    showToast(`🔨 Yapı yıkıldı (%70 iade)!`);
+    return true;
+  }
+
   // --- BUILDING PLACEMENT ---
   function tryPlaceBuilding() {
     if (state.isDead || state.isShopOpen) return;
+    if (state.selectedBuilding === 'demolish') {
+      tryDemolishBuilding();
+      return;
+    }
     const bInfo = BUILDING_TYPES[state.selectedBuilding];
     if (!bInfo) return;
 
@@ -1140,16 +1194,47 @@
 
     // 4. Building Placement Preview (Ghost Grid Snap - only shown in build mode!)
     if (!state.isDead && !state.isShopOpen && state.buildMode) {
-      const gx = Math.floor(state.mouse.worldX / GRID_SIZE) * GRID_SIZE + GRID_SIZE / 2;
-      const gy = Math.floor(state.mouse.worldY / GRID_SIZE) * GRID_SIZE + GRID_SIZE / 2;
-      ctx.save();
-      ctx.translate(gx, gy);
-      ctx.fillStyle = 'rgba(0, 230, 118, 0.35)';
-      ctx.strokeStyle = '#00e676';
-      ctx.lineWidth = 2;
-      ctx.fillRect(-20, -20, 40, 40);
-      ctx.strokeRect(-20, -20, 40, 40);
-      ctx.restore();
+      if (state.selectedBuilding === 'demolish') {
+        const hovered = buildings.find(b => Math.hypot(b.x - state.mouse.worldX, b.y - state.mouse.worldY) <= (b.radius || 20) + 16);
+        ctx.save();
+        if (hovered) {
+          ctx.translate(hovered.x, hovered.y);
+          ctx.fillStyle = 'rgba(255, 68, 68, 0.35)';
+          ctx.strokeStyle = '#ff4444';
+          ctx.lineWidth = 3;
+          ctx.beginPath();
+          ctx.arc(0, 0, (hovered.radius || 20) + 8, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+          ctx.fillStyle = '#ffffff';
+          ctx.font = 'bold 12px sans-serif';
+          ctx.textAlign = 'center';
+          ctx.fillText('🔨 YIK (%70)', 0, 4);
+        } else {
+          ctx.translate(state.mouse.worldX, state.mouse.worldY);
+          ctx.strokeStyle = '#ff5252';
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.arc(0, 0, 22, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.fillStyle = '#ff5252';
+          ctx.font = '16px sans-serif';
+          ctx.textAlign = 'center';
+          ctx.fillText('🔨', 0, 6);
+        }
+        ctx.restore();
+      } else {
+        const gx = Math.floor(state.mouse.worldX / GRID_SIZE) * GRID_SIZE + GRID_SIZE / 2;
+        const gy = Math.floor(state.mouse.worldY / GRID_SIZE) * GRID_SIZE + GRID_SIZE / 2;
+        ctx.save();
+        ctx.translate(gx, gy);
+        ctx.fillStyle = 'rgba(0, 230, 118, 0.35)';
+        ctx.strokeStyle = '#00e676';
+        ctx.lineWidth = 2;
+        ctx.fillRect(-20, -20, 40, 40);
+        ctx.strokeRect(-20, -20, 40, 40);
+        ctx.restore();
+      }
     }
 
     // 5. Projectiles

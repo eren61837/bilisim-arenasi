@@ -315,7 +315,6 @@ function getGameRatings() {
     dino: { sum: 232, count: 50 },
     racing: { sum: 248, count: 50 },
     subway: { sum: 244, count: 50 },
-    templerun: { sum: 241, count: 50 },
     gartic: { sum: 245, count: 50 },
     python: { sum: 247, count: 50 }
   };
@@ -874,7 +873,7 @@ exit
   else if (pathname === '/stickwar') safePath = '/stickwar.html';
   else if (pathname === '/eaglercraft') safePath = '/eaglercraft.html';
   else if (pathname === '/subway') safePath = '/subway.html';
-  else if (pathname === '/templerun') safePath = '/templerun.html';
+  else if (pathname === '/templerun') safePath = '/index.html';
   else if (pathname === '/gartic') safePath = '/gartic.html';
   else if (pathname === '/racing') safePath = '/racing.html';
   else if (pathname === '/python' || pathname === '/pygame') safePath = '/python.html';

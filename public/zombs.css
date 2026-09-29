@@ -315,6 +315,15 @@ html, body {
     box-shadow: 0 0 16px rgba(0, 230, 118, 0.5);
     transform: translateY(-4px);
 }
+.hotbar-slot.slot-demolish:hover,
+.hotbar-slot.slot-demolish.active {
+    background: rgba(255, 68, 68, 0.25) !important;
+    border-color: #ff4444 !important;
+    box-shadow: 0 0 16px rgba(255, 68, 68, 0.5) !important;
+}
+.hotbar-slot.slot-demolish .slot-cost {
+    color: #ff8a80;
+}
 .slot-icon { font-size: 24px; margin-bottom: 2px; }
 .slot-name { font-size: 9px; font-weight: 800; color: #ccc; }
 .slot-cost { font-size: 9px; color: #ffd700; font-weight: 700; }

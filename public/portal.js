@@ -410,7 +410,6 @@
           updateCount('count-stickwar', data.games.stickwar);
           updateCount('count-racing', data.games.racing);
           updateCount('count-subway', data.games.subway);
-          updateCount('count-temple', data.games.templerun);
           updateCount('count-gartic', data.games.gartic);
           updateCount('count-python', data.games.python);
 
@@ -419,7 +418,6 @@
             { id: 'count-python', count: data.games.python || 0, name: 'Python & Pygame' },
             { id: 'count-racing', count: data.games.racing || 0, name: 'Bilişim GP Yarış' },
             { id: 'count-subway', count: data.games.subway || 0, name: 'Subway Surfers' },
-            { id: 'count-temple', count: data.games.templerun || 0, name: 'Temple Run 2' },
             { id: 'count-gartic', count: data.games.gartic || 0, name: 'Gartic.io & Çizim' },
             { id: 'count-cs16', count: data.games.cs16 || 0, name: 'Counter-Strike 1.6' },
             { id: 'count-stickwar', count: data.games.stickwar || 0, name: 'Stick War: Legacy' },
