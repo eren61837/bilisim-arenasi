@@ -1354,7 +1354,6 @@
     ws.onopen = () => {
       ws.send(JSON.stringify({ type: 'join', room: 'cs16' }));
       ws.send(JSON.stringify({ type: 'cs16_join', username: state.username, team: state.team }));
-      if (state.isAdmin) ws.send(JSON.stringify({ type: 'admin_auth', password: 'erencix201124' }));
     };
 
     ws.onmessage = (ev) => {
