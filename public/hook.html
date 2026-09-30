@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>🪝 Stickman Hook: Akrobatik Çöp Adam - Bilişim Arenası</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🪝</text></svg>">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+        html, body {
+            width: 100%; height: 100%;
+            overflow: hidden;
+            background: #090d16;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            color: #fff;
+        }
+        #game-canvas {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            display: block;
+        }
+        /* TOP HUD */
+        .top-hud {
+            position: fixed;
+            top: 14px; left: 16px; right: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            z-index: 100;
+            pointer-events: none;
+        }
+        .btn-nav {
+            pointer-events: auto;
+            background: rgba(13, 17, 23, 0.9);
+            border: 1px solid rgba(0, 230, 118, 0.5);
+            color: #00e676;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 800;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s;
+            backdrop-filter: blur(8px);
+        }
+        .btn-nav:hover {
+            background: #00e676;
+            color: #000;
+            transform: translateY(-2px);
+            box-shadow: 0 0 15px rgba(0, 230, 118, 0.5);
+        }
+        .hud-center {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+        .level-title {
+            font-size: 18px;
+            font-weight: 900;
+            letter-spacing: 1px;
+            color: #fff;
+            text-shadow: 0 0 10px rgba(0, 230, 118, 0.5);
+        }
+        .progress-track {
+            width: 180px;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #00e676, #00e5ff);
+            transition: width 0.1s linear;
+        }
+        /* RESTART BUTTON */
+        .btn-retry {
+            pointer-events: auto;
+            background: rgba(13, 17, 23, 0.9);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: #fff;
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            backdrop-filter: blur(8px);
+            transition: all 0.2s;
+        }
+        .btn-retry:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        /* OVERLAY MODALS */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(5, 7, 15, 0.85);
+            backdrop-filter: blur(10px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 500;
+        }
+        .modal-overlay.hidden { display: none; }
+        .modal-box {
+            background: linear-gradient(135deg, #0d121f 0%, #161e30 100%);
+            border: 2px solid #00e676;
+            border-radius: 20px;
+            padding: 36px 40px;
+            max-width: 440px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 0 50px rgba(0, 230, 118, 0.3);
+            animation: popIn 0.35s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+        }
+        @keyframes popIn {
+            from { transform: scale(0.8); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+        .modal-title {
+            font-size: 32px;
+            font-weight: 900;
+            color: #fff;
+            margin-bottom: 8px;
+        }
+        .modal-desc {
+            color: #94a3b8;
+            font-size: 14px;
+            line-height: 1.5;
+            margin-bottom: 24px;
+        }
+        .btn-action {
+            width: 100%;
+            background: linear-gradient(135deg, #00e676 0%, #00b0ff 100%);
+            color: #000;
+            border: none;
+            padding: 15px;
+            font-size: 18px;
+            font-weight: 900;
+            border-radius: 12px;
+            cursor: pointer;
+            letter-spacing: 1px;
+            box-shadow: 0 4px 25px rgba(0, 230, 118, 0.5);
+            transition: all 0.2s ease;
+        }
+        .btn-action:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 35px rgba(0, 230, 118, 0.8);
+        }
+        /* HINT BANNER */
+        .hook-hint {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(13, 17, 23, 0.85);
+            border: 1px solid rgba(0, 230, 118, 0.4);
+            border-radius: 30px;
+            padding: 8px 24px;
+            font-size: 13px;
+            font-weight: 700;
+            color: #fff;
+            pointer-events: none;
+            backdrop-filter: blur(6px);
+            z-index: 100;
+        }
+        .hook-hint kbd {
+            background: #00e676;
+            color: #000;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-weight: 900;
+            margin: 0 4px;
+        }
+    </style>
+</head>
+<body>
+
+    <canvas id="game-canvas"></canvas>
+
+    <!-- TOP HUD -->
+    <header class="top-hud">
+        <a href="/" class="btn-nav">🏠 Portale Dön</a>
+        <div class="hud-center">
+            <div class="level-title" id="hud-level">BÖLÜM 1</div>
+            <div class="progress-track">
+                <div class="progress-fill" id="hud-progress"></div>
+            </div>
+        </div>
+        <button class="btn-retry" id="btn-restart-level">🔄 Tekrar</button>
+    </header>
+
+    <div class="hook-hint">
+        <kbd>SPACE</kbd> veya <kbd>SOL TIK</kbd> basılı tutarak kancayı at ve sallan!
+    </div>
+
+    <!-- START MODAL -->
+    <div id="modal-start" class="modal-overlay">
+        <div class="modal-box">
+            <div style="font-size: 54px; margin-bottom: 8px;">🪝</div>
+            <h1 class="modal-title">STICKMAN HOOK</h1>
+            <p class="modal-desc">
+                Kancanı tavandaki noktalara fırlat, hızlanarak süzül ve trambolinlerde zıplayarak bitiş çizgisine ulaş!
+            </p>
+            <button class="btn-action" id="btn-start-game">BAŞLA (SPACE / TIKLA) 🚀</button>
+        </div>
+    </div>
+
+    <!-- LEVEL VICTORY MODAL -->
+    <div id="modal-victory" class="modal-overlay hidden">
+        <div class="modal-box">
+            <div style="font-size: 54px; margin-bottom: 8px;">🏆</div>
+            <h2 class="modal-title" style="color:#00e676;">BÖLÜM GEÇİLDİ!</h2>
+            <p class="modal-desc">Harika bir uçuş gerçekleştirdin!</p>
+            <button class="btn-action" id="btn-next-level">SONRAKİ BÖLÜM ➡️</button>
+        </div>
+    </div>
+
+    <script src="overlay-back.js"></script>
+
+    <script>
+    (function() {
+        'use strict';
+
+        // --- WEB AUDIO SOUNDS ---
+        const Sfx = {
+            ctx: null,
+            init() {
+                if (!this.ctx) {
+                    const AC = window.AudioContext || window.webkitAudioContext;
+                    if (AC) this.ctx = new AC();
+                }
+                if (this.ctx && this.ctx.state === 'suspended') {
+                    this.ctx.resume().catch(() => {});
+                }
+            },
+            hook() {
+                try {
+                    this.init();
+                    if (!this.ctx) return;
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(600, this.ctx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(180, this.ctx.currentTime + 0.12);
+                    gain.gain.setValueAtTime(0.15, this.ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.12);
+                    osc.connect(gain); gain.connect(this.ctx.destination);
+                    osc.start(); osc.stop(this.ctx.currentTime + 0.12);
+                } catch(_) {}
+            },
+            bounce() {
+                try {
+                    this.init();
+                    if (!this.ctx) return;
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(180, this.ctx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(520, this.ctx.currentTime + 0.22);
+                    gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.22);
+                    osc.connect(gain); gain.connect(this.ctx.destination);
+                    osc.start(); osc.stop(this.ctx.currentTime + 0.22);
+                } catch(_) {}
+            },
+            win() {
+                try {
+                    this.init();
+                    if (!this.ctx) return;
+                    const notes = [440, 554, 659, 880];
+                    notes.forEach((freq, idx) => {
+                        setTimeout(() => {
+                            const osc = this.ctx.createOscillator();
+                            const gain = this.ctx.createGain();
+                            osc.type = 'triangle';
+                            osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+                            gain.gain.setValueAtTime(0.15, this.ctx.currentTime);
+                            gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.25);
+                            osc.connect(gain); gain.connect(this.ctx.destination);
+                            osc.start(); osc.stop(this.ctx.currentTime + 0.25);
+                        }, idx * 80);
+                    });
+                } catch(_) {}
+            }
+        };
+
+        const canvas = document.getElementById('game-canvas');
+        const ctx = canvas.getContext('2d');
+
+        let width = canvas.width = window.innerWidth;
+        let height = canvas.height = window.innerHeight;
+
+        window.addEventListener('resize', () => {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        });
+
+        // --- GAME STATE ---
+        let currentLevel = parseInt(localStorage.getItem('hook_level') || '1', 10);
+        let isHolding = false;
+        let gameState = 'start'; // 'start', 'playing', 'victory', 'falling'
+
+        const player = {
+            x: 100,
+            y: 300,
+            vx: 0,
+            vy: 0,
+            radius: 16,
+            angle: 0,
+            attachedNode: null,
+            ropeLength: 0,
+            ropeAngle: 0,
+            angularVelocity: 0
+        };
+
+        let nodes = [];
+        let trampolines = [];
+        let finishX = 1800;
+        let startX = 100;
+        let cameraX = 0;
+
+        // Generate Level Layout
+        function loadLevel(lvl) {
+            currentLevel = lvl;
+            localStorage.setItem('hook_level', lvl);
+            document.getElementById('hud-level').textContent = `BÖLÜM ${lvl}`;
+
+            player.x = 100;
+            player.y = 350;
+            player.vx = 4;
+            player.vy = -2;
+            player.attachedNode = null;
+            player.angle = 0;
+
+            startX = 100;
+            finishX = 1200 + lvl * 250;
+
+            nodes = [];
+            trampolines = [];
+
+            // Procedural generation of hook nodes
+            const nodeCount = 5 + Math.min(15, lvl * 2);
+            const step = (finishX - 300) / nodeCount;
+
+            for (let i = 0; i < nodeCount; i++) {
+                const nx = 250 + i * step + (Math.random() - 0.5) * 60;
+                const ny = 120 + Math.sin(i * 1.2) * 60;
+                nodes.push({ x: nx, y: ny, radius: 12 });
+            }
+
+            // Trampolines below gaps
+            const trampCount = Math.floor(nodeCount / 2);
+            for (let i = 0; i < trampCount; i++) {
+                const tx = 350 + i * (step * 2);
+                trampolines.push({ x: tx, y: 550, width: 90, height: 18 });
+            }
+
+            gameState = 'playing';
+            document.getElementById('modal-start').classList.add('hidden');
+            document.getElementById('modal-victory').classList.add('hidden');
+        }
+
+        // Attach Hook to nearest front node
+        function tryAttachHook() {
+            if (player.attachedNode) return;
+
+            let bestNode = null;
+            let minDist = 320; // Max grapple distance
+
+            for (const n of nodes) {
+                // Must be slightly ahead or above
+                if (n.x >= player.x - 40 && n.x <= player.x + 280) {
+                    const dx = n.x - player.x;
+                    const dy = n.y - player.y;
+                    const dist = Math.hypot(dx, dy);
+                    if (dist < minDist) {
+                        minDist = dist;
+                        bestNode = n;
+                    }
+                }
+            }
+
+            if (bestNode) {
+                Sfx.hook();
+                player.attachedNode = bestNode;
+                player.ropeLength = Math.hypot(bestNode.x - player.x, bestNode.y - player.y);
+                player.ropeAngle = Math.atan2(player.y - bestNode.y, player.x - bestNode.x);
+
+                // Convert linear velocity to angular velocity
+                const tangentSpeed = -player.vx * Math.sin(player.ropeAngle) + player.vy * Math.cos(player.ropeAngle);
+                player.angularVelocity = tangentSpeed / player.ropeLength;
+            }
+        }
+
+        function releaseHook() {
+            if (!player.attachedNode) return;
+
+            // Fling forward with current tangential speed
+            const speed = player.angularVelocity * player.ropeLength;
+            player.vx = -speed * Math.sin(player.ropeAngle);
+            player.vy = speed * Math.cos(player.ropeAngle);
+
+            // Boost horizontal forward momentum
+            if (player.vx < 6) player.vx = 8;
+
+            player.attachedNode = null;
+        }
+
+        // Physics Update
+        function update() {
+            if (gameState !== 'playing') return;
+
+            const gravity = 0.38;
+
+            if (player.attachedNode) {
+                // Pendulum physics
+                const node = player.attachedNode;
+                const angularAccel = (-gravity / player.ropeLength) * Math.cos(player.ropeAngle);
+                player.angularVelocity += angularAccel;
+                player.angularVelocity *= 0.994; // slight air drag
+                player.ropeAngle += player.angularVelocity;
+
+                player.x = node.x + Math.cos(player.ropeAngle) * player.ropeLength;
+                player.y = node.y + Math.sin(player.ropeAngle) * player.ropeLength;
+            } else {
+                // Free flight physics
+                player.vy += gravity;
+                player.x += player.vx;
+                player.y += player.vy;
+                player.angle += player.vx * 0.08;
+
+                // Trampoline collision
+                for (const tr of trampolines) {
+                    if (player.x >= tr.x - tr.width/2 && player.x <= tr.x + tr.width/2 &&
+                        player.y + player.radius >= tr.y && player.y - player.radius <= tr.y + tr.height) {
+                        Sfx.bounce();
+                        player.vy = -18;
+                        player.vx = Math.max(player.vx * 1.15, 10);
+                        player.y = tr.y - player.radius;
+                    }
+                }
+            }
+
+            // Fall-out reset
+            if (player.y > 800) {
+                loadLevel(currentLevel);
+                return;
+            }
+
+            // Finish Line Victory
+            if (player.x >= finishX) {
+                Sfx.win();
+                gameState = 'victory';
+                document.getElementById('modal-victory').classList.remove('hidden');
+            }
+
+            // Progress bar
+            const pct = Math.min(100, Math.max(0, ((player.x - startX) / (finishX - startX)) * 100));
+            document.getElementById('hud-progress').style.width = pct + '%';
+
+            // Camera follow
+            const targetCamX = player.x - width * 0.35;
+            cameraX += (targetCamX - cameraX) * 0.1;
+        }
+
+        // --- DRAWING LOOP ---
+        function draw() {
+            ctx.clearRect(0, 0, width, height);
+
+            // Cyber grid background
+            ctx.strokeStyle = 'rgba(0, 230, 118, 0.06)';
+            ctx.lineWidth = 1;
+            const gridSize = 60;
+            const offsetX = -cameraX % gridSize;
+            for (let x = offsetX; x < width; x += gridSize) {
+                ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, height); ctx.stroke();
+            }
+            for (let y = 0; y < height; y += gridSize) {
+                ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(width, y); ctx.stroke();
+            }
+
+            ctx.save();
+            ctx.translate(-cameraX, 0);
+
+            // 1. Draw Trampolines
+            for (const tr of trampolines) {
+                ctx.save();
+                ctx.fillStyle = '#00e676';
+                ctx.shadowColor = '#00e676';
+                ctx.shadowBlur = 15;
+                ctx.beginPath();
+                ctx.roundRect(tr.x - tr.width/2, tr.y, tr.width, tr.height, 8);
+                ctx.fill();
+
+                // Spring coils under
+                ctx.strokeStyle = '#fff';
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                ctx.moveTo(tr.x - 20, tr.y + tr.height);
+                ctx.lineTo(tr.x - 10, tr.y + tr.height + 15);
+                ctx.lineTo(tr.x + 10, tr.y + tr.height + 15);
+                ctx.lineTo(tr.x + 20, tr.y + tr.height);
+                ctx.stroke();
+                ctx.restore();
+            }
+
+            // 2. Draw Nodes
+            for (const n of nodes) {
+                const isTarget = player.attachedNode === n;
+                ctx.save();
+                ctx.fillStyle = isTarget ? '#00e5ff' : '#cbd5e1';
+                ctx.shadowColor = isTarget ? '#00e5ff' : '#00e676';
+                ctx.shadowBlur = isTarget ? 25 : 10;
+
+                ctx.beginPath();
+                ctx.arc(n.x, n.y, n.radius, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Inner core ring
+                ctx.strokeStyle = '#05070f';
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                ctx.arc(n.x, n.y, n.radius * 0.5, 0, Math.PI * 2);
+                ctx.stroke();
+                ctx.restore();
+            }
+
+            // 3. Draw Finish Line Flag
+            ctx.save();
+            ctx.strokeStyle = '#ffd700';
+            ctx.lineWidth = 4;
+            ctx.beginPath();
+            ctx.moveTo(finishX, 100);
+            ctx.lineTo(finishX, 600);
+            ctx.stroke();
+
+            // Checkered flag banner
+            for (let y = 100; y < 240; y += 20) {
+                for (let x = finishX; x < finishX + 60; x += 20) {
+                    ctx.fillStyle = ((x + y) % 40 === 0) ? '#fff' : '#000';
+                    ctx.fillRect(x, y, 20, 20);
+                }
+            }
+            ctx.restore();
+
+            // 4. Draw Hook Rope
+            if (player.attachedNode) {
+                ctx.save();
+                ctx.strokeStyle = '#00e5ff';
+                ctx.lineWidth = 2.5;
+                ctx.shadowColor = '#00e5ff';
+                ctx.shadowBlur = 12;
+                ctx.beginPath();
+                ctx.moveTo(player.attachedNode.x, player.attachedNode.y);
+                ctx.lineTo(player.x, player.y);
+                ctx.stroke();
+                ctx.restore();
+            }
+
+            // 5. Draw Stickman Player
+            ctx.save();
+            ctx.translate(player.x, player.y);
+
+            if (player.attachedNode) {
+                // Swinging posture: hands reaching up, legs trailing
+                const swingDir = player.angularVelocity > 0 ? 1 : -1;
+                ctx.rotate(player.ropeAngle + Math.PI / 2);
+
+                ctx.fillStyle = '#ff0055';
+                ctx.shadowColor = '#ff0055';
+                ctx.shadowBlur = 18;
+
+                // Head
+                ctx.beginPath();
+                ctx.arc(0, -14, 8, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Torso
+                ctx.strokeStyle = '#fff';
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                ctx.moveTo(0, -6);
+                ctx.lineTo(0, 10);
+                // Arms reaching up to rope
+                ctx.lineTo(-6, -16);
+                ctx.moveTo(0, -4);
+                ctx.lineTo(6, -16);
+                // Legs trailing back
+                ctx.moveTo(0, 10);
+                ctx.lineTo(-8 * swingDir, 22);
+                ctx.moveTo(0, 10);
+                ctx.lineTo(4 * swingDir, 24);
+                ctx.stroke();
+
+            } else {
+                // Flying spinning aerodynamic ball posture
+                ctx.rotate(player.angle);
+                ctx.fillStyle = '#ff0055';
+                ctx.shadowColor = '#ff0055';
+                ctx.shadowBlur = 20;
+
+                ctx.beginPath();
+                ctx.arc(0, 0, player.radius, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Inner cute visor/eye
+                ctx.fillStyle = '#fff';
+                ctx.beginPath();
+                ctx.arc(6, -2, 4, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            ctx.restore();
+            ctx.restore();
+        }
+
+        function gameLoop() {
+            update();
+            draw();
+            requestAnimationFrame(gameLoop);
+        }
+
+        // --- INPUT EVENT HANDLERS ---
+        function handlePressStart(e) {
+            if (e.target.closest('button') || e.target.closest('a')) return;
+            isHolding = true;
+            if (gameState === 'playing') {
+                tryAttachHook();
+            }
+        }
+
+        function handlePressEnd() {
+            isHolding = false;
+            if (gameState === 'playing') {
+                releaseHook();
+            }
+        }
+
+        window.addEventListener('mousedown', handlePressStart);
+        window.addEventListener('mouseup', handlePressEnd);
+        window.addEventListener('touchstart', (e) => { handlePressStart(e); }, { passive: true });
+        window.addEventListener('touchend', handlePressEnd);
+
+        window.addEventListener('keydown', (e) => {
+            if (e.code === 'Space' || e.key === ' ') {
+                e.preventDefault();
+                if (gameState === 'start') {
+                    loadLevel(currentLevel);
+                } else if (gameState === 'victory') {
+                    loadLevel(currentLevel + 1);
+                } else {
+                    handlePressStart(e);
+                }
+            }
+        });
+        window.addEventListener('keyup', (e) => {
+            if (e.code === 'Space' || e.key === ' ') {
+                handlePressEnd();
+            }
+        });
+
+        document.getElementById('btn-start-game').addEventListener('click', () => loadLevel(currentLevel));
+        document.getElementById('btn-restart-level').addEventListener('click', () => loadLevel(currentLevel));
+        document.getElementById('btn-next-level').addEventListener('click', () => loadLevel(currentLevel + 1));
+
+        loadLevel(currentLevel);
+        requestAnimationFrame(gameLoop);
+
+    })();
+    </script>
+</body>
+</html>

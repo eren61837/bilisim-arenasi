@@ -86,15 +86,23 @@ function initGamesManager(wss, db) {
     });
   }
 
-  function broadcastAnnouncement(text, author = '👑 Baş Yönetici') {
+  function broadcastAnnouncement(text, author = 'erencix') {
     const payload = JSON.stringify({
       type: 'portal_announcement',
       text: String(text).trim(),
+      message: String(text).trim(),
+      author: String(author)
+    });
+    const payloadAdmin = JSON.stringify({
+      type: 'admin_announcement',
+      text: String(text).trim(),
+      message: String(text).trim(),
       author: String(author)
     });
     wss.clients.forEach(client => {
       if (client.readyState === WebSocket.OPEN) {
-        client.send(payload);
+        try { client.send(payload); } catch (_) {}
+        try { client.send(payloadAdmin); } catch (_) {}
       }
     });
   }
@@ -1895,52 +1903,27 @@ function initGamesManager(wss, db) {
   // Return Public API
   return {
     getLanIp,
+    broadcastPortalChat,
+    broadcastAnnouncement,
     getStats() {
-      let csCount = 0, diepCount = 0, mcCount = 0, survivorCount = 0, gdCount = 0, sosCount = 0, kafatopuCount = 0, zombsCount = 0, redmatchCount = 0, dinoCount = 0, sumoCount = 0, stickwarCount = 0;
-      let racingCount = 0, subwayCount = 0, garticCount = 0, pythonCount = 0;
+      const roomCounts = {
+        cs16: 0, diep: 0, minecraft: 0, survivor: 0, geometrydash: 0, sos: 0,
+        kafatopu: 0, zombs: 0, redmatch: 0, dino: 0, sumo: 0, stickwar: 0,
+        racing: 0, subway: 0, gartic: 0, python: 0, slope: 0, hook: 0, tank: 0
+      };
       let realHumanTotal = 0;
       wss.clients.forEach(c => {
         if (c.readyState === WebSocket.OPEN && !c.isBot) {
           realHumanTotal++;
-          if (c.room === 'cs16') csCount++;
-          else if (c.room === 'diep') diepCount++;
-          else if (c.room === 'minecraft') mcCount++;
-          else if (c.room === 'survivor') survivorCount++;
-          else if (c.room === 'geometrydash') gdCount++;
-          else if (c.room === 'sos') sosCount++;
-          else if (c.room === 'kafatopu') kafatopuCount++;
-          else if (c.room === 'zombs') zombsCount++;
-          else if (c.room === 'redmatch') redmatchCount++;
-          else if (c.room === 'dino') dinoCount++;
-          else if (c.room === 'sumo') sumoCount++;
-          else if (c.room === 'stickwar') stickwarCount++;
-          else if (c.room === 'racing') racingCount++;
-          else if (c.room === 'subway') subwayCount++;
-          else if (c.room === 'gartic') garticCount++;
-          else if (c.room === 'python') pythonCount++;
+          if (c.room) {
+            roomCounts[c.room] = (roomCounts[c.room] || 0) + 1;
+          }
         }
       });
       return {
         lanIp: getLanIp(),
         onlineTotal: realHumanTotal,
-        games: {
-          cs16: csCount,
-          diep: diepCount,
-          minecraft: mcCount,
-          survivor: survivorCount,
-          geometrydash: gdCount,
-          sos: sosCount,
-          kafatopu: kafatopuCount,
-          zombs: zombsCount,
-          redmatch: redmatchCount,
-          dino: dinoCount,
-          sumo: sumoCount,
-          stickwar: stickwarCount,
-          racing: racingCount,
-          subway: subwayCount,
-          gartic: garticCount,
-          python: pythonCount
-        }
+        games: roomCounts
       };
     },
     handleMessage(ws, data) {

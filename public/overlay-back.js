@@ -4,7 +4,7 @@
   'use strict';
 
   /* ── Shared announcement handler ── */
-  window._showPortalAnnouncement = function (msg) {
+  window._showPortalAnnouncement = function (msg, author) {
     const el = document.createElement('div');
     el.style.cssText = [
       'position:fixed', 'top:70px', 'left:50%', 'transform:translateX(-50%)',
@@ -23,9 +23,10 @@
       document.head.appendChild(s);
     }
 
-    el.innerHTML = `📢 <span style="font-size:15px;opacity:0.7">ADMİN DUYURUSU</span><br>${msg}`;
+    const sender = author || 'erencix';
+    el.innerHTML = `📢 <span style="font-size:15px;opacity:0.9;color:#ffd700;">DUYURU (${sender} tarafından gönderildi)</span><br>${msg}`;
     document.body.appendChild(el);
-    setTimeout(() => { el.style.transition = 'opacity 0.5s'; el.style.opacity = '0'; setTimeout(() => el.remove(), 500); }, 12000);
+    setTimeout(() => { el.style.transition = 'opacity 0.5s'; el.style.opacity = '0'; setTimeout(() => el.remove(), 500); }, 14000);
 
     try {
       const ac = new (window.AudioContext || window.webkitAudioContext)();
@@ -237,6 +238,30 @@
           { k: 'P', d: 'Parti & Takım Menüsü' },
           { k: 'İSTEYEN', d: 'Onur Baran' },
           { k: 'GELİŞTİRİCİ', d: 'erencix' }
+        ]
+      },
+      'slope': {
+        name: 'Slope 3D Neon',
+        icon: '🌐',
+        bottom: '16px',
+        right: '16px',
+        keys: [
+          { k: 'A / D veya ← / →', d: 'Topu Sağa/Sola Yönlendir' },
+          { k: 'SPACE', d: 'Başlat / Yeniden Dene' },
+          { k: 'KIRMIZI BLOK', d: 'Engellerden Kaç' },
+          { k: 'YAMAÇLAR', d: 'Rampalardan Uç & Hızlan' }
+        ]
+      },
+      'hook': {
+        name: 'Stickman Hook',
+        icon: '🪝',
+        bottom: '16px',
+        right: '16px',
+        keys: [
+          { k: 'SPACE / SOL TIK', d: 'Kancayı At ve Sallan' },
+          { k: 'TRAMBOLİN', d: 'İleri & Yukarı Zıpla' },
+          { k: 'AKROBASİ', d: 'Momentum Yakala & Uç' },
+          { k: 'BİTİŞ ÇİZGİSİ', d: 'Bölümü Tamamla' }
         ]
       }
     };
@@ -501,7 +526,12 @@
   /* ── 4. IN-GAME LIVE PLAYER COUNT BADGE & UNIVERSAL PRESENCE ── */
   (function initPresenceAndBadge() {
     const pName = window.location.pathname.toLowerCase();
-    const GAME_KEYS = ['cs16', 'minecraft', 'survivor', 'trollparkur', 'geometrydash', 'kafatopu', 'miner', 'sos', 'zombs', 'diep', 'xox', 'tank', 'deeeep', 'slither', 'agario', 'pixelplace'];
+    const GAME_KEYS = [
+      'cs16', 'minecraft', 'eaglercraft', 'survivor', 'racing', 'stickwar',
+      'slope', 'hook', 'kafatopu', 'sos', 'geometrydash', 'diep', 'tank',
+      'zombs', 'sumo', 'dino', 'gartic', 'subway', 'python', 'pygame',
+      'trollparkur', 'miner', 'xox', 'deeeep', 'slither', 'agario', 'pixelplace'
+    ];
     let currentKey = GAME_KEYS.find(k => pName.includes(k)) || 'game';
 
     // Top floating live player count badge
@@ -549,8 +579,8 @@
               const c = d.counts.rooms[currentKey] || 1;
               updateBadge(c);
             }
-            if (d.type === 'admin_announcement') {
-              window._showPortalAnnouncement(d.text || d.message);
+            if (d.type === 'admin_announcement' || d.type === 'portal_announcement') {
+              window._showPortalAnnouncement(d.text || d.message, d.author);
             }
           } catch (_) {}
         };

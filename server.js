@@ -803,6 +803,31 @@ exit
         });
       }
 
+      // 8c. POST /api/portal-chat (HTTP fallback for 100% reliable chat delivery)
+      if (pathname === '/api/portal-chat' && req.method === 'POST') {
+        const body = await parseJsonBody(req);
+        const username = String(body.username || 'Misafir').trim().slice(0, 30);
+        const msg = String(body.msg || body.message || '').trim().slice(0, 300);
+        if (!msg) {
+          return sendJson(res, 400, { error: 'Mesaj boş olamaz.' });
+        }
+        if (gamesManager && typeof gamesManager.broadcastPortalChat === 'function') {
+          gamesManager.broadcastPortalChat(username, msg);
+        }
+        return sendJson(res, 200, { success: true });
+      }
+
+      // 8d. POST /api/admin-announce
+      if (pathname === '/api/admin-announce' && req.method === 'POST') {
+        const body = await parseJsonBody(req);
+        const text = String(body.text || body.message || '').trim();
+        const author = String(body.author || 'erencix').trim();
+        if (gamesManager && typeof gamesManager.broadcastAnnouncement === 'function') {
+          gamesManager.broadcastAnnouncement(text, author);
+        }
+        return sendJson(res, 200, { success: true });
+      }
+
       // 9. GET /api/admin/bot-config
       if (pathname === '/api/admin/bot-config' && req.method === 'GET') {
         return sendJson(res, 200, { success: true, config: OFFICIAL_BOT });
@@ -855,6 +880,8 @@ exit
   else if (pathname === '/templerun') safePath = '/index.html';
   else if (pathname === '/gartic') safePath = '/gartic.html';
   else if (pathname === '/racing') safePath = '/racing.html';
+  else if (pathname === '/slope') safePath = '/slope.html';
+  else if (pathname === '/hook') safePath = '/hook.html';
   else if (pathname === '/python' || pathname === '/pygame') safePath = '/python.html';
   else if (safePath === '/' || safePath === '\\') safePath = '/index.html';
 

@@ -404,8 +404,8 @@
           updateCount('count-survivor', data.games.survivor);
           updateCount('count-diep', data.games.diep || data.games.deeeep);
           updateCount('count-zombs', data.games.zombs);
-          updateCount('count-flappy', (data.games && data.games.flappy) || 12);
-          updateCount('count-tetris', (data.games && data.games.tetris) || 18);
+          updateCount('count-slope', data.games.slope);
+          updateCount('count-hook', data.games.hook);
           updateCount('count-dino', data.games.dino);
           updateCount('count-sumo', data.games.sumo);
           updateCount('count-stickwar', data.games.stickwar);
@@ -418,6 +418,8 @@
           const gameEntries = [
             { id: 'count-python', count: data.games.python || 0, name: 'Python & Pygame' },
             { id: 'count-racing', count: data.games.racing || 0, name: 'Bilişim GP Yarış' },
+            { id: 'count-slope', count: data.games.slope || 0, name: 'Slope 3D Neon' },
+            { id: 'count-hook', count: data.games.hook || 0, name: 'Stickman Hook' },
             { id: 'count-subway', count: data.games.subway || 0, name: 'Subway Surfers' },
             { id: 'count-gartic', count: data.games.gartic || 0, name: 'Gartic.io & Çizim' },
             { id: 'count-cs16', count: data.games.cs16 || 0, name: 'Counter-Strike 1.6' },
@@ -702,7 +704,16 @@
   });
 
   // 8. WebSocket for Live Classroom Chat & Announcements
+  function ensureWS() {
+    if (!state.ws || state.ws.readyState === WebSocket.CLOSED || state.ws.readyState === WebSocket.CLOSING) {
+      initWS();
+    }
+  }
+
   function initWS() {
+    if (state.ws && (state.ws.readyState === WebSocket.OPEN || state.ws.readyState === WebSocket.CONNECTING)) {
+      return;
+    }
     const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
     const ws = new WebSocket(`${protocol}//${location.host}`);
     state.ws = ws;
@@ -749,16 +760,33 @@
           chatMessages.innerHTML = `<div class="portal-chat-line" style="color:#ff5252; text-align:center; font-style:italic;">${esc(data.message || 'Sohbet temizlendi')}</div>`;
         }
       }
-      else if (data.type === 'portal_announcement') {
-        if (window._showPortalAnnouncement) window._showPortalAnnouncement(data.text || data.message || '');
+      else if (data.type === 'portal_announcement' || data.type === 'admin_announcement') {
+        if (window._showPortalAnnouncement) {
+          window._showPortalAnnouncement(data.text || data.message || '', data.author || 'erencix');
+        }
       }
       else if (data.type === 'portal_error') {
         alert(data.message || 'Yetkisiz işlem!');
       }
     };
 
-    ws.onclose = () => setTimeout(initWS, 2500);
+    ws.onerror = () => {
+      try { ws.close(); } catch (_) {}
+    };
+
+    ws.onclose = () => setTimeout(ensureWS, 2000);
   }
+
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') {
+      ensureWS();
+      fetchStats();
+    }
+  });
+  window.addEventListener('focus', () => {
+    ensureWS();
+    fetchStats();
+  });
 
   function showPlayerJoinBanner(text) {
     let container = document.getElementById('player-join-toast-container');
@@ -798,16 +826,37 @@
   }
 
   if (chatForm) {
-    chatForm.addEventListener('submit', (e) => {
+    chatForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       const msg = chatInput.value.trim();
-      if (msg && state.ws && state.ws.readyState === WebSocket.OPEN) {
-        state.ws.send(JSON.stringify({
-          type: 'portal_chat',
-          username: state.username,
-          msg
-        }));
-        chatInput.value = '';
+      if (!msg) return;
+
+      chatInput.value = '';
+
+      let sent = false;
+      if (state.ws && state.ws.readyState === WebSocket.OPEN) {
+        try {
+          state.ws.send(JSON.stringify({
+            type: 'portal_chat',
+            username: state.username,
+            msg
+          }));
+          sent = true;
+        } catch (_) {}
+      }
+
+      if (!sent) {
+        try {
+          await fetch('/api/portal-chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              username: state.username,
+              msg
+            })
+          });
+        } catch (_) {}
+        ensureWS();
       }
     });
   }
