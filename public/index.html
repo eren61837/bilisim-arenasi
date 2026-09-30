@@ -68,17 +68,7 @@
   </div>
 </div>
 
-<!-- FLOATING ADMIN BAR (Only visible if admin logged in) -->
-<div id="portal-admin-bar" class="portal-admin-bar hidden" style="background: linear-gradient(90deg, #b71c1c, #e65100); color: #fff; padding: 10px 30px; display: flex; align-items: center; justify-content: space-between; font-size: 13px; font-weight: bold; border-bottom: 2px solid #ffd54f; box-shadow: 0 4px 20px rgba(230, 81, 0, 0.5); position:sticky; top:0; z-index:2000;">
-    <div style="display:flex; align-items:center; gap:10px;">
-        <span>👑 YÖNETİCİ KONTROL PANELİ</span>
-        <span style="font-size:11px; background:#000; padding:3px 10px; border-radius:12px; color:#ffd54f; letter-spacing:1px;">YETKİLİ</span>
-    </div>
-    <div style="display:flex; gap:10px;">
-        <button id="btn-admin-announce" style="background:#ffd54f; color:#000; border:none; padding:6px 16px; border-radius:6px; font-weight:900; font-size:12px; cursor:pointer;">📢 TÜM OYUNLARA DUYURU AT</button>
-        <button id="btn-admin-clear-chat" style="background:#000; color:#ff5252; border:1px solid #ff5252; padding:6px 14px; border-radius:6px; font-weight:800; font-size:12px; cursor:pointer;">🧹 CHATİ TEMİZLE</button>
-    </div>
-</div>
+
 
 <!-- TOP NAVBAR -->
 <header class="portal-header">
@@ -120,8 +110,6 @@
             <strong id="portal-username">Kral</strong>
             <button id="btn-change-name" class="btn-rename-icon">⚙️</button>
         </div>
-
-        <button id="btn-open-admin" class="btn-header-admin">🔑 Admin</button>
     </div>
 </header>
 
@@ -808,31 +796,7 @@
     </div>
 </div>
 
-<!-- MODAL: ADMIN AUTH -->
-<div id="modal-admin-auth" class="name-modal-backdrop hidden">
-    <div class="name-modal">
-        <h3 style="color:var(--gold);">👑 Yönetici (Admin) Girişi</h3>
-        <p style="font-size:12px; color:var(--text-muted);">Yönetici şifresini girerek duyuru gönderme ve sohbet temizleme yetkilerini açın.</p>
-        <input type="password" id="in-admin-pass" placeholder="Admin Şifresi..." maxlength="30">
-        <div class="name-modal-buttons">
-            <button id="btn-submit-admin-auth" class="btn-save-name" style="background:var(--gold); color:#000;">GİRİŞ YAP</button>
-            <button id="btn-cancel-admin-auth" style="background:rgba(255,255,255,0.1); color:#fff; border:none; padding:10px; border-radius:6px; cursor:pointer;">İptal</button>
-        </div>
-    </div>
-</div>
 
-<!-- MODAL: ADMIN ANNOUNCEMENT -->
-<div id="modal-announce" class="name-modal-backdrop hidden">
-    <div class="name-modal" style="max-width:460px;">
-        <h3 style="color:var(--red);">📢 Tüm Sınıflara Duyuru Gönder</h3>
-        <p style="font-size:12px; color:var(--text-muted);">Bu duyuru portaldaki ve tüm oyunlardaki öğrencilerin ekranında sesli ve devasa kırmızı afiş olarak belirecektir!</p>
-        <textarea id="in-announce-text" style="background:rgba(0,0,0,0.5); border:1px solid rgba(255,255,255,0.2); color:#fff; padding:12px; border-radius:8px; min-height:90px; font-size:13px; outline:none;" placeholder="Duyuru metnini yazın... (Örn: 5 dakika sonra CS 1.6 turnuvası başlıyor!)" maxlength="180"></textarea>
-        <div class="name-modal-buttons">
-            <button id="btn-send-announce" class="btn-save-name" style="background:var(--red); color:#fff;">YAYINLA 📢</button>
-            <button id="btn-cancel-announce" style="background:rgba(255,255,255,0.1); color:#fff; border:none; padding:10px; border-radius:6px; cursor:pointer;">İptal</button>
-        </div>
-    </div>
-</div>
 
 <!-- MODAL: RATE GAME (YILDIZ VER & DEĞERLENDİR) -->
 <div id="modal-rate-game" class="rating-modal-backdrop" style="display:none;">

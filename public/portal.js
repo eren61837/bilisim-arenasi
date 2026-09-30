@@ -286,7 +286,6 @@
   // State
   state = {
     username: localStorage.getItem('portal_username') || 'Kral_' + Math.floor(100 + Math.random() * 900),
-    isAdmin: localStorage.getItem('portal_is_admin') === 'true',
     lanIp: window.location.hostname,
     ws: null
   };
@@ -352,26 +351,15 @@
   const chatForm = document.getElementById('portal-chat-form');
   const chatInput = document.getElementById('portal-chat-input');
 
-  // Admin Elements
-  const btnOpenAdmin = document.getElementById('btn-open-admin');
-  const adminBar = document.getElementById('portal-admin-bar');
-  const modalAdminAuth = document.getElementById('modal-admin-auth');
-  const inAdminPass = document.getElementById('in-admin-pass');
-  const btnSubmitAdminAuth = document.getElementById('btn-submit-admin-auth');
-  const btnCancelAdminAuth = document.getElementById('btn-cancel-admin-auth');
-  const btnAdminClearChat = document.getElementById('btn-admin-clear-chat');
-  const btnAdminAnnounce = document.getElementById('btn-admin-announce');
-  const modalAnnounce = document.getElementById('modal-announce');
-  const inAnnounceText = document.getElementById('in-announce-text');
-  const btnSendAnnounce = document.getElementById('btn-send-announce');
-  const btnCancelAnnounce = document.getElementById('btn-cancel-announce');
+  // Admin panel completely removed for security
+
 
   // Random Game Button
   const btnRandom = document.getElementById('btn-random-game');
 
   // Initial UI state
   if (elUsername) elUsername.textContent = state.username;
-  updateAdminUI();
+
 
   // 1. Fetch Server Stats & Active Player Counts
   async function fetchStats() {
@@ -559,118 +547,9 @@
     });
   }
 
-  // 4. Admin UI & Handlers
-  function updateAdminUI() {
-    if (state.isAdmin) {
-      if (adminBar) adminBar.classList.remove('hidden');
-      if (btnOpenAdmin) btnOpenAdmin.textContent = '👑 Admin Aktif';
-    } else {
-      if (adminBar) adminBar.classList.add('hidden');
-      if (btnOpenAdmin) btnOpenAdmin.textContent = '🔑 Admin';
-    }
-  }
 
-  if (btnOpenAdmin) {
-    btnOpenAdmin.addEventListener('click', () => {
-      AudioEngine.playClick();
-      if (state.isAdmin) {
-        adminBar.classList.toggle('hidden');
-      } else {
-        modalAdminAuth.classList.remove('hidden');
-        inAdminPass.value = '';
-        inAdminPass.focus();
-      }
-    });
-  }
+  // ⛔ ADMIN PANELİ GÜVENLİK NEDENİYLE KALDIRILDI
 
-  if (btnCancelAdminAuth) btnCancelAdminAuth.addEventListener('click', () => modalAdminAuth.classList.add('hidden'));
-
-  if (btnSubmitAdminAuth) {
-    btnSubmitAdminAuth.addEventListener('click', () => {
-      AudioEngine.playClick();
-      const pass = inAdminPass.value.trim();
-      if (pass === 'erencix201124') {
-        state.isAdmin = true;
-        localStorage.setItem('portal_is_admin', 'true');
-        modalAdminAuth.classList.add('hidden');
-        updateAdminUI();
-        if (state.ws && state.ws.readyState === WebSocket.OPEN) {
-          state.ws.send(JSON.stringify({ type: 'admin_auth', password: pass }));
-        }
-      } else {
-        alert('❌ Hatalı admin şifresi!');
-      }
-    });
-  }
-
-  if (btnAdminClearChat) {
-    btnAdminClearChat.addEventListener('click', () => {
-      if (confirm('Tüm sohbet geçmişi silinsin mi?')) {
-        if (state.ws && state.ws.readyState === WebSocket.OPEN) {
-          state.ws.send(JSON.stringify({ type: 'admin_clear_chat' }));
-        }
-      }
-    });
-  }
-
-  if (btnAdminAnnounce) {
-    btnAdminAnnounce.addEventListener('click', () => {
-      if (!state.isAdmin) {
-        if (modalAdminAuth) modalAdminAuth.classList.remove('hidden');
-        if (inAdminPass) {
-          inAdminPass.value = '';
-          inAdminPass.focus();
-        }
-        return;
-      }
-      if (modalAnnounce) modalAnnounce.classList.remove('hidden');
-      if (inAnnounceText) {
-        inAnnounceText.value = '';
-        inAnnounceText.focus();
-      }
-    });
-  }
-  if (btnCancelAnnounce) btnCancelAnnounce.addEventListener('click', () => {
-    if (modalAnnounce) modalAnnounce.classList.add('hidden');
-  });
-
-  if (btnSendAnnounce) {
-    btnSendAnnounce.addEventListener('click', async () => {
-      if (!state.isAdmin) {
-        alert('❌ Yalnızca yetkili yönetici (admin) duyuru gönderebilir!');
-        if (modalAnnounce) modalAnnounce.classList.add('hidden');
-        return;
-      }
-      const text = inAnnounceText ? inAnnounceText.value.trim() : '';
-      if (text) {
-        const author = state.username || '👑 Admin';
-        // 1. WebSocket send
-        if (state.ws && state.ws.readyState === WebSocket.OPEN) {
-          try {
-            state.ws.send(JSON.stringify({
-              type: 'admin_announcement',
-              text,
-              author
-            }));
-          } catch (_) {}
-        }
-        // 2. HTTP POST fallback to guarantee server reception & broadcast
-        try {
-          fetch('/api/admin-announce', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ text, author })
-          }).catch(() => {});
-        } catch (_) {}
-        // 3. Instant local display & cross-tab sync
-        if (window._showPortalAnnouncement) {
-          window._showPortalAnnouncement(text, author);
-        }
-        if (modalAnnounce) modalAnnounce.classList.add('hidden');
-        if (inAnnounceText) inAnnounceText.value = '';
-      }
-    });
-  }
 
   // 5. Random Game Button Roulette (Tüm 21 arena oyunu arasından adil rastgele seçim)
   if (btnRandom) {
@@ -892,9 +771,6 @@
       ws.send(JSON.stringify({ type: 'portal_get_chat' }));
       if (state.username) {
         ws.send(JSON.stringify({ type: 'player_announce', username: state.username }));
-      }
-      if (state.isAdmin) {
-        ws.send(JSON.stringify({ type: 'admin_auth', password: 'erencix201124' }));
       }
     };
 

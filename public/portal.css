@@ -44,6 +44,7 @@ body {
   display: flex;
   flex-direction: column;
   overflow-x: hidden;
+  overflow-y: auto;
   position: relative;
   selection-background-color: var(--cyan);
   selection-color: #000;
