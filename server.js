@@ -1049,15 +1049,12 @@ exit
   const ext = path.extname(filePath).toLowerCase();
   const contentType = MIME_TYPES[ext] || 'application/octet-stream';
 
-  // Smart Bandwidth & Caching Optimizer for weak/free-tier Render:
-  // - HTML: 60s cache with must-revalidate (keeps content up to date)
-  // - JS / CSS / Images: 1 day cache with stale-while-revalidate
-  // - Audio / Media / WASM: 7 days immutable
-  let cacheHeader = 'public, max-age=86400, stale-while-revalidate=3600';
-  if (ext === '.html') {
-    cacheHeader = 'public, max-age=60, must-revalidate';
-  } else if (ext === '.mp3' || ext === '.wav' || ext === '.ogg' || ext === '.wasm') {
+  // Immediate updates: Disable cache on HTML, JS and CSS so changes reflect instantly
+  let cacheHeader = 'no-cache, no-store, must-revalidate, max-age=0';
+  if (ext === '.mp3' || ext === '.wav' || ext === '.ogg' || ext === '.wasm') {
     cacheHeader = 'public, max-age=604800, immutable';
+  } else if (ext === '.png' || ext === '.jpg' || ext === '.svg' || ext === '.webp') {
+    cacheHeader = 'public, max-age=86400';
   }
 
   // Audio / Media HTTP Range Streaming Support (Vital for browser audio playback & seeking!)

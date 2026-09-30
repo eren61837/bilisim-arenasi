@@ -3,31 +3,36 @@
 (function () {
   'use strict';
 
-  // ⛔ KAYNAK KODU KORUMASI
+  // ⛔ KAYNAK KODU VE GELİŞTİRİCİ ARAÇLARI KORUMASI (CAPTURE PHASE)
   (function() {
-    // Sağ tık engeli
-    document.addEventListener('contextmenu', function(e) {
+    function blockEvent(e) {
       e.preventDefault();
+      e.stopPropagation();
+      e.stopImmediatePropagation();
       return false;
-    });
+    }
 
-    // F12, Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+Shift+C, Ctrl+U engeli
-    document.addEventListener('keydown', function(e) {
+    // Sağ Tık Engeli (Hem window hem document seviyesinde capture)
+    window.addEventListener('contextmenu', blockEvent, true);
+    document.addEventListener('contextmenu', blockEvent, true);
+
+    // Kısayol Tuşları Engeli (F12, Ctrl+U, Ctrl+Shift+I/J/C/S, Ctrl+S)
+    window.addEventListener('keydown', function(e) {
       // F12
-      if (e.keyCode === 123) { e.preventDefault(); return false; }
-      // Ctrl+Shift+I / J / C (DevTools)
-      if (e.ctrlKey && e.shiftKey && (e.keyCode === 73 || e.keyCode === 74 || e.keyCode === 67)) {
-        e.preventDefault(); return false;
+      if (e.keyCode === 123 || e.key === 'F12') return blockEvent(e);
+      // Ctrl+Shift+I / J / C (DevTools & Elements)
+      if (e.ctrlKey && e.shiftKey && (e.keyCode === 73 || e.keyCode === 74 || e.keyCode === 67 || e.key === 'I' || e.key === 'J' || e.key === 'C')) {
+        return blockEvent(e);
       }
       // Ctrl+U (View Source)
-      if (e.ctrlKey && !e.shiftKey && e.keyCode === 85) {
-        e.preventDefault(); return false;
+      if (e.ctrlKey && !e.shiftKey && (e.keyCode === 85 || e.key === 'u' || e.key === 'U')) {
+        return blockEvent(e);
       }
       // Ctrl+S (Save page)
-      if (e.ctrlKey && e.keyCode === 83) {
-        e.preventDefault(); return false;
+      if (e.ctrlKey && (e.keyCode === 83 || e.key === 's' || e.key === 'S')) {
+        return blockEvent(e);
       }
-    });
+    }, true);
   })();
 
   /* ── Universal Real-Time Announcement System with Cross-Tab Sync ── */

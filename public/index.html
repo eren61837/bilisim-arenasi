@@ -6,8 +6,26 @@
     <title>⚡ Bilişim Sınıfı & Dünya Multiplayer Oyun Arenası</title>
     <link rel="stylesheet" href="bgm.css?v=30">
     <link rel="stylesheet" href="portal.css?v=30">
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎮</text></svg>">
     <script src="https://js.hcaptcha.com/1/api.js" async defer></script>
+    <script>
+      // ⛔ İLK ANDAN İTİBAREN KAYNAK KODU & GELİŞTİRİCİ ARAÇLARI ENGELİ
+      (function() {
+        document.addEventListener('contextmenu', function(e) { e.preventDefault(); return false; }, true);
+        window.addEventListener('contextmenu', function(e) { e.preventDefault(); return false; }, true);
+        document.addEventListener('keydown', function(e) {
+          if (e.keyCode === 123) { e.preventDefault(); e.stopPropagation(); return false; } // F12
+          if (e.ctrlKey && e.shiftKey && (e.keyCode === 73 || e.keyCode === 74 || e.keyCode === 67)) { // Ctrl+Shift+I/J/C
+            e.preventDefault(); e.stopPropagation(); return false;
+          }
+          if (e.ctrlKey && !e.shiftKey && e.keyCode === 85) { // Ctrl+U (View Source)
+            e.preventDefault(); e.stopPropagation(); return false;
+          }
+          if (e.ctrlKey && e.keyCode === 83) { // Ctrl+S (Save)
+            e.preventDefault(); e.stopPropagation(); return false;
+          }
+        }, true);
+      })();
+    </script>
 </head>
 <body>
 
