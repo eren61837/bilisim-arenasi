@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="bgm.css?v=30">
     <link rel="stylesheet" href="portal.css?v=30">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎮</text></svg>">
+    <script src="https://js.hcaptcha.com/1/api.js" async defer></script>
 </head>
 <body>
 
@@ -45,6 +46,7 @@
       <input type="text" id="reg-username-input" class="welcome-name-input" placeholder="Kullanıcı adın (en az 2 karakter)..." maxlength="20" autocomplete="username">
       <input type="password" id="reg-password-input" class="welcome-name-input" placeholder="Şifren (en az 3 karakter)..." maxlength="50" autocomplete="new-password" style="margin-top:8px;">
       <div id="reg-error" class="welcome-name-error" style="display:none;">Hata mesajı</div>
+      <div class="h-captcha" data-sitekey="10000000-ffff-ffff-ffff-000000000001" style="margin: 10px 0; transform: scale(0.85); transform-origin: left;"></div>
       <button id="reg-submit-btn" class="welcome-start-btn" style="background:linear-gradient(135deg, #ff9800, #e65100);">HESAP OLUŞTUR VE GİR 🚀</button>
       <p style="margin-top:12px; font-size:12px; color:#888;">Zaten hesabın var mı? <a href="#" id="link-go-login" style="color:#00e676; font-weight:800; text-decoration:none;">Buradan Giriş Yap</a></p>
     </div>

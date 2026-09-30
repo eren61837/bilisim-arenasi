@@ -3,6 +3,56 @@
 (function () {
   'use strict';
 
+  // ⛔ KAYNAK KODU KORUMASI
+  (function() {
+    // Sağ tık engeli
+    document.addEventListener('contextmenu', function(e) {
+      e.preventDefault();
+      return false;
+    });
+
+    // F12, Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+Shift+C, Ctrl+U engeli
+    document.addEventListener('keydown', function(e) {
+      // F12
+      if (e.keyCode === 123) { e.preventDefault(); return false; }
+      // Ctrl+Shift+I / J / C (DevTools)
+      if (e.ctrlKey && e.shiftKey && (e.keyCode === 73 || e.keyCode === 74 || e.keyCode === 67)) {
+        e.preventDefault(); return false;
+      }
+      // Ctrl+U (View Source)
+      if (e.ctrlKey && !e.shiftKey && e.keyCode === 85) {
+        e.preventDefault(); return false;
+      }
+      // Ctrl+S (Save page)
+      if (e.ctrlKey && e.keyCode === 83) {
+        e.preventDefault(); return false;
+      }
+    });
+
+    // DevTools detection (boyut farkı yöntemi)
+    let devToolsOpen = false;
+    const threshold = 160;
+    setInterval(function() {
+      const widthDiff = window.outerWidth - window.innerWidth;
+      const heightDiff = window.outerHeight - window.innerHeight;
+      if (widthDiff > threshold || heightDiff > threshold) {
+        if (!devToolsOpen) {
+          devToolsOpen = true;
+          // Geliştirici araçları açık uyarısı göster
+          const w = document.createElement('div');
+          w.id = 'devtools-warning';
+          w.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.97);z-index:999999;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#ff1744;font-family:monospace;font-size:24px;font-weight:900;text-align:center;';
+          w.innerHTML = '<div style="font-size:64px">⛔</div><div>GELİŞTİRİCİ ARAÇLARI TESPİT EDİLDİ</div><div style="font-size:14px;color:#aaa;margin-top:12px">Bu site kaynak kod görüntülemeye karşı korumalıdır.</div><div style="font-size:14px;color:#aaa">Geliştirici araçlarını kapatıp sayfayı yenileyin.</div>';
+          document.body.appendChild(w);
+        }
+      } else {
+        devToolsOpen = false;
+        const w = document.getElementById('devtools-warning');
+        if (w) w.remove();
+      }
+    }, 1000);
+  })();
+
   /* ── Universal Real-Time Announcement System with Cross-Tab Sync ── */
   const annChannel = (typeof BroadcastChannel !== 'undefined') ? new BroadcastChannel('bilisim_portal_announcements') : null;
   const displayedAnnouncements = new Set();

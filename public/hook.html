@@ -406,6 +406,8 @@
             player.vx = -speed * Math.sin(player.ropeAngle);
             player.vy = speed * Math.cos(player.ropeAngle);
 
+            if (player.vy < -15) player.vy = -15; // prevent flying off top
+
             // Boost horizontal forward momentum
             if (player.vx < 6) player.vx = 8;
 
@@ -421,7 +423,7 @@
             if (player.attachedNode) {
                 // Pendulum physics
                 const node = player.attachedNode;
-                const angularAccel = (-gravity / player.ropeLength) * Math.cos(player.ropeAngle);
+                const angularAccel = (gravity / player.ropeLength) * Math.cos(player.ropeAngle);
                 player.angularVelocity += angularAccel;
                 player.angularVelocity *= 0.994; // slight air drag
                 player.ropeAngle += player.angularVelocity;
@@ -445,6 +447,13 @@
                         player.y = tr.y - player.radius;
                     }
                 }
+            }
+
+            // Fly-off-top reset
+            if (player.y < -250) {
+                player.attachedNode = null;
+                player.vy = 0;
+                player.y = 50;
             }
 
             // Fall-out reset

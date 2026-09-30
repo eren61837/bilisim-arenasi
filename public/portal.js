@@ -2,6 +2,9 @@
 (function() {
   'use strict';
 
+  // Eski admin yetki kalıntılarını temizle
+  localStorage.removeItem('portal_is_admin');
+
   // Global state reference (declared before IIFE to prevent TDZ ReferenceError)
   let state = null;
 

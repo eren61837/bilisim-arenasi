@@ -3,484 +3,123 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>🏃 Subway Surfers 3D Web - Bilişim Arenası</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏃</text></svg>">
+    <title>Subway Surfers - Bilişim Arenası</title>
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        html, body {
-            width: 100%; height: 100%;
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
             overflow: hidden;
-            background: #0a101d;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            color: #fff;
-            user-select: none;
+            background-color: #0d1117; /* Dark cyber theme */
+            color: #c9d1d9;
+            font-family: Arial, sans-serif;
+            touch-action: none;
         }
-
-        /* TOP NAVIGATION BAR */
-        .subway-top-bar {
-            position: fixed;
-            top: 0; left: 0; right: 0;
-            height: 48px;
-            background: rgba(13, 17, 23, 0.95);
-            backdrop-filter: blur(12px);
-            border-bottom: 2px solid #00dbff;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0 16px;
-            z-index: 2000;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.8);
-            gap: 12px;
+        #hud {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            font-size: 24px;
+            font-weight: bold;
+            z-index: 10;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
         }
-
-        .subway-brand {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            flex-shrink: 0;
-        }
-
-        .btn-subway-nav {
-            background: rgba(0, 219, 255, 0.12);
-            color: #00dbff;
-            border: 1px solid #00dbff;
-            padding: 6px 12px;
-            border-radius: 6px;
-            font-size: 12px;
-            font-weight: 800;
-            cursor: pointer;
+        .hud-item { margin-bottom: 8px; }
+        .hud-icon { color: #f1e05a; }
+        
+        #back-button {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            padding: 10px 20px;
+            background: rgba(30, 30, 30, 0.8);
+            border: 2px solid #4caf50;
+            color: white;
             text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-            transition: all 0.2s ease;
-        }
-        .btn-subway-nav:hover {
-            background: #00dbff;
-            color: #000;
-            transform: translateY(-1px);
-            box-shadow: 0 0 12px rgba(0, 219, 255, 0.5);
-        }
-
-        .source-select {
-            background: #161b22;
-            color: #00dbff;
-            border: 1px solid rgba(0, 219, 255, 0.4);
-            padding: 5px 10px;
-            border-radius: 6px;
-            font-size: 12px;
-            font-weight: 700;
-            outline: none;
-            cursor: pointer;
-        }
-
-        /* 3D GAME CONTAINER */
-        #game-container {
-            position: absolute;
-            top: 48px;
-            left: 0;
-            width: 100%;
-            height: calc(100% - 48px - 32px);
-            background: #0a101d;
-            overflow: hidden;
-            display: block;
-        }
-
-        /* IFRAME FALLBACK CONTAINER */
-        #iframe-container {
-            position: absolute;
-            top: 48px;
-            left: 0;
-            width: 100%;
-            height: calc(100% - 48px - 32px);
-            border: none;
-            display: none;
-            background: #000;
-            z-index: 15;
-        }
-
-        /* TOP IN-GAME HUD */
-        .ingame-hud {
-            position: fixed;
-            top: 58px;
-            left: 0; right: 0;
-            padding: 0 24px;
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            pointer-events: none;
-            z-index: 100;
-        }
-
-        .score-box {
-            display: flex;
-            flex-direction: column;
-            align-items: flex-end;
-            background: rgba(0, 0, 0, 0.65);
-            padding: 8px 18px;
-            border-radius: 12px;
-            border: 1px solid rgba(0, 219, 255, 0.3);
-            backdrop-filter: blur(8px);
-        }
-        .score-val {
-            font-size: 28px;
-            font-weight: 900;
-            letter-spacing: 1.5px;
-            color: #fff;
-            text-shadow: 0 2px 8px rgba(0, 219, 255, 0.6);
-        }
-        .multi-badge {
-            font-size: 13px;
-            font-weight: 800;
-            color: #ffd700;
-            background: rgba(255, 215, 0, 0.2);
-            padding: 2px 8px;
-            border-radius: 6px;
-            margin-top: 2px;
-        }
-
-        .stats-left {
-            display: flex;
-            gap: 12px;
-        }
-        .coin-box, .high-box {
-            background: rgba(0, 0, 0, 0.65);
-            padding: 8px 14px;
-            border-radius: 12px;
-            border: 1px solid rgba(255, 215, 0, 0.3);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-weight: 800;
-            font-size: 15px;
-            backdrop-filter: blur(8px);
-        }
-        .coin-val { color: #ffd700; }
-        .high-val { color: #00e676; }
-
-        /* ACTIVE POWERUPS DOCK */
-        #powerup-dock {
-            position: fixed;
-            top: 130px;
-            left: 24px;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            pointer-events: none;
-            z-index: 100;
-        }
-        .powerup-badge {
-            background: rgba(0, 0, 0, 0.8);
             border-radius: 8px;
-            padding: 6px 12px;
-            font-size: 12px;
-            font-weight: 800;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            animation: pulseBadge 1.2s infinite;
-        }
-        .p-board { border: 1.5px solid #00dbff; color: #00dbff; }
-        .p-mag { border: 1.5px solid #ff1744; color: #ff5252; }
-        .p-jet { border: 1.5px solid #ff9100; color: #ff9100; }
-        .p-sneak { border: 1.5px solid #00e676; color: #00e676; }
-        .p-multi { border: 1.5px solid #ffd700; color: #ffd700; }
-
-        @keyframes pulseBadge {
-            0%, 100% { opacity: 1; transform: scale(1); }
-            50% { opacity: 0.85; transform: scale(1.03); }
-        }
-
-        /* START / MENU SCREEN */
-        #start-screen {
-            position: fixed;
-            inset: 0;
-            background: rgba(10, 16, 29, 0.85);
-            backdrop-filter: blur(10px);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            z-index: 500;
-            gap: 20px;
-        }
-        .start-logo {
-            font-size: 48px;
-            font-weight: 900;
-            letter-spacing: 2px;
-            background: linear-gradient(135deg, #00dbff, #ffd700, #ff1744);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            text-shadow: 0 10px 30px rgba(0, 219, 255, 0.4);
-            text-align: center;
-        }
-        .btn-big-play {
-            background: linear-gradient(135deg, #00e676, #00b0ff);
-            color: #000;
-            font-size: 20px;
-            font-weight: 900;
-            padding: 16px 48px;
-            border-radius: 50px;
-            border: none;
+            font-weight: bold;
+            z-index: 20;
             cursor: pointer;
-            box-shadow: 0 10px 30px rgba(0, 230, 118, 0.4);
-            transition: all 0.25s ease;
+            transition: 0.3s;
         }
-        .btn-big-play:hover {
-            transform: scale(1.08) translateY(-2px);
-            box-shadow: 0 15px 40px rgba(0, 230, 118, 0.6);
-        }
+        #back-button:hover { background: #4caf50; color: black; }
 
-        /* GAME OVER MODAL */
-        #game-over-modal {
-            position: fixed;
-            inset: 0;
-            background: rgba(5, 7, 13, 0.92);
-            backdrop-filter: blur(12px);
+        #mobile-controls {
             display: none;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            z-index: 600;
-            gap: 20px;
-        }
-        .go-box {
-            background: #161b22;
-            border: 2px solid #ff1744;
-            border-radius: 20px;
-            padding: 36px 42px;
-            text-align: center;
-            max-width: 420px;
-            width: 90%;
-            box-shadow: 0 0 50px rgba(255, 23, 68, 0.4);
-        }
-        .go-title {
-            color: #ff1744;
-            font-size: 32px;
-            font-weight: 900;
-            margin-bottom: 16px;
-        }
-        .go-stats-row {
-            display: flex;
-            justify-content: space-between;
-            padding: 8px 0;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            font-size: 15px;
-        }
-        .btn-restart {
-            margin-top: 20px;
-            background: linear-gradient(135deg, #00dbff, #00e676);
-            color: #000;
-            border: none;
-            padding: 14px 32px;
-            font-size: 16px;
-            font-weight: 900;
-            border-radius: 30px;
-            cursor: pointer;
-            box-shadow: 0 8px 25px rgba(0, 219, 255, 0.5);
-            transition: all 0.2s;
-        }
-        .btn-restart:hover {
-            transform: scale(1.05);
-        }
-
-        /* BOTTOM CONTROLS RIBBON */
-        .subway-bottom-bar {
-            position: fixed;
-            bottom: 0; left: 0; right: 0;
-            height: 32px;
-            background: rgba(13, 17, 23, 0.98);
-            border-top: 1px solid rgba(0, 219, 255, 0.3);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0 16px;
-            font-size: 11.5px;
-            color: #aaa;
-            z-index: 2000;
-        }
-        .key-tip {
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-        }
-        .key-tip kbd {
-            background: #21262d;
-            border: 1px solid #00dbff;
-            color: #00dbff;
-            padding: 1px 6px;
-            border-radius: 4px;
-            font-weight: 800;
-            font-family: inherit;
-        }
-
-        /* MOBILE ON-SCREEN CONTROLS */
-        .mobile-controls {
-            display: none;
-            position: fixed;
-            bottom: 45px;
-            left: 0; right: 0;
-            padding: 0 20px;
-            justify-content: space-between;
+            position: absolute;
+            bottom: 30px;
+            width: 100%;
             pointer-events: none;
-            z-index: 100;
+            z-index: 10;
         }
-        @media (max-width: 800px) {
-            .mobile-controls { display: flex; }
+        @media (max-width: 768px) {
+            #mobile-controls {
+                display: flex;
+                justify-content: space-between;
+                padding: 0 30px;
+                box-sizing: border-box;
+            }
         }
-        .touch-btn {
+        .control-btn {
             pointer-events: auto;
-            width: 58px; height: 58px;
+            background: rgba(255,255,255,0.15);
+            border: 2px solid rgba(255,255,255,0.3);
             border-radius: 50%;
-            background: rgba(0, 0, 0, 0.6);
-            border: 2px solid #00dbff;
-            color: #00dbff;
-            font-size: 22px;
+            width: 70px;
+            height: 70px;
             display: flex;
-            align-items: center;
             justify-content: center;
-            cursor: pointer;
+            align-items: center;
+            font-size: 30px;
+            color: white;
+            user-select: none;
+            -webkit-user-select: none;
             backdrop-filter: blur(4px);
+        }
+        .control-btn:active { background: rgba(255,255,255,0.4); }
+        .controls-group { display: flex; gap: 15px; }
+        
+        #subway-canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
         }
     </style>
 </head>
 <body>
 
-    <!-- TOP NAVIGATION & ENGINE CONTROL BAR -->
-    <header class="subway-top-bar">
-        <div class="subway-brand">
-            <a href="/" class="btn-subway-nav">⬅ Arenaya Dön</a>
-            <span style="font-weight:900; font-size:14px; letter-spacing:0.5px; color:#fff;">🏃 SUBWAY SURFERS 3D</span>
-        </div>
+    <a href="/" id="back-button">🏠 PORTALE DÖN</a>
 
-        <div style="display:flex; align-items:center; gap:8px;">
-            <label style="font-size:11px; color:#aaa;">Oyun Motoru:</label>
-            <select id="source-select" class="source-select" onchange="switchEngine(this.value)">
-                <option value="local">🟢 Yerel 3D WebGL (MEB Engeli Yok - 100% Okul)</option>
-                <option value="https://ubg98.github.io/SubwaySurfers/">⚡ Ayna 1 (ubg98)</option>
-                <option value="https://subway-surfers.org/">🔥 Ayna 2 (Original Web)</option>
-                <option value="https://subwaysurfers.world/">🌐 Ayna 3 (Alternatif)</option>
-            </select>
-            <button id="btn-toggle-audio" class="btn-subway-nav">🔊 Ses: Açık</button>
-            <button class="btn-subway-nav" onclick="toggleFullscreen()">⛶ Tam Ekran</button>
-        </div>
-    </header>
-
-    <!-- IN-GAME HUD -->
-    <div class="ingame-hud">
-        <div class="stats-left">
-            <div class="coin-box">
-                <span>🪙</span> <span id="val-coins" class="coin-val">0</span>
-            </div>
-            <div class="high-box">
-                <span>🏆 REKOR:</span> <span id="val-high" class="high-val">0</span>
-            </div>
-        </div>
-
-        <div class="score-box">
-            <div id="val-score" class="score-val">0</div>
-            <div id="val-multi" class="multi-badge">1X</div>
-        </div>
+    <div id="hud">
+        <div class="hud-item"><span class="hud-icon">🏆</span> Skor: <span id="hud-score">0</span></div>
+        <div class="hud-item"><span class="hud-icon">🪙</span> Altın: <span id="hud-coins">0</span></div>
     </div>
 
-    <!-- POWERUP BADGES -->
-    <div id="powerup-dock"></div>
+    <canvas id="subway-canvas"></canvas>
 
-    <!-- 3D WEBGL ENGINE VIEWPORT -->
-    <div id="game-container"></div>
-
-    <!-- IFRAME FALLBACK VIEWPORT (Sadece dış kaynak seçilirse devreye girer) -->
-    <iframe id="iframe-container" allow="autoplay; fullscreen; pointer-lock; keyboard"></iframe>
-
-    <!-- START SCREEN -->
-    <div id="start-screen">
-        <div class="start-logo">🏃 SUBWAY SURFERS 3D</div>
-        <p style="color:#aaa; font-size:14px; font-weight:bold; letter-spacing:0.5px;">Bilişim Sınıfı Özel • 100% Yerel MEB Uyumlu WebGL</p>
-        <button id="btn-play-game" class="btn-big-play">KOŞMAYA BAŞLA! ▶</button>
-        <p style="color:#666; font-size:12px;">Kontroller: [W/A/S/D] veya [Ok Tuşları] &bull; Kaykay: [SPACE Çift Tık]</p>
+    <div id="mobile-controls">
+        <div class="controls-group">
+            <div class="control-btn" id="btn-left">←</div>
+            <div class="control-btn" id="btn-right">→</div>
+        </div>
+        <div class="control-btn" id="btn-jump">↑</div>
     </div>
 
-    <!-- GAME OVER SCREEN -->
-    <div id="game-over-modal">
-        <div class="go-box">
-            <div class="go-title">YAKALANDIN!</div>
-            <div class="go-stats-row">
-                <span style="color:#aaa;">Skorun:</span>
-                <span id="go-score" style="font-weight:900; color:#fff;">0</span>
-            </div>
-            <div class="go-stats-row">
-                <span style="color:#aaa;">Toplanan Altın:</span>
-                <span id="go-coins" style="font-weight:900; color:#ffd700;">0</span>
-            </div>
-            <div class="go-stats-row">
-                <span style="color:#aaa;">En Yüksek Rekorun:</span>
-                <span id="go-high" style="font-weight:900; color:#00e676;">0</span>
-            </div>
-            <button id="btn-restart-game" class="btn-restart">TEKRAR KOŞ 🔄</button>
-        </div>
-    </div>
-
-    <!-- MOBILE ON-SCREEN CONTROLS -->
-    <div class="mobile-controls">
-        <div style="display:flex; gap:10px;">
-            <button id="touch-left" class="touch-btn">◀</button>
-            <button id="touch-right" class="touch-btn">▶</button>
-        </div>
-        <div style="display:flex; gap:10px;">
-            <button id="touch-slide" class="touch-btn">▼</button>
-            <button id="touch-jump" class="touch-btn">▲</button>
-            <button id="touch-board" class="touch-btn">🛹</button>
-        </div>
-    </div>
-
-    <!-- BOTTOM CONTROLS RIBBON -->
-    <footer class="subway-bottom-bar">
-        <div class="key-tip"><kbd>←</kbd> <kbd>→</kbd> / <kbd>A</kbd> <kbd>D</kbd> Şerit Değiştir</div>
-        <div class="key-tip"><kbd>↑</kbd> / <kbd>W</kbd> Zıpla</div>
-        <div class="key-tip"><kbd>↓</kbd> / <kbd>S</kbd> Yuvarlan</div>
-        <div class="key-tip"><kbd>ÇİFT SPACE</kbd> Kaykay Kullan (Hoverboard)</div>
-        <div style="color:#00dbff; font-weight:bold;">⚡ 100% Yerel WebGL • MEB Filtre Korumalı</div>
-    </footer>
-
-    <!-- ENGINE SWITCHER SCRIPT -->
-    <script>
-        function switchEngine(mode) {
-            const gameContainer = document.getElementById('game-container');
-            const iframe = document.getElementById('iframe-container');
-            const startScreen = document.getElementById('start-screen');
-            const ingameHud = document.querySelector('.ingame-hud');
-
-            if (mode === 'local') {
-                if (iframe) {
-                    iframe.style.display = 'none';
-                    iframe.src = '';
-                }
-                if (gameContainer) gameContainer.style.display = 'block';
-                if (ingameHud) ingameHud.style.display = 'flex';
-                if (startScreen) startScreen.style.display = 'flex';
-            } else {
-                if (gameContainer) gameContainer.style.display = 'none';
-                if (startScreen) startScreen.style.display = 'none';
-                if (ingameHud) ingameHud.style.display = 'none';
-                if (iframe) {
-                    iframe.style.display = 'block';
-                    iframe.src = mode;
-                }
-            }
-        }
-
-        function toggleFullscreen() {
-            if (!document.fullscreenElement) {
-                document.documentElement.requestFullscreen().catch(() => {});
-            } else {
-                document.exitFullscreen().catch(() => {});
-            }
-        }
-    </script>
-
-    <!-- LOAD THREE.JS & 100% LOCAL SUBWAY ENGINE -->
+    <!-- Load Local Libraries -->
     <script src="three.min.js"></script>
     <script src="subway.js"></script>
     <script src="overlay-back.js"></script>
+    
+    <script>
+        function triggerKey(key) {
+            document.dispatchEvent(new KeyboardEvent('keydown', { key: key, code: key }));
+            setTimeout(() => document.dispatchEvent(new KeyboardEvent('keyup', { key: key, code: key })), 100);
+        }
+        
+        document.getElementById('btn-left').addEventListener('touchstart', (e) => { e.preventDefault(); triggerKey('ArrowLeft'); });
+        document.getElementById('btn-right').addEventListener('touchstart', (e) => { e.preventDefault(); triggerKey('ArrowRight'); });
+        document.getElementById('btn-jump').addEventListener('touchstart', (e) => { e.preventDefault(); triggerKey('ArrowUp'); });
+    </script>
 </body>
 </html>

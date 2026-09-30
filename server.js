@@ -335,6 +335,13 @@ let cachedStatsPayload = null;
 let lastStatsTime = 0;
 
 const server = http.createServer(async (req, res) => {
+  // Security headers
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+  res.setHeader('X-XSS-Protection', '1; mode=block');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+
   const parsedUrl = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
   const pathname = parsedUrl.pathname;
 
@@ -665,6 +672,37 @@ exit
       // 3. POST /api/register
       if (pathname === '/api/register' && req.method === 'POST') {
         const body = await parseJsonBody(req);
+        
+        // hCaptcha verification
+        const hcaptchaToken = body['h-captcha-response'] || body.hcaptchaToken || '';
+        if (!hcaptchaToken) {
+          return sendJson(res, 400, { error: 'Güvenlik doğrulaması gerekli! (hCaptcha)' });
+        }
+        // Test key always passes; for production replace with real secret from hcaptcha.com
+        const HCAPTCHA_SECRET = process.env.HCAPTCHA_SECRET || '0x0000000000000000000000000000000000000000';
+        try {
+          const verifyRes = await new Promise((resolve, reject) => {
+            const postData = `response=${hcaptchaToken}&secret=${HCAPTCHA_SECRET}`;
+            const options = {
+              hostname: 'hcaptcha.com',
+              path: '/siteverify',
+              method: 'POST',
+              headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'Content-Length': Buffer.byteLength(postData) }
+            };
+            const req2 = require('https').request(options, (res2) => {
+              let d = ''; res2.on('data', c => d += c); res2.on('end', () => resolve(JSON.parse(d)));
+            });
+            req2.on('error', reject);
+            req2.write(postData);
+            req2.end();
+          });
+          if (!verifyRes.success) {
+            return sendJson(res, 400, { error: 'Güvenlik doğrulaması başarısız! Lütfen tekrar deneyin.' });
+          }
+        } catch (_) {
+          // If hcaptcha check fails due to network, allow through (don't block students)
+        }
+
         const { username, email, password, captchaToken } = body;
 
         // Cloudflare Turnstile / Captcha Verification Check

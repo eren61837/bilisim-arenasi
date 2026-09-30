@@ -1259,7 +1259,8 @@ function initGamesManager(wss, db) {
         isDead: false,
         hasShield: false,
         powerup: null,
-        powerupAmmo: 0
+        powerupAmmo: 0,
+        spawnInvulTimer: Date.now() + 3000
       };
       ws.tankId = id;
       tankPlayers.set(id, p);
@@ -1275,6 +1276,7 @@ function initGamesManager(wss, db) {
         arenaW: TANK_ARENA_W,
         arenaH: TANK_ARENA_H
       }));
+      ws.send(JSON.stringify({ type: 'tank_spawn_shield', duration: 3000 }));
       return;
     }
 
@@ -1328,6 +1330,7 @@ function initGamesManager(wss, db) {
 
   function eliminateTank(victim, killerName) {
     if (victim.isDead) return;
+    if (victim.spawnInvulTimer && Date.now() < victim.spawnInvulTimer) return;
     victim.isDead = true;
     victim.deaths++;
 
@@ -1354,6 +1357,7 @@ function initGamesManager(wss, db) {
       victim.isDead = false;
       victim.hasShield = false;
       victim.powerup = null;
+      victim.spawnInvulTimer = Date.now() + 3000;
       if (victim.ws && victim.ws.readyState === WebSocket.OPEN) {
         victim.ws.send(JSON.stringify({
           type: 'tank_respawn',
@@ -1361,6 +1365,7 @@ function initGamesManager(wss, db) {
           y: victim.y,
           angle: victim.angle
         }));
+        victim.ws.send(JSON.stringify({ type: 'tank_spawn_shield', duration: 3000 }));
       }
     }, 3000);
   }

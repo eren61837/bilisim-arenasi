@@ -265,6 +265,11 @@
 
         triggerSuperShot(direction) {
             if (this.superMeter < 100) return false;
+            // Must be near the ball to trigger super shot
+            const dx = (this.x + this.width/2) - (ball.x + ball.radius);
+            const dy = (this.y + this.height/2) - (ball.y + ball.radius);
+            const distToBall = Math.sqrt(dx*dx + dy*dy);
+            if (distToBall > 180) return false; // too far from ball
             this.superMeter = 0;
             SoundFX.superShot();
             ball.isFire = true;

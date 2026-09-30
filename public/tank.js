@@ -244,6 +244,19 @@
         state.walls = data.walls || [];
         state.alive = true;
       }
+      else if (data.type === 'tank_spawn_shield') {
+        // Show spawn shield for 3 seconds
+        state.invulTimer = Date.now() + (data.duration || 3000);
+        const hud = document.getElementById('hud-powerup');
+        const icon = document.getElementById('hud-powerup-icon');
+        const text = document.getElementById('hud-powerup-text');
+        if (hud && icon && text) {
+          hud.style.display = 'flex';
+          icon.textContent = '🛡️';
+          text.textContent = 'SPAWN KALKANI';
+          setTimeout(() => { if (hud) hud.style.display = 'none'; }, 3000);
+        }
+      }
       else if (data.type === 'tank_tick') {
         state.tanks = data.tanks || [];
         state.bullets = data.bullets || [];
