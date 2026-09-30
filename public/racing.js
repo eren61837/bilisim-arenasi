@@ -282,9 +282,8 @@
     function init3D() {
         renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, powerPreference: 'high-performance' });
         renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-        renderer.shadowMap.enabled = true;
-        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.25));
+        renderer.shadowMap.enabled = false;
 
         scene = new THREE.Scene();
         scene.background = new THREE.Color(0x0a0f18);
@@ -293,24 +292,14 @@
         camera = new THREE.PerspectiveCamera(65, window.innerWidth / window.innerHeight, 0.5, 1200);
 
         // Lights
-        const ambientLight = new THREE.AmbientLight(0xddeeff, 0.55);
+        const ambientLight = new THREE.AmbientLight(0xddeeff, 0.65);
         scene.add(ambientLight);
 
-        const hemiLight = new THREE.HemisphereLight(0x00dbff, 0x1a2436, 0.4);
+        const hemiLight = new THREE.HemisphereLight(0x00dbff, 0x1a2436, 0.5);
         scene.add(hemiLight);
 
-        const dirLight = new THREE.DirectionalLight(0xffffff, 0.85);
+        const dirLight = new THREE.DirectionalLight(0xffffff, 0.95);
         dirLight.position.set(200, 300, 150);
-        dirLight.castShadow = true;
-        dirLight.shadow.mapSize.width = 2048;
-        dirLight.shadow.mapSize.height = 2048;
-        dirLight.shadow.camera.near = 50;
-        dirLight.shadow.camera.far = 700;
-        const d = 250;
-        dirLight.shadow.camera.left = -d;
-        dirLight.shadow.camera.right = d;
-        dirLight.shadow.camera.top = d;
-        dirLight.shadow.camera.bottom = -d;
         scene.add(dirLight);
 
         // Ground Plane (Dark surrounding terrain)
@@ -395,22 +384,15 @@
 
                 const bldgMesh = new THREE.Mesh(new THREE.BoxGeometry(bw, bh, bd), bldgMat);
                 bldgMesh.position.set(bx, bh / 2, bz);
-                bldgMesh.castShadow = true;
-                bldgMesh.receiveShadow = true;
                 scene.add(bldgMesh);
 
-                // Lit Window Strips / Neon Facade Accents
-                const winColor = windowColors[Math.floor(Math.random() * windowColors.length)];
+                // Single Neon Facade Accent Band
+                const winColor = windowColors[i % windowColors.length];
                 const winMat = new THREE.MeshBasicMaterial({ color: winColor });
-                const floors = Math.floor(bh / 14);
-                for (let f = 1; f < floors; f++) {
-                    if (Math.random() > 0.3) {
-                        const stripGeo = new THREE.BoxGeometry(bw + 0.4, 1.8, bd + 0.4);
-                        const stripMesh = new THREE.Mesh(stripGeo, winMat);
-                        stripMesh.position.set(bx, f * 14, bz);
-                        scene.add(stripMesh);
-                    }
-                }
+                const stripGeo = new THREE.BoxGeometry(bw + 0.4, 2.4, bd + 0.4);
+                const stripMesh = new THREE.Mesh(stripGeo, winMat);
+                stripMesh.position.set(bx, bh * 0.65, bz);
+                scene.add(stripMesh);
 
                 // Rooftop Red Aviation Beacon
                 const beacon = new THREE.Mesh(new THREE.SphereGeometry(1.2, 6, 6), new THREE.MeshBasicMaterial({ color: 0xff1744 }));
@@ -972,21 +954,54 @@
         flameGroup.visible = false;
         carGroup.add(flameGroup);
 
-        // 11. Underglow Neon Kit
-        const glowGeo = new THREE.PlaneGeometry(2.6, 4.4);
+        // 11. Ground Contact Shadow & Underglow Neon
+        const shadowGeo = new THREE.PlaneGeometry(2.7, 4.8);
+        const shadowMat = new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.85 });
+        const shadowMesh = new THREE.Mesh(shadowGeo, shadowMat);
+        shadowMesh.rotation.x = -Math.PI / 2;
+        shadowMesh.position.y = 0.04;
+        carGroup.add(shadowMesh);
+
+        const glowGeo = new THREE.PlaneGeometry(3.0, 5.0);
         const glowMat = new THREE.MeshBasicMaterial({
             color: bodyColor,
             transparent: true,
-            opacity: 0.4
+            opacity: 0.45
         });
         const underglow = new THREE.Mesh(glowGeo, glowMat);
         underglow.rotation.x = -Math.PI / 2;
-        underglow.position.y = 0.08;
+        underglow.position.y = 0.06;
         carGroup.add(underglow);
+
+        // 12. Floating 3D Overhead Indicator Arrow (🔻)
+        const markerGroup = new THREE.Group();
+        markerGroup.position.set(0, 2.1, 0);
+        const arrowGeo = new THREE.ConeGeometry(0.35, 0.65, 4);
+        arrowGeo.rotateX(Math.PI); // Points downward at roof
+        const arrowMat = new THREE.MeshBasicMaterial({ color: isPlayer ? 0x00e5ff : bodyColor });
+        const arrowMesh = new THREE.Mesh(arrowGeo, arrowMat);
+        markerGroup.add(arrowMesh);
+        carGroup.add(markerGroup);
+
+        // 13. Forward Headlight Illumination Cones
+        [-0.75, 0.75].forEach(hx => {
+            const beamGeo = new THREE.CylinderGeometry(0.1, 1.4, 12, 8, 1, true);
+            beamGeo.rotateX(Math.PI / 2);
+            beamGeo.translate(0, 0, 6.0);
+            const beamMat = new THREE.MeshBasicMaterial({
+                color: 0xffffff,
+                transparent: true,
+                opacity: 0.12,
+                depthWrite: false
+            });
+            const beam = new THREE.Mesh(beamGeo, beamMat);
+            beam.position.set(hx, 0.45, 2.2);
+            carGroup.add(beam);
+        });
 
         scene.add(carGroup);
 
-        return { carGroup, wheels, nitroFlame: flameGroup, taillightMat };
+        return { carGroup, wheels, nitroFlame: flameGroup, taillightMat, markerGroup };
     }
 
     // ------------------------------------------------------------------------
@@ -1488,20 +1503,20 @@
             // Authentic Need for Speed 3rd-Person Chase Camera
             // Follow distance and height tuned specifically to frame the sports car prominently
             const speedRatio = Math.min(1.0, Math.abs(playerCar.speed) / playerCar.maxNitroSpeed);
-            const followDist = 5.8 + speedRatio * 2.2;
-            const followHeight = 2.15 + (playerCar.isNitro ? -0.15 : 0);
+            const followDist = 7.4 + speedRatio * 1.8;
+            const followHeight = 2.9 + (playerCar.isNitro ? -0.2 : 0);
 
             desiredCamPos.copy(carPos)
                 .subScaledVector(forward, followDist)
                 .add(new THREE.Vector3(0, followHeight, 0));
 
-            // Aim look target at the car's upper body / hood and slightly forward
+            // Aim look target directly at the car's body and slightly forward
             desiredLookTarget.copy(carPos)
-                .addScaledVector(forward, 3.8)
-                .add(new THREE.Vector3(0, 1.15, 0));
+                .addScaledVector(forward, 2.0)
+                .add(new THREE.Vector3(0, 0.9, 0));
 
             // Need for Speed signature dynamic camera banking / roll into drifts & turns!
-            const bankAngle = -(playerCar.driftAngle * 0.45 + (playerCar.steerAngle || 0) * 0.18);
+            const bankAngle = -(playerCar.driftAngle * 0.4 + (playerCar.steerAngle || 0) * 0.15);
             camera.up.set(Math.sin(bankAngle), Math.cos(bankAngle), 0);
         }
 
@@ -1686,6 +1701,11 @@
         }
 
         setupRaceCars();
+        if (playerCar) {
+            updateCamera(0.016);
+            camera.position.copy(desiredCamPos);
+            camera.lookAt(desiredLookTarget);
+        }
         state.gameRunning = true;
         lastTime = performance.now();
 

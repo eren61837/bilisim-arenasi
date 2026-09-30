@@ -300,38 +300,15 @@ function parseJsonBody(req) {
 }
 
 function getGameRatings() {
-  const defaults = {
-    cs16: { sum: 245, count: 50 },
-    stickwar: { sum: 247, count: 50 },
-    minecraft: { sum: 242, count: 50 },
-    sumo: { sum: 248, count: 50 },
-    kafatopu: { sum: 236, count: 50 },
-    sos: { sum: 238, count: 50 },
-    geometrydash: { sum: 244, count: 50 },
-    survivor: { sum: 246, count: 50 },
-    diep: { sum: 242, count: 50 },
-    zombs: { sum: 249, count: 50 },
-    flappy: { sum: 246, count: 50 },
-    tetris: { sum: 248, count: 50 },
-    dino: { sum: 232, count: 50 },
-    racing: { sum: 248, count: 50 },
-    subway: { sum: 244, count: 50 },
-    gartic: { sum: 245, count: 50 },
-    python: { sum: 247, count: 50 }
-  };
   const result = {};
-  for (const [k, v] of Object.entries(defaults)) {
-    result[k] = { avg: Number((v.sum / v.count).toFixed(1)), count: v.count };
-  }
   try {
     const rows = db.prepare('SELECT game_id, SUM(rating) as total_sum, COUNT(*) as total_count FROM game_ratings GROUP BY game_id').all();
     for (const r of rows) {
-      const base = defaults[r.game_id] || { sum: 0, count: 0 };
-      const totSum = base.sum + Number(r.total_sum);
-      const totCount = base.count + Number(r.total_count);
+      const count = Number(r.total_count);
+      const sum = Number(r.total_sum);
       result[r.game_id] = {
-        avg: Number((totSum / totCount).toFixed(1)),
-        count: totCount
+        avg: count > 0 ? Number((sum / count).toFixed(1)) : 0,
+        count: count
       };
     }
   } catch (_) {}

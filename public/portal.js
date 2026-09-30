@@ -999,11 +999,16 @@
     function updateBadgesUI(ratings) {
       document.querySelectorAll('.game-rating-badge').forEach(badge => {
         const gid = badge.getAttribute('data-game-id');
-        const info = ratings[gid] || { avg: 4.8, count: 50 };
+        const info = ratings && ratings[gid];
         const avgEl = badge.querySelector('.rate-avg');
         const countEl = badge.querySelector('.rate-count');
-        if (avgEl) avgEl.textContent = Number(info.avg).toFixed(1);
-        if (countEl) countEl.textContent = `(${info.count} oy)`;
+        if (info && info.count > 0) {
+          if (avgEl) avgEl.textContent = Number(info.avg).toFixed(1);
+          if (countEl) countEl.textContent = `(${info.count} oy)`;
+        } else {
+          if (avgEl) avgEl.textContent = 'Yeni';
+          if (countEl) countEl.textContent = '(Puan Ver)';
+        }
       });
     }
 

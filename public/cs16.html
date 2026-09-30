@@ -225,14 +225,14 @@
             <a href="/" class="btn-cs-nav">🏠 Portale Dön</a>
             <span style="font-weight:900; font-size:14px; color:#ff9800; letter-spacing:0.5px;">🔫 COUNTER-STRIKE 1.6</span>
             <div class="cs-servers-group">
-                <button class="cs-server-btn active" id="btn-engine-playcs" onclick="switchEngine('playcs')">Motor 1 (Play-CS)</button>
-                <button class="cs-server-btn" id="btn-engine-kirka" onclick="switchEngine('kirka')">Motor 2 (Kirka Dust 2 - Doğrulamasız)</button>
+                <button class="cs-server-btn active" id="btn-engine-kirka" onclick="switchEngine('kirka')">🟢 Motor 1 (Kirka Dust 2 - Doğrulamasız)</button>
+                <button class="cs-server-btn" id="btn-engine-playcs" onclick="switchEngine('playcs')">Motor 2 (Play-CS 1.6)</button>
             </div>
         </div>
 
         <!-- ACTIONS -->
         <div class="cs-actions">
-            <button class="btn-cs-nav" style="background:linear-gradient(135deg, #00e5ff, #0088ff); color:#000; font-weight:900;" onclick="openDirectPlayCS()" title="Cloudflare Doğrulamasını Anında Geçer">🚀 Doğrudan Pencerede Aç</button>
+            <button class="btn-cs-nav" style="background:linear-gradient(135deg, #00e5ff, #0088ff); color:#000; font-weight:900;" onclick="openDirectPlayCS()" title="Cloudflare Doğrulamasını Anında Geçer">🚀 Play-CS'i Ayrı Pencerede Aç</button>
             <button class="btn-cs-nav" id="btn-lock-pointer" onclick="lockGamePointer()">🎯 Fareyi Kilitle</button>
             <button class="btn-cs-nav" id="btn-fullscreen" onclick="toggleFullscreen()">⛶ Tam Ekran</button>
             <button class="btn-cs-nav" id="btn-reload" onclick="reloadGame()">🔄 Yenile</button>
@@ -240,22 +240,22 @@
     </header>
 
     <!-- CLOUDFLARE BYPASS PROMPT BANNER -->
-    <div id="cs-direct-hint" style="position:fixed; top:54px; left:50%; transform:translateX(-50%); background:rgba(15, 23, 42, 0.95); border:2px solid #00e5ff; border-radius:10px; padding:10px 20px; font-size:13px; color:#fff; z-index:1500; display:flex; align-items:center; gap:14px; box-shadow:0 0 30px rgba(0,229,255,0.4);">
-        <span>⚠️ Cloudflare <strong>"Verify your browser"</strong> döngüsünde kalıyorsan:</span>
+    <div id="cs-direct-hint" style="position:fixed; top:54px; left:50%; transform:translateX(-50%); background:rgba(15, 23, 42, 0.95); border:2px solid #00e5ff; border-radius:10px; padding:10px 20px; font-size:13px; color:#fff; z-index:1500; display:none; align-items:center; gap:14px; box-shadow:0 0 30px rgba(0,229,255,0.4);">
+        <span>⚠️ Play-CS Cloudflare <strong>"Verify your browser"</strong> döngüsünde kalıyorsa:</span>
         <button onclick="openDirectPlayCS()" style="background:linear-gradient(135deg, #ff9800, #ff5722); color:#000; font-weight:900; font-size:12px; border:none; padding:7px 16px; border-radius:6px; cursor:pointer; box-shadow:0 0 15px rgba(255,152,0,0.5);">🚀 PENCEREDE AÇ (DOĞRULAMAYI ATLA)</button>
-        <button onclick="switchEngine('kirka')" style="background:linear-gradient(135deg, #00e676, #00a843); color:#000; font-weight:900; font-size:12px; border:none; padding:7px 16px; border-radius:6px; cursor:pointer;">🎮 MOTOR 2'YE GEÇ (DOĞRULAMASIZ)</button>
+        <button onclick="switchEngine('kirka')" style="background:linear-gradient(135deg, #00e676, #00a843); color:#000; font-weight:900; font-size:12px; border:none; padding:7px 16px; border-radius:6px; cursor:pointer;">🎮 MOTOR 1'E DÖN (KIRKA DUST 2)</button>
     </div>
 
     <!-- LOADING SCREEN -->
     <div id="cs-loader">
         <div class="cs-spinner"></div>
-        <h2 style="font-size:18px; letter-spacing:1px;" id="cs-loader-title">Counter-Strike 1.6 Sunucuları Yükleniyor...</h2>
+        <h2 style="font-size:18px; letter-spacing:1px;" id="cs-loader-title">Kirka Dust 2 (Doğrulamasız CS) Yükleniyor...</h2>
         <p style="font-size:12px; color:#888;">Lütfen bekleyin...</p>
     </div>
 
-    <!-- AUTHENTIC CS 1.6 WEB ENGINE IFRAME -->
+    <!-- AUTHENTIC CS WEB ENGINE IFRAME -->
     <iframe id="cs-game-frame" 
-            src="https://play-cs.com/en/servers" 
+            src="https://kirka.io/" 
             allow="autoplay; fullscreen; pointer-lock; camera; microphone; clipboard-write; web-share"
             tabindex="0">
     </iframe>
@@ -286,10 +286,6 @@
                     if (frame.contentWindow) frame.contentWindow.focus();
                 } catch(_) {}
             }, 600);
-            setTimeout(() => {
-                if (hint) hint.style.opacity = '0';
-                setTimeout(() => { if (hint) hint.remove(); }, 500);
-            }, 5000);
         };
 
         function lockGamePointer() {

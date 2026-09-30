@@ -1003,6 +1003,11 @@
     modalGameover.classList.remove('active');
     modalLevelup.classList.remove('active');
     modalBlacksmith.classList.remove('active');
+    const mcs = document.getElementById('modal-char-select');
+    if (mcs) {
+      mcs.classList.remove('active');
+      mcs.style.display = 'none';
+    }
   }
 
   // --- SPAWNING SYSTEM (WAVES & PROGRESSION) ---
@@ -3024,6 +3029,17 @@
     if (!charCardsGrid) return;
     charCardsGrid.innerHTML = '';
 
+    function enterRun() {
+      if (modalCharSelect) {
+        modalCharSelect.classList.remove('active');
+        modalCharSelect.style.display = 'none';
+      }
+      try {
+        SurvivorBGM.start();
+      } catch (_) {}
+      startRun();
+    }
+
     CHARACTERS.forEach(c => {
       const card = document.createElement('div');
       card.className = `char-card ${c.id === state.selectedCharId ? 'selected' : ''}`;
@@ -3038,26 +3054,42 @@
           <span>⚔️</span> Başlangıç: ${wName}
         </div>
         <div class="char-perks">${c.desc}</div>
+        <button type="button" class="btn-card-choose">⚔️ SEÇ VE SAVAŞA GİR</button>
       `;
 
-      card.addEventListener('click', () => {
+      card.addEventListener('click', (e) => {
         state.selectedCharId = c.id;
         document.querySelectorAll('.char-card').forEach(cd => cd.classList.remove('selected'));
         card.classList.add('selected');
         Sfx.hit();
+        if (e.target.closest('.btn-card-choose')) {
+          enterRun();
+        }
+      });
+
+      card.addEventListener('dblclick', () => {
+        state.selectedCharId = c.id;
+        enterRun();
       });
 
       charCardsGrid.appendChild(card);
     });
 
-    btnStartWithChar?.addEventListener('click', () => {
-      if (modalCharSelect) modalCharSelect.classList.remove('active');
-      startRun();
+    btnStartWithChar?.addEventListener('click', enterRun);
+
+    window.addEventListener('keydown', (e) => {
+      if (modalCharSelect && modalCharSelect.classList.contains('active') && (e.key === 'Enter' || e.key === ' ')) {
+        e.preventDefault();
+        enterRun();
+      }
     });
 
     btnGoChar?.addEventListener('click', () => {
       if (modalGameover) modalGameover.classList.remove('active');
-      if (modalCharSelect) modalCharSelect.classList.add('active');
+      if (modalCharSelect) {
+        modalCharSelect.style.display = 'flex';
+        modalCharSelect.classList.add('active');
+      }
     });
   }
 
@@ -3065,7 +3097,10 @@
   initCharacterSelect();
 
   // Show Character Select on start, do NOT start run until hero selected!
-  if (modalCharSelect) modalCharSelect.classList.add('active');
+  if (modalCharSelect) {
+    modalCharSelect.style.display = 'flex';
+    modalCharSelect.classList.add('active');
+  }
   requestAnimationFrame(gameLoop);
 
 })();
