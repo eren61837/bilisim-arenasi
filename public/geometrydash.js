@@ -369,15 +369,21 @@
         resetLevel();
     });
 
+    function launchDemonsMode(e) {
+        if (e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+        currentLevel = 'demons';
+        if (levelSelect) levelSelect.value = 'demons';
+        resetLevel();
+        startGame();
+    }
+
     const btnQuickDemons = document.getElementById('btn-quick-demons');
     if (btnQuickDemons) {
-        btnQuickDemons.addEventListener('click', (e) => {
-            if (e) e.stopPropagation();
-            currentLevel = 'demons';
-            if (levelSelect) levelSelect.value = 'demons';
-            resetLevel();
-            startGame();
-        });
+        btnQuickDemons.addEventListener('click', launchDemonsMode);
+        btnQuickDemons.addEventListener('touchend', launchDemonsMode);
     }
 
     btnToggleMusic.addEventListener('click', () => {

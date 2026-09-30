@@ -22,6 +22,9 @@ body {
 #tank-canvas {
     display: block;
     background: #111622;
+    max-width: 96vw;
+    max-height: calc(100vh - 60px);
+    object-fit: contain;
 }
 
 /* TOP HUD */

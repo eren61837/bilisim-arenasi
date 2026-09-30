@@ -1050,4 +1050,40 @@ body {
   box-shadow: 0 8px 35px rgba(0, 219, 255, 0.6);
 }
 
+/* RESPONSIVE SCREEN ADAPTATION */
+@media (max-width: 1366px) {
+  .top-hud {
+    height: 52px;
+    padding: 0 12px;
+  }
+  .hud-left, .hud-center, .hud-right {
+    gap: 8px;
+  }
+  .hud-stat-badge {
+    padding: 4px 10px;
+    font-size: 12px;
+    border-radius: 8px;
+  }
+  .timer-badge {
+    font-size: 15px;
+  }
+  .xp-bar-container {
+    top: 50px;
+  }
+}
+
+@media (max-width: 1024px) {
+  .btn-stage-select {
+    display: none;
+  }
+  .hud-stat-badge {
+    padding: 3px 6px;
+    font-size: 11px;
+  }
+  .dash-badge {
+    display: none;
+  }
+}
+
+
 

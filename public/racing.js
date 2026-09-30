@@ -291,15 +291,15 @@
 
         camera = new THREE.PerspectiveCamera(65, window.innerWidth / window.innerHeight, 0.5, 1200);
 
-        // Lights
-        const ambientLight = new THREE.AmbientLight(0xddeeff, 0.65);
+        // Lights - Vivid high-contrast illumination
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.95);
         scene.add(ambientLight);
 
-        const hemiLight = new THREE.HemisphereLight(0x00dbff, 0x1a2436, 0.5);
+        const hemiLight = new THREE.HemisphereLight(0x00e5ff, 0x1a2436, 0.75);
         scene.add(hemiLight);
 
-        const dirLight = new THREE.DirectionalLight(0xffffff, 0.95);
-        dirLight.position.set(200, 300, 150);
+        const dirLight = new THREE.DirectionalLight(0xffffff, 1.35);
+        dirLight.position.set(120, 260, 140);
         scene.add(dirLight);
 
         // Ground Plane (Dark surrounding terrain)
@@ -312,10 +312,9 @@
         const groundMesh = new THREE.Mesh(groundGeo, groundMat);
         groundMesh.rotation.x = -Math.PI / 2;
         groundMesh.position.y = -0.05;
-        groundMesh.receiveShadow = true;
         scene.add(groundMesh);
 
-        // Distant Stadium / Cyber City Elements
+        // Distant Stadium / Cyber City Elements (Optimized 60 FPS Engine)
         buildEnvironment();
 
         // 3D Race Track with Asphalt, Curbs, and Continuous Solid Steel Barriers
@@ -324,7 +323,7 @@
 
     function buildEnvironment() {
         // 1. Deep Cyber Night Sky Dome
-        const skyGeo = new THREE.SphereGeometry(950, 32, 32);
+        const skyGeo = new THREE.SphereGeometry(950, 24, 24);
         const skyMat = new THREE.MeshBasicMaterial({
             color: 0x070c18,
             side: THREE.BackSide
@@ -334,7 +333,7 @@
         // 2. Stars Particle Field
         const starsGeo = new THREE.BufferGeometry();
         const starPositions = [];
-        for (let i = 0; i < 900; i++) {
+        for (let i = 0; i < 600; i++) {
             const theta = Math.random() * Math.PI * 2;
             const phi = Math.acos(Math.random() * 0.9);
             const r = 920;
@@ -355,99 +354,86 @@
         moon.position.set(-350, 360, -500);
         scene.add(moon);
 
-        // 4. Procedural Cyber City Skyscrapers (75+ buildings around perimeter)
+        // 4. Procedural Cyber City Skyscrapers (25 high-impact towers, zero frame drops)
         const windowColors = [0x00e5ff, 0xffd600, 0xff007f, 0x00ff88, 0xff6d00];
         const bldgMat = new THREE.MeshStandardMaterial({
             color: 0x111827,
-            roughness: 0.7,
-            metalness: 0.3
+            roughness: 0.6,
+            metalness: 0.2
         });
 
-        const cityClusters = [
-            { cx: 300, cz: -180, count: 18, radius: 160 },
-            { cx: 580, cz: 250, count: 18, radius: 180 },
-            { cx: 200, cz: 600, count: 16, radius: 160 },
-            { cx: -320, cz: 480, count: 16, radius: 160 },
-            { cx: -520, cz: -80, count: 20, radius: 200 }
+        const cityTowers = [
+            { cx: 320, cz: -200, count: 5, radius: 140 },
+            { cx: 520, cz: 220, count: 5, radius: 150 },
+            { cx: 180, cz: 560, count: 5, radius: 140 },
+            { cx: -320, cz: 420, count: 5, radius: 140 },
+            { cx: -480, cz: -100, count: 5, radius: 160 }
         ];
 
-        cityClusters.forEach(cluster => {
+        cityTowers.forEach(cluster => {
             for (let i = 0; i < cluster.count; i++) {
-                const angle = (i / cluster.count) * Math.PI * 2 + Math.random() * 0.3;
-                const dist = cluster.radius * (0.6 + Math.random() * 0.7);
+                const angle = (i / cluster.count) * Math.PI * 2 + Math.random() * 0.4;
+                const dist = cluster.radius * (0.8 + Math.random() * 0.5);
                 const bx = cluster.cx + Math.cos(angle) * dist;
                 const bz = cluster.cz + Math.sin(angle) * dist;
 
-                const bw = 18 + Math.random() * 22;
-                const bd = 18 + Math.random() * 22;
-                const bh = 50 + Math.random() * 110;
+                const bw = 24 + Math.random() * 20;
+                const bd = 24 + Math.random() * 20;
+                const bh = 70 + Math.random() * 120;
 
                 const bldgMesh = new THREE.Mesh(new THREE.BoxGeometry(bw, bh, bd), bldgMat);
                 bldgMesh.position.set(bx, bh / 2, bz);
                 scene.add(bldgMesh);
 
-                // Single Neon Facade Accent Band
+                // Glowing Neon Accent Bands
                 const winColor = windowColors[i % windowColors.length];
                 const winMat = new THREE.MeshBasicMaterial({ color: winColor });
-                const stripGeo = new THREE.BoxGeometry(bw + 0.4, 2.4, bd + 0.4);
+                const stripGeo = new THREE.BoxGeometry(bw + 0.6, 3.0, bd + 0.6);
                 const stripMesh = new THREE.Mesh(stripGeo, winMat);
-                stripMesh.position.set(bx, bh * 0.65, bz);
+                stripMesh.position.set(bx, bh * 0.7, bz);
                 scene.add(stripMesh);
 
-                // Rooftop Red Aviation Beacon
-                const beacon = new THREE.Mesh(new THREE.SphereGeometry(1.2, 6, 6), new THREE.MeshBasicMaterial({ color: 0xff1744 }));
-                beacon.position.set(bx, bh + 1.5, bz);
+                // Rooftop Beacon
+                const beacon = new THREE.Mesh(new THREE.SphereGeometry(1.5, 6, 6), new THREE.MeshBasicMaterial({ color: 0xff1744 }));
+                beacon.position.set(bx, bh + 1.8, bz);
                 scene.add(beacon);
             }
         });
 
-        // 5. Trackside Palm Trees with Illuminated Foliage
-        const trunkMat = new THREE.MeshStandardMaterial({ color: 0x4e342e, roughness: 0.9 });
-        const leafMat = new THREE.MeshStandardMaterial({ color: 0x00e676, roughness: 0.4, emissive: 0x00a843, emissiveIntensity: 0.18 });
+        // 5. High-Impact Cyber Neon Track Arches (18 futuristic speed gates across circuit)
+        const archPillarMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, metalness: 0.8, roughness: 0.2 });
+        const archNeonColors = [0x00e5ff, 0xffd600, 0xff007f, 0x00ff88];
 
-        for (let i = 0; i < TOTAL_POINTS; i += 12) {
+        for (let i = 0; i < TOTAL_POINTS; i += Math.floor(TOTAL_POINTS / 18)) {
             const frame = getTrackFrameAt(i / TOTAL_POINTS);
-            [-1, 1].forEach(side => {
-                const treePos = new THREE.Vector3().copy(frame.pt).addScaledVector(frame.normal, side * (HALF_ROAD + 8 + Math.random() * 6));
-                const treeGroup = new THREE.Group();
-                treeGroup.position.set(treePos.x, 0, treePos.z);
+            const archGroup = new THREE.Group();
+            archGroup.position.copy(frame.pt);
+            archGroup.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), frame.tangent);
 
-                const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.6, 9, 7), trunkMat);
-                trunk.position.y = 4.5;
-                trunk.rotation.z = (Math.random() - 0.5) * 0.15;
-                treeGroup.add(trunk);
+            // Left & Right Pillars
+            const pillarGeo = new THREE.BoxGeometry(0.8, 8.5, 0.8);
+            const leftPillar = new THREE.Mesh(pillarGeo, archPillarMat);
+            leftPillar.position.set(HALF_ROAD + 2.4, 4.25, 0);
+            archGroup.add(leftPillar);
 
-                for (let k = 0; k < 6; k++) {
-                    const leaf = new THREE.Mesh(new THREE.ConeGeometry(2.4, 5.5, 4), leafMat);
-                    leaf.position.set(0, 9, 0);
-                    leaf.rotation.x = Math.PI / 3;
-                    leaf.rotation.y = (k / 6) * Math.PI * 2;
-                    treeGroup.add(leaf);
-                }
-                scene.add(treeGroup);
-            });
-        }
+            const rightPillar = new THREE.Mesh(pillarGeo, archPillarMat);
+            rightPillar.position.set(-(HALF_ROAD + 2.4), 4.25, 0);
+            archGroup.add(rightPillar);
 
-        // 6. Modern Arching Highway Streetlights with Light Cones
-        const poleMat = new THREE.MeshStandardMaterial({ color: 0x263238, metalness: 0.85, roughness: 0.25 });
-        const lanternMat = new THREE.MeshBasicMaterial({ color: 0xffea00 });
-        const poleGeo = new THREE.CylinderGeometry(0.3, 0.4, 14, 8);
+            // Crossbeam
+            const beamWidth = (HALF_ROAD + 2.4) * 2 + 1.0;
+            const beamGeo = new THREE.BoxGeometry(beamWidth, 1.0, 1.2);
+            const crossbeam = new THREE.Mesh(beamGeo, archPillarMat);
+            crossbeam.position.set(0, 8.2, 0);
+            archGroup.add(crossbeam);
 
-        for (let i = 0; i < TOTAL_POINTS; i += 8) {
-            const frame = getTrackFrameAt(i / TOTAL_POINTS);
-            const polePos = new THREE.Vector3().copy(frame.pt).addScaledVector(frame.normal, HALF_ROAD + 3.8);
-            const pole = new THREE.Mesh(poleGeo, poleMat);
-            pole.position.set(polePos.x, 7, polePos.z);
-            scene.add(pole);
+            // Glowing Neon Speed Frame
+            const neonMat = new THREE.MeshBasicMaterial({ color: archNeonColors[(i / 50 | 0) % archNeonColors.length] });
+            const neonFrame = new THREE.Mesh(new THREE.BoxGeometry(beamWidth - 1.0, 0.35, 1.3), neonMat);
+            neonFrame.position.set(0, 8.2, 0);
+            archGroup.add(neonFrame);
 
-            const arm = new THREE.Mesh(new THREE.BoxGeometry(4.2, 0.4, 0.4), poleMat);
-            arm.position.set(polePos.x - frame.normal.x * 1.8, 14, polePos.z - frame.normal.z * 1.8);
-            arm.quaternion.setFromUnitVectors(new THREE.Vector3(1, 0, 0), frame.normal.clone().negate());
-            scene.add(arm);
-
-            const lantern = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.4, 0.9), lanternMat);
-            lantern.position.set(polePos.x - frame.normal.x * 3.2, 13.7, polePos.z - frame.normal.z * 3.2);
-            scene.add(lantern);
+            scene.add(archGroup);
         }
     }
 
@@ -743,33 +729,35 @@
     }
 
     // ------------------------------------------------------------------------
-    // 7. 3D CAR MESH GENERATOR
+    // 7. 3D CAR MESH GENERATOR (Vibrant Luminous Supercar with Headlights & Nametag)
     // ------------------------------------------------------------------------
-    function create3DCarMesh(colorHex, isPlayer = false) {
+    function create3DCarMesh(colorHex, isPlayer = false, name = '') {
         const carGroup = new THREE.Group();
 
         const bodyColor = new THREE.Color(colorHex);
         const bodyMat = new THREE.MeshStandardMaterial({
             color: bodyColor,
-            roughness: 0.18,
-            metalness: 0.85
+            roughness: 0.28,
+            metalness: 0.12,
+            emissive: bodyColor,
+            emissiveIntensity: 0.25
         });
         const carbonMat = new THREE.MeshStandardMaterial({
-            color: 0x0c0f14,
-            roughness: 0.35,
-            metalness: 0.65
+            color: 0x1f2733,
+            roughness: 0.45,
+            metalness: 0.2
         });
         const darkTrimMat = new THREE.MeshStandardMaterial({
-            color: 0x10141b,
-            roughness: 0.4,
-            metalness: 0.5
+            color: 0x273142,
+            roughness: 0.45,
+            metalness: 0.2
         });
         const glassMat = new THREE.MeshStandardMaterial({
-            color: 0x050a12,
-            roughness: 0.05,
-            metalness: 0.95,
+            color: 0x10283d,
+            roughness: 0.15,
+            metalness: 0.35,
             transparent: true,
-            opacity: 0.88
+            opacity: 0.8
         });
 
         // 1. Aerodynamic Wedge Chassis
@@ -962,37 +950,66 @@
         shadowMesh.position.y = 0.04;
         carGroup.add(shadowMesh);
 
-        const glowGeo = new THREE.PlaneGeometry(3.0, 5.0);
+        const glowGeo = new THREE.PlaneGeometry(3.2, 5.2);
         const glowMat = new THREE.MeshBasicMaterial({
             color: bodyColor,
             transparent: true,
-            opacity: 0.45
+            opacity: 0.85
         });
         const underglow = new THREE.Mesh(glowGeo, glowMat);
         underglow.rotation.x = -Math.PI / 2;
         underglow.position.y = 0.06;
         carGroup.add(underglow);
 
-        // 12. Floating 3D Overhead Indicator Arrow (🔻)
+        // 12. Floating 3D Overhead Indicator Arrow & Nametag Sprite
         const markerGroup = new THREE.Group();
-        markerGroup.position.set(0, 2.1, 0);
+        markerGroup.position.set(0, 2.5, 0);
+
+        if (name) {
+            const canvas = document.createElement('canvas');
+            canvas.width = 256;
+            canvas.height = 64;
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = 'rgba(8, 12, 20, 0.88)';
+            if (ctx.roundRect) ctx.roundRect(6, 6, 244, 52, 12);
+            else ctx.rect(6, 6, 244, 52);
+            ctx.fill();
+            ctx.strokeStyle = isPlayer ? '#00e5ff' : colorHex;
+            ctx.lineWidth = 3.5;
+            ctx.stroke();
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 22px -apple-system, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText((isPlayer ? '👑 ' : '') + name, 128, 32);
+
+            const texture = new THREE.CanvasTexture(canvas);
+            const spriteMat = new THREE.SpriteMaterial({ map: texture, transparent: true, depthTest: false });
+            const sprite = new THREE.Sprite(spriteMat);
+            sprite.scale.set(3.4, 0.85, 1);
+            sprite.position.set(0, 0.4, 0);
+            markerGroup.add(sprite);
+        }
+
         const arrowGeo = new THREE.ConeGeometry(0.35, 0.65, 4);
-        arrowGeo.rotateX(Math.PI); // Points downward at roof
+        arrowGeo.rotateX(Math.PI);
         const arrowMat = new THREE.MeshBasicMaterial({ color: isPlayer ? 0x00e5ff : bodyColor });
         const arrowMesh = new THREE.Mesh(arrowGeo, arrowMat);
+        arrowMesh.position.set(0, -0.4, 0);
         markerGroup.add(arrowMesh);
         carGroup.add(markerGroup);
 
-        // 13. Forward Headlight Illumination Cones
+        // 13. High-Intensity Forward Headlight Illumination Cones
         [-0.75, 0.75].forEach(hx => {
-            const beamGeo = new THREE.CylinderGeometry(0.1, 1.4, 12, 8, 1, true);
+            const beamGeo = new THREE.CylinderGeometry(0.12, 1.8, 16, 8, 1, true);
             beamGeo.rotateX(Math.PI / 2);
-            beamGeo.translate(0, 0, 6.0);
+            beamGeo.translate(0, 0, 8.0);
             const beamMat = new THREE.MeshBasicMaterial({
-                color: 0xffffff,
+                color: 0xe0f7ff,
                 transparent: true,
-                opacity: 0.12,
-                depthWrite: false
+                opacity: 0.25,
+                depthWrite: false,
+                side: THREE.DoubleSide
             });
             const beam = new THREE.Mesh(beamGeo, beamMat);
             beam.position.set(hx, 0.45, 2.2);
@@ -1015,7 +1032,7 @@
             this.isPlayer = isPlayer;
 
             // 3D Visual Mesh
-            this.view = create3DCarMesh(color, isPlayer);
+            this.view = create3DCarMesh(color, isPlayer, name);
 
             // Track Coordinates
             this.trackU = 0.0; // 0.0 to 1.0
@@ -1708,6 +1725,10 @@
         }
         state.gameRunning = true;
         lastTime = performance.now();
+
+        // Render first frame immediately - no black screen pause
+        renderer.render(scene, camera);
+        updateHUD();
 
         runCountdown(() => {
             // Racing in progress!

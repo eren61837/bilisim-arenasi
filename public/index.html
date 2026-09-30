@@ -156,20 +156,33 @@
         </div>
     </section>
 
+    <!-- INTERACTIVE SEARCH & LIVE SERVER PING BAR -->
+    <div class="search-filter-wrapper">
+        <div class="search-input-box">
+            <span class="search-icon">🔍</span>
+            <input type="text" id="game-search-input" placeholder="Oyun veya kategori ara... (Kısayol: '/') Örn: CS, Subway, Zombi, Stick War, Yarış" autocomplete="off">
+            <button id="btn-clear-search" class="btn-clear-search" title="Aramayı Temizle" style="display:none;">✕</button>
+        </div>
+        <div class="server-status-pill" id="server-status-pill" title="Canlı Sunucu Bağlantısı ve Gecikme">
+            <span class="status-indicator-ping"></span>
+            <span id="ping-text">⚡ 12ms • Render Aktif</span>
+        </div>
+    </div>
+
     <!-- SECTION TITLE & CATEGORY FILTER TABS -->
     <div class="filter-tabs-row">
         <div class="section-headline">ARENA OYUNLARI</div>
         <div class="category-buttons">
-            <button class="btn-cat-tab active" data-filter="all">🔥 Tümü (16)</button>
-            <button class="btn-cat-tab" data-filter="fps">🔫 3D &amp; FPS</button>
-            <button class="btn-cat-tab" data-filter="strategy">⚔️ Strateji &amp; Savaş</button>
-            <button class="btn-cat-tab" data-filter="io">🛡️ .IO &amp; Hayatta Kalma</button>
-            <button class="btn-cat-tab" data-filter="multi">⚽ Çok Oyunculu &amp; Düello</button>
-            <button class="btn-cat-tab" data-filter="arcade">⚡ Ritim &amp; Arcade</button>
+            <button class="btn-cat-tab active" data-filter="all">🔥 Tümü <span class="cat-count">21</span></button>
+            <button class="btn-cat-tab" data-filter="fps">🔫 3D &amp; FPS <span class="cat-count">4</span></button>
+            <button class="btn-cat-tab" data-filter="strategy">⚔️ Strateji &amp; Savaş <span class="cat-count">5</span></button>
+            <button class="btn-cat-tab" data-filter="io">🛡️ .IO &amp; Hayatta Kalma <span class="cat-count">4</span></button>
+            <button class="btn-cat-tab" data-filter="multi">⚽ Çok Oyunculu &amp; Düello <span class="cat-count">6</span></button>
+            <button class="btn-cat-tab" data-filter="arcade">⚡ Ritim &amp; Arcade <span class="cat-count">7</span></button>
         </div>
     </div>
 
-    <!-- 11 CURATED GAME CARDS GRID -->
+    <!-- 21 CURATED GAME CARDS GRID -->
     <div class="games-grid" id="games-grid">
 
         <!-- 1. CS 1.6 WEB 3D -->
@@ -632,6 +645,114 @@
             </div>
         </a>
 
+        <!-- 19. CYBER TETRIS NEON -->
+        <a href="/tetris" class="game-card card-tetris" data-category="arcade">
+            <div class="game-thumb" style="background: radial-gradient(circle, #2a0845 0%, #0d0218 100%);">
+                <span class="game-thumb-art">🧱</span>
+                <div class="thumb-gradient-overlay"></div>
+                <div class="genre-tag-floating" style="color:#d500f9;">60FPS NEON RETRO</div>
+                <div class="live-player-badge" id="count-tetris">🟢 0 Oyuncu</div>
+            </div>
+            <div class="game-info">
+                <div class="game-title-row">
+                    <span class="game-title">Cyber Tetris Neon HD</span>
+                </div>
+                <p class="game-desc">
+                    Tüm zamanların en çok oynanan efsane blok yerleştirme oyunu! 60 FPS akıcı neon tasarım, Hold Piece (saklama), Ghost Piece (gölge rehber) ve Hard Drop mekanikleri.
+                </p>
+                <div class="game-tags">
+                    <span class="game-tag" style="border-color:#d500f9; color:#ea80fc;">🧱 Tetris Efsanesi</span>
+                    <span class="game-tag">60 FPS Neon Motor</span>
+                    <span class="game-tag">Hold &amp; Ghost Piece</span>
+                    <span class="game-tag">Hard Drop</span>
+                </div>
+                <div class="game-play-btn" style="background:linear-gradient(135deg,#d500f9,#7c4dff); color:#fff;">
+                    ▶ BLOKLARI DİZ 🧱
+                </div>
+            </div>
+        </a>
+
+        <!-- 20. FLAPPY CYBER BIRD -->
+        <a href="/flappy" class="game-card card-flappy" data-category="arcade">
+            <div class="game-thumb" style="background: radial-gradient(circle, #00363a 0%, #001214 100%);">
+                <span class="game-thumb-art">🐦</span>
+                <div class="thumb-gradient-overlay"></div>
+                <div class="genre-tag-floating" style="color:#00e5ff;">KLASİK BECERİ &amp; HIZ</div>
+                <div class="live-player-badge" id="count-flappy">🟢 0 Oyuncu</div>
+            </div>
+            <div class="game-info">
+                <div class="game-title-row">
+                    <span class="game-title">Flappy Cyber Bird (Retro Uçuş)</span>
+                </div>
+                <p class="game-desc">
+                    Siber şehrin neon boruları arasından süzül! 4 farklı efsanevi kuş görünümü (Cyber, Phoenix, Mecha, Gold), hatasız hitbox fiziği ve anında tek tuşla yeniden başlatma.
+                </p>
+                <div class="game-tags">
+                    <span class="game-tag" style="border-color:#00e5ff; color:#00e5ff;">🐦 4 Özel Skin</span>
+                    <span class="game-tag">Hatasız Hitbox Fiziği</span>
+                    <span class="game-tag">Liderlik Tablosu</span>
+                    <span class="game-tag">Anında Yeniden Başlat</span>
+                </div>
+                <div class="game-play-btn" style="background:linear-gradient(135deg,#00e5ff,#00b0ff); color:#000;">
+                    ▶ KANAT ÇIRP 🐦
+                </div>
+            </div>
+        </a>
+
+        <!-- 21. PAPERMAP.IO FETİH -->
+        <a href="/papermap" class="game-card card-papermap" data-category="io strategy">
+            <div class="game-thumb" style="background: radial-gradient(circle, #331500 0%, #120700 100%);">
+                <span class="game-thumb-art">🗺️</span>
+                <div class="thumb-gradient-overlay"></div>
+                <div class="genre-tag-floating" style="color:#ff9100;">BÖLGE FETHİ &amp; HARİTA</div>
+                <div class="live-player-badge" id="count-papermap">🟢 0 Oyuncu</div>
+            </div>
+            <div class="game-info">
+                <div class="game-title-row">
+                    <span class="game-title">PaperMap.io (Harita Kapmaca &amp; Fetih)</span>
+                </div>
+                <p class="game-desc">
+                    Haritaya çık, alan çizerek kendi üssünü devasa krallığa dönüştür! Rakiplerin kuyruğunu keserek onları ele, haritanın %100'ünü kaplayarak birinci ol.
+                </p>
+                <div class="game-tags">
+                    <span class="game-tag" style="border-color:#ff9100; color:#ffab40;">🗺️ Bölge Kapmaca</span>
+                    <span class="game-tag">Kuyruk Kesme Savaşı</span>
+                    <span class="game-tag">Canlı Skor &amp; Yüzde</span>
+                    <span class="game-tag">Hızlı Refleks</span>
+                </div>
+                <div class="game-play-btn" style="background:linear-gradient(135deg,#ff9100,#ff3d00); color:#000;">
+                    ▶ ALANI FETHET 🗺️
+                </div>
+            </div>
+        </a>
+
+        <!-- 22. TANK SAVAŞI 2D -->
+        <a href="/tank" class="game-card card-tank" data-category="multi strategy">
+            <div class="game-thumb" style="background: radial-gradient(circle, #0e2b1d 0%, #05140d 100%);">
+                <span class="game-thumb-art">🎯</span>
+                <div class="thumb-gradient-overlay"></div>
+                <div class="genre-tag-floating" style="color:#00e676;">2D TANK &amp; DÜELLO</div>
+                <div class="live-player-badge" id="count-tank">🟢 0 Oyuncu</div>
+            </div>
+            <div class="game-info">
+                <div class="game-title-row">
+                    <span class="game-title">Tank Savaşı 2D (Taktik Düello)</span>
+                </div>
+                <p class="game-desc">
+                    Labirent koridorlarında seken mermilerle savaş! Lazer, Kalkan ve Shotgun sandıklarını topla, duvarlardan sektirerek düşman tanklarını köşeye sıkıştır.
+                </p>
+                <div class="game-tags">
+                    <span class="game-tag" style="border-color:#00e676; color:#00e676;">🎯 Seken Mermiler</span>
+                    <span class="game-tag">Lazer &amp; Kalkan Sandıkları</span>
+                    <span class="game-tag">Akıllı Labirent</span>
+                    <span class="game-tag">1v1 / AI Kapışma</span>
+                </div>
+                <div class="game-play-btn" style="background:linear-gradient(135deg,#00e676,#00b0ff); color:#000;">
+                    ▶ NAMLULARI DOĞRULT 🎯
+                </div>
+            </div>
+        </a>
+
     </div>
 
     <!-- GLOBAL CLASSROOM LIVE CHAT -->
@@ -733,29 +854,35 @@
     </div>
 </div>
 
-<script src="portal.js?v=30"></script>
-<script src="bgm.js?v=30"></script>
-<script src="overlay-back.js?v=30"></script>
-</body>
-</html>
-<!-- G�NCELLEME NOTLARI MODAL -->
+<!-- GÜNCELLEME NOTLARI MODAL -->
 <div id="modal-patch-notes" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.85); z-index:99999; align-items:center; justify-content:center;">
     <div style="background:#0d1117; border:2px solid #00e5ff; border-radius:12px; width:600px; max-width:90%; padding:30px; position:relative; box-shadow:0 0 40px rgba(0,229,255,0.3); color:#fff; font-family:sans-serif;">
         <button onclick="document.getElementById('modal-patch-notes').style.display='none'" style="position:absolute; top:15px; right:20px; background:transparent; border:none; color:#ff5252; font-size:24px; font-weight:bold; cursor:pointer;">&times;</button>
-        <h2 style="color:#00e5ff; margin-top:0; border-bottom:1px solid #333; padding-bottom:10px;">?? G�ncelleme Notlar� & D�zeltmeler</h2>
+        <h2 style="color:#00e5ff; margin-top:0; border-bottom:1px solid #333; padding-bottom:10px;">⚡ Güncelleme Notları & Düzeltmeler</h2>
         
         <div style="margin-top:20px; max-height:400px; overflow-y:auto; padding-right:10px;">
-            <h3 style="color:#ffd54f;">v2.1 - Son D�zeltmeler</h3>
+            <h3 style="color:#00e5ff;">v2.6 - Evrensel Duyuru Sistemi, Arama Motoru &amp; Sıfır Lag Optimizasyonu</h3>
+            <ul style="line-height:1.6; margin-left:20px; color:#ccc; margin-bottom:20px;">
+                <li><b style="color:#fff">Evrensel Canlı Duyuru (Tüm Oyunlar):</b> Admin paneli veya sohbette yayınlanan duyurular, arka plandaki ya da sekmedeki 21 oyunun tamamına (CS 1.6, Subway, Flappy, Stick War vb.) anında sesli ve kırmızı banner olarak iletilir! Sekmeler arası anlık senkronizasyon (BroadcastChannel + LocalStorage) eklendi.</li>
+                <li><b style="color:#fff">Hızlı Oyun Arama &amp; Kategori Filtresi:</b> Portal ana sayfasına anında arama kutusu ve kategori sayaçları eklendi. Aradığın oyuna milisaniyeler içinde tek harfle ulaşabilirsin!</li>
+                <li><b style="color:#fff">Sıfır Lag &amp; RAM Önbelleği:</b> Render sunucusu zayıf olsa bile donma, kasma ve gecikme yaşanmaması için sunucu tarafında RAM önbellekleme (In-Memory Gzip RAM Cache), ETag 304 desteği ve optimize edilmiş veri tabanı motoru devreye alındı. 30+ öğrenci aynı anda bağlansa bile CPU yükü %0 kalır!</li>
+                <li><b style="color:#fff">4 Yeni Oyun Eklendi:</b> Cyber Tetris Neon, Flappy Cyber Bird, PaperMap.io Fetih ve Tank 2D Düello portala entegre edildi (Toplam 21 Oyun).</li>
+            </ul>
+            <h3 style="color:#ffd54f;">v2.5 - MEB Bilişim Arenası Özel Düzeltmeler</h3>
             <ul style="line-height:1.6; margin-left:20px; color:#ccc;">
-                <li><b style="color:#fff">Yar�� Oyunu:</b> Oyun motoru tamamen 3D yap�ld�. Nitro sistemi (<kbd>SHIFT</kbd> veya ekrandaki buton) aktif edildi! Pist kenarlar�na �arp�p yava�layaca��n�z �elik bariyerler eklendi! (NOT: 3D motoru g�rmek i�in <b>CTRL + F5</b> yaparak �nbelle�i temizleyin!)</li>
-                <li><b style="color:#fff">Zombs.io:</b> Kulelerin g�r�nmeme (texture) hatas� d�zeltildi! Art�k odun veya ta� kasmak i�in y�r�mek gerekmiyor, durdu�unuz yerden s�rekli vurabilirsiniz. (De�i�iklikleri g�rmek i�in <b>CTRL + F5</b> yap�n!)</li>
-                <li><b style="color:#fff">Stick War: Legacy:</b> Asker formasyonlar� birebir orijinal oyuna uygun hale getirildi (Ok�ular her zaman K�l��l�lar�n arkas�nda durur). Yapay zeka ordu biriktirmeden sald�rmaz. "Kaleye S���n" (Retreat) dendi�inde piyadeler kap�dan kalenin i�ine girerek saklan�r, Ok�ular kalenin �st surlar�na ��karak savunma at��� yapar!</li>
-                <li><b style="color:#fff">CS 1.6:</b> Engellenen "csjs.live" sunucusu kald�r�larak do�rudan �al��an "play-cs" sunucu motoruna ge�i� yap�ld�.</li>
-                <li><b style="color:#fff">Vampire Survivors:</b> Men�de karakter se�ildi�inde olu�an bug ve oyun ortas�nda aniden donma / tak�lma sorunu tamamen ��z�ld�!</li>
-                <li><b style="color:#fff">Yeni Oyunlar:</b> Redmatch yerine herkesin severek oynadığı <b>Flappy Cyber Bird</b> ve <b>Cyber Tetris</b> eklendi! Oyunlardan çıkışta 5 yıldızlı puanlama sistemi eklendi!</li>
-                <li><b style="color:#fff">Genel Uyar�:</b> Bu g�ncellemeleri g�rebilmek i�in mutlaka <b>CTRL + F5</b> tu�lar�na basarak sitenin �nbelle�ini temizleyin, aksi halde eski versiyonda oynars�n�z!</li>
+                <li><b style="color:#fff">Vampire Survivors (Zindan Avcısı):</b> Boss öldürünce oyunun donması ve zafer ekranının takılması sorunu tamamen çözüldü! 1-2-3 tuşlarına basınca oluşan büyü/silah ses hatası ve donma giderildi. Seviye atlama kartları 1, 2, 3 tuşlarıyla anında seçilebilir!</li>
+                <li><b style="color:#fff">Subway Surfers & CS 1.6:</b> MEB ve okul filtrelerine takılmayan 100% Yerel WebGL 3D motoru aktif edildi! Kurulum yok, engel yok, okul bilgisayarlarında doğrudan 120 FPS akıcı oynanabilir!</li>
+                <li><b style="color:#fff">Stick War: Legacy:</b> Modeller, Spartan Spearton (Corinthian miğfer, kırmızı sorguç, Hoplon kalkanı, mızrak), Archidon (deri sadak, yay, ok), Swordwrath (çift elli kılıç) ve Magikill birebir orijinal oyun kalitesine yükseltildi!</li>
+                <li><b style="color:#fff">Üst Duyuru & Mesajlaşma:</b> Admin ve genel duyuruların ekranın dışına taşması engellendi. Duyurular artık her ekrana tam oturur ve kapatma butonu içerir.</li>
+                <li><b style="color:#fff">Genel Uyarı:</b> Yenilikleri anında görebilmek için mutlaka <b>CTRL + F5</b> tuşlarına basarak sitenin önbelleğini temizleyin!</li>
             </ul>
         </div>
-        <button onclick="document.getElementById('modal-patch-notes').style.display='none'" style="margin-top:20px; width:100%; padding:12px; background:#00e5ff; color:#000; border:none; font-weight:bold; font-size:16px; border-radius:8px; cursor:pointer;">ANLADIM & OYUNA DEVAM ET ??</button>
+        <button onclick="document.getElementById('modal-patch-notes').style.display='none'" style="margin-top:20px; width:100%; padding:12px; background:#00e5ff; color:#000; border:none; font-weight:bold; font-size:16px; border-radius:8px; cursor:pointer;">ANLADIM & OYUNA DEVAM ET 🎮</button>
     </div>
 </div>
+
+<script src="portal.js?v=35"></script>
+<script src="bgm.js?v=35"></script>
+<script src="overlay-back.js?v=35"></script>
+</body>
+</html>

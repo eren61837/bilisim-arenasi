@@ -107,62 +107,67 @@
         </div>
     </div>
 
-    <!-- TOP GAME BAR / HUD -->
+    <!-- TOP GAME BAR / HUD (RESPONSIVE MASTER BAR) -->
     <header class="sw-top-bar">
         <!-- BRAND & NAVIGATION -->
         <div class="sw-brand">
-            <a href="/" class="btn-sw-nav">🏠 Portale Dön</a>
-            <span class="sw-title">⚔️ STICK WAR: LEGACY</span>
-            <span class="sw-creators-tag">👑 Yapımcılar: Ahmet Baki ve Hakan Samet</span>
+            <a href="/" class="btn-sw-nav btn-sw-home" title="Ana Portale Dön">🏠 <span class="nav-text">Portal</span></a>
+            <div class="sw-brand-text">
+                <span class="sw-title">STICK WAR</span>
+                <span class="sw-title-badge">LEGACY</span>
+            </div>
+            <span class="sw-creators-tag" title="Orijinal Geliştiriciler: Ahmet Baki ve Hakan Samet">👑 Ahmet &amp; Hakan</span>
         </div>
 
         <!-- CURRENT MUSIC BADGE -->
         <div class="sw-music-badge" id="sw-music-badge" title="Dinamik Savaş Müziği">
             <span class="sw-music-eq"><span></span><span></span><span></span><span></span></span>
             <div class="sw-music-info">
-                <span class="sw-music-label">MÜZİK:</span>
-                <span class="sw-music-track" id="sw-track-name">Run From Your Demons (Savunma)</span>
+                <span class="sw-music-label">MÜZİK</span>
+                <span class="sw-music-track" id="sw-track-name">Run From Your Demons</span>
             </div>
             <button class="btn-sw-icon" id="btn-sw-mute" title="Sesi Aç/Kapat">🔊</button>
         </div>
 
-        <!-- RESOURCE COUNTERS -->
-        <div class="sw-resources">
-            <div class="res-item res-gold">
-                <span class="res-icon">🟡</span>
-                <span class="res-val" id="res-gold-val">500</span>
-            </div>
-            <div class="res-item res-mana" id="res-mana-box">
-                <span class="res-icon">🔵</span>
-                <span class="res-val" id="res-mana-val">150 / 500</span>
-            </div>
-            <div class="res-item res-pop">
-                <span class="res-icon">👥</span>
-                <span class="res-val" id="res-pop-val">2 / 50</span>
-            </div>
-        </div>
-
-        <!-- STATUE HP STATUS (MINI HEADER BARS) -->
+        <!-- STATUE HP STATUS (MINI DUAL HEALTH BARS) -->
         <div class="sw-statue-bars">
-            <div class="statue-bar-box order-statue">
-                <div class="sb-label">🛡️ BİZİM HEYKEL: <span id="hp-statue-order">3000 / 3000</span></div>
+            <div class="statue-bar-box order-statue" title="Bizim Heykel Canı">
+                <div class="sb-label"><span>🛡️ BİZİM</span><span id="hp-statue-order">3000</span></div>
                 <div class="sb-track"><div class="sb-fill order-fill" id="fill-statue-order" style="width: 100%;"></div></div>
             </div>
-            <div class="statue-bar-box chaos-statue">
-                <div class="sb-label">💀 DÜŞMAN HEYKEL: <span id="hp-statue-chaos">3000 / 3000</span></div>
+            <div class="statue-bar-box chaos-statue" title="Düşman Heykel Canı">
+                <div class="sb-label"><span>💀 DÜŞMAN</span><span id="hp-statue-chaos">3000</span></div>
                 <div class="sb-track"><div class="sb-fill chaos-fill" id="fill-statue-chaos" style="width: 100%;"></div></div>
             </div>
         </div>
 
-        <!-- ACTIONS & MODE SWITCHER -->
+        <!-- RESOURCE COUNTERS -->
+        <div class="sw-resources">
+            <div class="res-item res-gold" title="Altın Madeni">
+                <span class="res-icon">🟡</span>
+                <span class="res-val" id="res-gold-val">500</span>
+            </div>
+            <div class="res-item res-mana" id="res-mana-box" title="Büyü Manası">
+                <span class="res-icon">🔵</span>
+                <span class="res-val" id="res-mana-val">150/500</span>
+            </div>
+            <div class="res-item res-pop" title="Ordu Nüfusu">
+                <span class="res-icon">👥</span>
+                <span class="res-val" id="res-pop-val">2/50</span>
+            </div>
+        </div>
+
+        <!-- ACTIONS & MODES BAR -->
         <div class="sw-actions">
-            <button class="btn-sw-nav" id="btn-sw-back-to-menu" style="background:#ffd700; color:#000; font-weight:900;" title="Mevcut savaştan çıkıp ana menüye dön">🏠 Ana Menü</button>
-            <button class="btn-sw-nav" id="btn-sw-online-1v1" style="background:linear-gradient(135deg, #00e5ff, #0088ff); color:#000; font-weight:900; box-shadow:0 0 15px rgba(0,229,255,0.4);" title="Gerçek Oyuncuyla 1v1 Online Düello">🌐 1v1 Canlı Düello</button>
-            <button class="btn-sw-nav" id="btn-sw-online-2v2" style="background:linear-gradient(135deg, #00e676, #00a843); color:#000; font-weight:900; box-shadow:0 0 15px rgba(0,230,118,0.4);" title="Gerçek Oyuncularla 2v2 Online Takım Savaşı">👥 2v2 Canlı Savaş</button>
-            <button class="btn-sw-nav" id="btn-sw-chapters" style="background:#ff9800; color:#000; font-weight:900;" title="Stick War Legacy Hikaye Bölümlerini Seç">🗺️ Bölümler</button>
-            <button class="btn-sw-nav" id="btn-sw-upgrades">🔨 Yükseltmeler</button>
-            <button class="btn-sw-nav" id="btn-sw-restart">🔄 Yeniden Başlat</button>
-            <button class="btn-sw-nav" id="btn-sw-fullscreen">⛶ Tam Ekran</button>
+            <div class="sw-modes-quick-bar">
+                <button class="btn-sw-nav btn-mode-pill" id="btn-sw-online-1v1" title="1v1 Canlı Düello">🌐 1v1</button>
+                <button class="btn-sw-nav btn-mode-pill" id="btn-sw-online-2v2" title="2v2 Canlı Takım Savaşı">👥 2v2</button>
+                <button class="btn-sw-nav btn-mode-pill" id="btn-sw-chapters" title="Bölüm Seçimi">🗺️ Sefer</button>
+            </div>
+            <button class="btn-sw-nav btn-sw-action" id="btn-sw-upgrades" title="Cephanelik &amp; Yükseltmeler [U]">🔨 <span class="nav-text">Demirci</span></button>
+            <button class="btn-sw-nav btn-sw-action" id="btn-sw-back-to-menu" title="Ana Menüye Dön">🏠 <span class="nav-text">Menü</span></button>
+            <button class="btn-sw-nav btn-sw-action" id="btn-sw-restart" title="Savaşı Yeniden Başlat">🔄</button>
+            <button class="btn-sw-nav btn-sw-action" id="btn-sw-fullscreen" title="Tam Ekran Aç/Kapat">⛶</button>
         </div>
     </header>
 
@@ -170,39 +175,27 @@
     <div class="sw-command-panel">
         <!-- ARMY FORMATION ORDERS (MUSIC TIED!) -->
         <div class="formation-buttons">
-            <button class="btn-formation active" id="btn-order-defend" title="Birlikler heykelin önünü korur. (Müzik: Run From Your Demons)">
+            <button class="btn-formation active" id="btn-order-defend" title="Savunma Duruşu [Z]">
+                <span class="hotkey-pill">Z</span>
                 <span class="f-icon">🛡️</span>
                 <span class="f-text">SAVUN</span>
             </button>
-            <button class="btn-formation" id="btn-order-attack" title="Tüm ordu hücuma geçer! (Müzik: Hymn For The Weekend)">
+            <button class="btn-formation" id="btn-order-attack" title="Tüm Ordu Hücuma [X]">
+                <span class="hotkey-pill">X</span>
                 <span class="f-icon">⚔️</span>
                 <span class="f-text">SALDIR</span>
             </button>
-            <button class="btn-formation" id="btn-order-retreat" title="Tüm birlikler kaleye sığınır. (Müzik: Run From Your Demons)">
+            <button class="btn-formation" id="btn-order-retreat" title="Kaleye Sığın [C]">
+                <span class="hotkey-pill">C</span>
                 <span class="f-icon">🏰</span>
-                <span class="f-text">KALEYE SIĞIN</span>
+                <span class="f-text">SIĞIN</span>
             </button>
         </div>
 
-        <!-- STICK WAR 2 GOD POWERS & SPELLS -->
-        <div class="sw-spells-group" id="sw-spells-group">
-            <button class="btn-spell" id="btn-spell-rage" title="Tüm kılıçlılara çılgın öfke kazandırır! (100 Mana)">
-                <span class="spell-icon">⚡</span>
-                <span class="spell-name">ÖFKE (100)</span>
-            </button>
-            <button class="btn-spell" id="btn-spell-heal" title="Tüm ordunun canını %35 tazeler! (150 Mana)">
-                <span class="spell-icon">💖</span>
-                <span class="spell-name">ŞİFA (150)</span>
-            </button>
-            <button class="btn-spell" id="btn-spell-meteor" title="Düşman saflarına dev alevli göktaşı indirir! (250 Mana)">
-                <span class="spell-icon">☄️</span>
-                <span class="spell-name">GÖKTAŞI (250)</span>
-            </button>
-        </div>
-
-        <!-- UNIT RECRUITMENT BUTTONS -->
+        <!-- UNIT RECRUITMENT BUTTONS (WITH KEYBOARD SHORTCUTS 1-7) -->
         <div class="unit-recruit-group">
-            <button class="btn-recruit" id="btn-spawn-miner" data-cost="150" data-pop="1">
+            <button class="btn-recruit" id="btn-spawn-miner" data-cost="150" data-pop="1" title="Madenci Üret [1]">
+                <span class="rec-hotkey">1</span>
                 <div class="rec-avatar">⛏️</div>
                 <div class="rec-info">
                     <span class="rec-name">Madenci</span>
@@ -210,7 +203,8 @@
                 </div>
                 <span class="rec-pop-tag">+1</span>
             </button>
-            <button class="btn-recruit" id="btn-spawn-sword" data-cost="125" data-pop="1">
+            <button class="btn-recruit" id="btn-spawn-sword" data-cost="125" data-pop="1" title="Kılıçlı Üret [2]">
+                <span class="rec-hotkey">2</span>
                 <div class="rec-avatar">🗡️</div>
                 <div class="rec-info">
                     <span class="rec-name">Kılıçlı</span>
@@ -218,7 +212,8 @@
                 </div>
                 <span class="rec-pop-tag">+1</span>
             </button>
-            <button class="btn-recruit" id="btn-spawn-archer" data-cost="300" data-pop="1">
+            <button class="btn-recruit" id="btn-spawn-archer" data-cost="300" data-pop="1" title="Okçu Üret [3]">
+                <span class="rec-hotkey">3</span>
                 <div class="rec-avatar">🏹</div>
                 <div class="rec-info">
                     <span class="rec-name">Okçu</span>
@@ -226,7 +221,8 @@
                 </div>
                 <span class="rec-pop-tag">+1</span>
             </button>
-            <button class="btn-recruit" id="btn-spawn-spear" data-cost="500" data-pop="2">
+            <button class="btn-recruit" id="btn-spawn-spear" data-cost="500" data-pop="2" title="Mızrakçı Üret [4]">
+                <span class="rec-hotkey">4</span>
                 <div class="rec-avatar">🛡️</div>
                 <div class="rec-info">
                     <span class="rec-name">Mızrakçı</span>
@@ -234,36 +230,58 @@
                 </div>
                 <span class="rec-pop-tag">+2</span>
             </button>
-            <button class="btn-recruit" id="btn-spawn-meric" data-cost="200" data-pop="1">
+            <button class="btn-recruit" id="btn-spawn-meric" data-cost="200" data-pop="1" title="Şifacı Meric Üret [5]">
+                <span class="rec-hotkey">5</span>
                 <div class="rec-avatar">✨</div>
                 <div class="rec-info">
-                    <span class="rec-name">Şifacı (Meric)</span>
-                    <span class="rec-cost">🟡 200 🔵 80</span>
+                    <span class="rec-name">Şifacı</span>
+                    <span class="rec-cost">🟡 200</span>
                 </div>
                 <span class="rec-pop-tag">+1</span>
             </button>
-            <button class="btn-recruit" id="btn-spawn-mage" data-cost="1200" data-pop="3">
+            <button class="btn-recruit" id="btn-spawn-mage" data-cost="1200" data-pop="3" title="Büyücü Magikill Üret [6]">
+                <span class="rec-hotkey">6</span>
                 <div class="rec-avatar">🧙</div>
                 <div class="rec-info">
                     <span class="rec-name">Büyücü</span>
-                    <span class="rec-cost">🟡 1200</span>
+                    <span class="rec-cost">🟡 1.2k</span>
                 </div>
                 <span class="rec-pop-tag">+3</span>
             </button>
-            <button class="btn-recruit" id="btn-spawn-giant" data-cost="1500" data-pop="4">
+            <button class="btn-recruit" id="btn-spawn-giant" data-cost="1500" data-pop="4" title="Dev Savaşçı Üret [7]">
+                <span class="rec-hotkey">7</span>
                 <div class="rec-avatar">👹</div>
                 <div class="rec-info">
                     <span class="rec-name">Dev</span>
-                    <span class="rec-cost">🟡 1500</span>
+                    <span class="rec-cost">🟡 1.5k</span>
                 </div>
                 <span class="rec-pop-tag">+4</span>
             </button>
         </div>
+
+        <!-- STICK WAR 2 GOD POWERS & SPELLS -->
+        <div class="sw-spells-group" id="sw-spells-group">
+            <button class="btn-spell" id="btn-spell-rage" title="Çılgın Öfke Büyüsü [R]">
+                <span class="hotkey-pill">R</span>
+                <span class="spell-icon">⚡</span>
+                <span class="spell-name">ÖFKE (100)</span>
+            </button>
+            <button class="btn-spell" id="btn-spell-heal" title="Kutsal Şifa Büyüsü [T]">
+                <span class="hotkey-pill">T</span>
+                <span class="spell-icon">💖</span>
+                <span class="spell-name">ŞİFA (150)</span>
+            </button>
+            <button class="btn-spell" id="btn-spell-meteor" title="Alevli Göktaşı [Y]">
+                <span class="hotkey-pill">Y</span>
+                <span class="spell-icon">☄️</span>
+                <span class="spell-name">GÖKTAŞI (250)</span>
+            </button>
+        </div>
     </div>
 
-    <!-- MINIMAP OVERLAY (TOP CENTER) -->
-    <div class="sw-minimap-container" id="minimap-container">
-        <canvas id="minimap-canvas" width="300" height="40"></canvas>
+    <!-- MINIMAP OVERLAY (TOP RIGHT CORNER) -->
+    <div class="sw-minimap-container" id="minimap-container" title="Savaş Alanı Haritası [M]">
+        <canvas id="minimap-canvas" width="240" height="34"></canvas>
         <div class="minimap-view-window" id="minimap-lens"></div>
     </div>
 
@@ -576,9 +594,10 @@
     </div>
 
     <!-- AUDIO ELEMENTS FOR DYNAMIC COMBAT MUSIC -->
-    <audio id="audio-attack" src="music/hymn_for_the_weekend.mp3" preload="auto" loop></audio>
-    <audio id="audio-defend" src="music/run_from_your_demons.mp3" preload="auto" loop></audio>
+    <audio id="audio-attack" src="/music/hymn_for_the_weekend.mp3" preload="auto" loop></audio>
+    <audio id="audio-defend" src="/music/run_from_your_demons.mp3" preload="auto" loop></audio>
 
-    <script src="stickwar.js?v=30"></script>
+    <script src="stickwar.js?v=31"></script>
+    <script src="overlay-back.js?v=31"></script>
 </body>
 </html>

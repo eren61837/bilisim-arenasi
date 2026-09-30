@@ -27,6 +27,9 @@ const db = new DatabaseSync(DB_FILE);
 db.exec(`
   PRAGMA journal_mode = WAL;
   PRAGMA synchronous = NORMAL;
+  PRAGMA busy_timeout = 5000;
+  PRAGMA cache_size = -8000;
+  PRAGMA temp_store = MEMORY;
 
   CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -254,8 +257,16 @@ const MIME_TYPES = {
   '.json': 'application/json; charset=utf-8',
   '.png': 'image/png',
   '.jpg': 'image/jpeg',
+  '.jpeg': 'image/jpeg',
+  '.webp': 'image/webp',
   '.ico': 'image/x-icon',
-  '.svg': 'image/svg+xml'
+  '.svg': 'image/svg+xml',
+  '.mp3': 'audio/mpeg',
+  '.wav': 'audio/wav',
+  '.ogg': 'audio/ogg',
+  '.wasm': 'application/wasm',
+  '.woff': 'font/woff',
+  '.woff2': 'font/woff2'
 };
 
 function parseCookies(req) {
@@ -314,6 +325,14 @@ function getGameRatings() {
   } catch (_) {}
   return result;
 }
+
+// High-Speed In-Memory Static Cache with Pre-gzipped Buffers
+// Eliminates CPU spike, file disk I/O, and streaming lag on weak / free-tier servers
+const STATIC_RAM_CACHE = new Map();
+const MAX_RAM_CACHE_FILE_SIZE = 4 * 1024 * 1024; // 4MB per file max
+
+let cachedStatsPayload = null;
+let lastStatsTime = 0;
 
 const server = http.createServer(async (req, res) => {
   const parsedUrl = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
@@ -765,9 +784,14 @@ exit
         return;
       }
 
-      // 8. GET /api/portal-stats
+      // 8. GET /api/portal-stats (Cached for 2s to prevent polling storms from hammering SQLite/event loop)
       if (pathname === '/api/portal-stats' && req.method === 'GET') {
-        return sendJson(res, 200, gamesManager ? gamesManager.getStats() : { lanIp: getLanIp(), onlineTotal: connectedClients.size, games: {} });
+        const now = Date.now();
+        if (!cachedStatsPayload || (now - lastStatsTime > 2000)) {
+          cachedStatsPayload = gamesManager ? gamesManager.getStats() : { lanIp: getLanIp(), onlineTotal: connectedClients.size, games: {} };
+          lastStatsTime = now;
+        }
+        return sendJson(res, 200, cachedStatsPayload);
       }
 
       // 8a. GET /api/game-ratings
@@ -817,15 +841,25 @@ exit
         return sendJson(res, 200, { success: true });
       }
 
-      // 8d. POST /api/admin-announce
+      // 8d. POST /api/admin-announce (Broadcasts to all games & sockets)
       if (pathname === '/api/admin-announce' && req.method === 'POST') {
         const body = await parseJsonBody(req);
         const text = String(body.text || body.message || '').trim();
-        const author = String(body.author || 'erencix').trim();
-        if (gamesManager && typeof gamesManager.broadcastAnnouncement === 'function') {
-          gamesManager.broadcastAnnouncement(text, author);
+        const author = String(body.author || '👑 Admin').trim();
+        if (text) {
+          if (gamesManager && typeof gamesManager.broadcastAnnouncement === 'function') {
+            gamesManager.broadcastAnnouncement(text, author);
+          }
         }
         return sendJson(res, 200, { success: true });
+      }
+
+      // 8e. GET /api/latest-announcement (Universal polling fallback for all games & tabs)
+      if (pathname === '/api/latest-announcement' && req.method === 'GET') {
+        const ann = (gamesManager && typeof gamesManager.getLatestAnnouncement === 'function')
+          ? gamesManager.getLatestAnnouncement()
+          : null;
+        return sendJson(res, 200, { success: true, announcement: ann });
       }
 
       // 9. GET /api/admin/bot-config
@@ -918,31 +952,116 @@ exit
   const ext = path.extname(filePath).toLowerCase();
   const contentType = MIME_TYPES[ext] || 'application/octet-stream';
 
-  // Smart Bandwidth Optimizer for Render 100GB limit:
-  // - HTML: 5 minutes cache with must-revalidate (keeps content fresh)
-  // - Media / WASM / Audio / JS / CSS: 7 days immutable cache (saves 95% bandwidth!)
-  let cacheHeader = 'no-cache, no-store, must-revalidate';
+  // Smart Bandwidth & Caching Optimizer for weak/free-tier Render:
+  // - HTML: 60s cache with must-revalidate (keeps content up to date)
+  // - JS / CSS / Images: 1 day cache with stale-while-revalidate
+  // - Audio / Media / WASM: 7 days immutable
+  let cacheHeader = 'public, max-age=86400, stale-while-revalidate=3600';
   if (ext === '.html') {
-    cacheHeader = 'public, max-age=300, must-revalidate';
+    cacheHeader = 'public, max-age=60, must-revalidate';
+  } else if (ext === '.mp3' || ext === '.wav' || ext === '.ogg' || ext === '.wasm') {
+    cacheHeader = 'public, max-age=604800, immutable';
   }
 
-  const acceptEncoding = req.headers['accept-encoding'] || '';
-  const isCompressible = /text|javascript|json|xml|svg|html/.test(contentType);
+  // Audio / Media HTTP Range Streaming Support (Vital for browser audio playback & seeking!)
+  if (ext === '.mp3' || ext === '.wav' || ext === '.ogg') {
+    try {
+      const stat = fs.statSync(filePath);
+      const total = stat.size;
+      const range = req.headers.range;
 
-  if (isCompressible && acceptEncoding.includes('gzip')) {
-    res.writeHead(200, {
-      'Content-Type': contentType,
-      'Content-Encoding': 'gzip',
-      'Cache-Control': cacheHeader,
-      'Vary': 'Accept-Encoding'
-    });
-    fs.createReadStream(filePath).pipe(zlib.createGzip({ level: 6 })).pipe(res);
-  } else {
-    res.writeHead(200, {
-      'Content-Type': contentType,
-      'Cache-Control': cacheHeader
-    });
-    fs.createReadStream(filePath).pipe(res);
+      if (range) {
+        const parts = range.replace(/bytes=/, '').split('-');
+        const start = parseInt(parts[0], 10);
+        const end = parts[1] ? parseInt(parts[1], 10) : total - 1;
+        const chunksize = (end - start) + 1;
+        res.writeHead(206, {
+          'Content-Range': `bytes ${start}-${end}/${total}`,
+          'Accept-Ranges': 'bytes',
+          'Content-Length': chunksize,
+          'Content-Type': contentType,
+          'Cache-Control': cacheHeader
+        });
+        fs.createReadStream(filePath, { start, end }).pipe(res);
+        return;
+      } else {
+        res.writeHead(200, {
+          'Content-Length': total,
+          'Accept-Ranges': 'bytes',
+          'Content-Type': contentType,
+          'Cache-Control': cacheHeader
+        });
+        fs.createReadStream(filePath).pipe(res);
+        return;
+      }
+    } catch (_) {}
+  }
+
+  // High-Speed In-Memory RAM Cache with Pre-gzipped Buffers
+  try {
+    const stat = fs.statSync(filePath);
+    const etag = `"${stat.size}-${Math.floor(stat.mtimeMs)}"`;
+
+    // 304 Not Modified check (Instant 0-byte response)
+    if (req.headers['if-none-match'] === etag) {
+      res.writeHead(304, { 'ETag': etag, 'Cache-Control': cacheHeader });
+      res.end();
+      return;
+    }
+
+    const acceptEncoding = req.headers['accept-encoding'] || '';
+    const isCompressible = /text|javascript|json|xml|svg|html/.test(contentType);
+
+    if (stat.size <= MAX_RAM_CACHE_FILE_SIZE) {
+      let cached = STATIC_RAM_CACHE.get(filePath);
+      if (!cached || cached.mtimeMs !== stat.mtimeMs) {
+        const rawBuf = fs.readFileSync(filePath);
+        const gzBuf = isCompressible ? zlib.gzipSync(rawBuf, { level: 6 }) : null;
+        cached = { mtimeMs: stat.mtimeMs, buffer: rawBuf, gzippedBuffer: gzBuf, etag, contentType };
+        STATIC_RAM_CACHE.set(filePath, cached);
+      }
+
+      if (isCompressible && acceptEncoding.includes('gzip') && cached.gzippedBuffer) {
+        res.writeHead(200, {
+          'Content-Type': contentType,
+          'Content-Encoding': 'gzip',
+          'Content-Length': cached.gzippedBuffer.length,
+          'ETag': etag,
+          'Cache-Control': cacheHeader,
+          'Vary': 'Accept-Encoding'
+        });
+        res.end(cached.gzippedBuffer);
+      } else {
+        res.writeHead(200, {
+          'Content-Type': contentType,
+          'Content-Length': cached.buffer.length,
+          'ETag': etag,
+          'Cache-Control': cacheHeader
+        });
+        res.end(cached.buffer);
+      }
+      return;
+    }
+
+    // Large files fallback (>4MB, e.g. TLauncher.jar)
+    if (isCompressible && acceptEncoding.includes('gzip')) {
+      res.writeHead(200, {
+        'Content-Type': contentType,
+        'Content-Encoding': 'gzip',
+        'Cache-Control': cacheHeader,
+        'Vary': 'Accept-Encoding'
+      });
+      fs.createReadStream(filePath).pipe(zlib.createGzip({ level: 6 })).pipe(res);
+    } else {
+      res.writeHead(200, {
+        'Content-Type': contentType,
+        'Cache-Control': cacheHeader
+      });
+      fs.createReadStream(filePath).pipe(res);
+    }
+  } catch (serveErr) {
+    res.writeHead(500, { 'Content-Type': 'text/plain' });
+    res.end('Error serving static file');
   }
 });
 
@@ -955,14 +1074,14 @@ const wss = new WebSocketServer({
 const gamesManager = initGamesManager(wss, db);
 const connectedClients = new Set();
 
-// Automatic dead connection cleanup heartbeat every 30s
+// Automatic dead connection cleanup & Render 55s timeout preventer heartbeat every 25s
 setInterval(() => {
   wss.clients.forEach(ws => {
     if (ws.isAlive === false) return ws.terminate();
     ws.isAlive = false;
-    ws.ping();
+    try { ws.ping(); } catch (_) {}
   });
-}, 30000);
+}, 25000);
 
 function broadcastToRoom(roomId, message, senderWs = null) {
   const data = typeof message === 'string' ? message : JSON.stringify(message);
@@ -1513,6 +1632,8 @@ wss.on('connection', (ws, req) => {
   });
 
   broadcastOnlineCount();
+  ws.isAlive = true;
+  ws.on('pong', () => { ws.isAlive = true; });
 
   ws.on('message', (msg, isBinary) => {
     // 1. Binary Protocol: Fast Pixel Placement [x (2B), y (2B), c (1B)]

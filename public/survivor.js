@@ -3,7 +3,7 @@
   'use strict';
 
   // --- AUDIO SYNTHESIZER ---
-  const Sfx = {
+  const _rawSfx = {
     ctx: null,
     init() {
       if (!this.ctx) {
@@ -136,6 +136,25 @@
         });
       } catch (_) {}
     },
+    magic() {
+      try {
+        this.init();
+        if (!this.ctx) return;
+        const now = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(540, now);
+        osc.frequency.exponentialRampToValueAtTime(1180, now + 0.14);
+        gain.gain.setValueAtTime(0.12, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.14);
+        osc.connect(gain); gain.connect(this.ctx.destination);
+        osc.start(now); osc.stop(now + 0.14);
+      } catch (_) {}
+    },
+    fire() {
+      this.fireball();
+    },
     warning() {
       try {
         this.init();
@@ -148,6 +167,16 @@
       } catch (_) {}
     }
   };
+
+  // Safe Proxy so no unknown Sfx call ever crashes the game loop
+  const Sfx = new Proxy(_rawSfx, {
+    get(target, prop) {
+      if (prop in target) {
+        return typeof target[prop] === 'function' ? target[prop].bind(target) : target[prop];
+      }
+      return () => {};
+    }
+  });
 
   // --- GOTHIC SYNTHWAVE BGM GENERATOR (CASTLEVANIA / VAMPIRE SURVIVORS) ---
   const SurvivorBGM = {
@@ -784,6 +813,53 @@
   }, { passive: true });
 
   window.addEventListener('keydown', e => {
+    // 1. If stage clear victory modal is active, 1/Enter advances, 2 continues endless
+    if (modalStageClear && (modalStageClear.classList.contains('active') || modalStageClear.style.display === 'flex')) {
+      if (e.key === '1' || e.key === 'Enter' || e.code === 'Space') {
+        e.preventDefault();
+        if (btnScNext && btnScNext.style.display !== 'none') {
+          btnScNext.click();
+        } else if (btnScContinue) {
+          btnScContinue.click();
+        }
+        return;
+      }
+      if (e.key === '2' && btnScContinue) {
+        e.preventDefault();
+        btnScContinue.click();
+        return;
+      }
+    }
+
+    // 2. If level-up modal is active, keys 1, 2, 3 immediately select cards
+    if (modalLevelup && modalLevelup.classList.contains('active') && modalLevelup.style.display !== 'none') {
+      const cards = levelupCardsGrid ? levelupCardsGrid.children : [];
+      if (e.key === '1' && cards[0]) {
+        e.preventDefault();
+        cards[0].click();
+        return;
+      }
+      if (e.key === '2' && cards[1]) {
+        e.preventDefault();
+        cards[1].click();
+        return;
+      }
+      if (e.key === '3' && cards[2]) {
+        e.preventDefault();
+        cards[2].click();
+        return;
+      }
+    }
+
+    // If game over modal is active, Enter, Space or R restarts
+    if (modalGameover && modalGameover.classList.contains('active')) {
+      if (e.key === 'Enter' || e.code === 'Space' || e.key.toLowerCase() === 'r') {
+        e.preventDefault();
+        if (btnGoRestart) btnGoRestart.click();
+        return;
+      }
+    }
+
     state.keys[e.key.toLowerCase()] = true;
     if (e.code === 'Space' || e.key === ' ') {
       tryDash();
@@ -952,7 +1028,10 @@
     state.bossSpawned = false;
     bossBarWrap.style.display = 'none';
 
-    if (modalStageClear) modalStageClear.style.display = 'none';
+    if (modalStageClear) {
+      modalStageClear.classList.remove('active');
+      modalStageClear.style.display = 'none';
+    }
     if (modalStages) modalStages.style.display = 'none';
     if (swarmWarning) swarmWarning.style.display = 'none';
 
@@ -1665,39 +1744,34 @@
     const greedBonus = 1 + (forgeRanks.greed * FORGE_CONFIG.find(c => c.id === 'greed').valPerRank);
     if (e.isBoss) {
       const curStage = getCurrentStage();
-      const g = Math.round((e.goldVal + curStage.boss.gold) * greedBonus);
+      const bossBonusGold = (curStage && curStage.boss && curStage.boss.gold) ? curStage.boss.gold : 1000;
+      const g = Math.round(((e.goldVal || 500) + bossBonusGold) * greedBonus);
       state.goldEarned += g;
       persistentGold += g;
       saveGold();
       addFloatText(e.x, e.y - 30, `+${g} 🪙 BÖLÜM ZAFERİ!`, '#ffd54f', 28);
-      Sfx.victory();
+      try { Sfx.victory(); } catch (_) {}
       state.screenShake = 28;
-      bossBarWrap.style.display = 'none';
+      if (bossBarWrap) bossBarWrap.style.display = 'none';
       state.activeBoss = null;
       state.stageCleared = true;
 
-      // Transform all alive regular enemies into gems with burst effect
-      enemies.forEach(en => {
+      // Safely transform alive regular enemies into a capped burst of high-value gems
+      const remaining = enemies.filter(en => en && !en.isBoss);
+      enemies = [];
+      const gemCount = Math.min(20, remaining.length);
+      const totalGemXp = remaining.reduce((acc, en) => acc + (en.xpVal || 5), 0);
+      const xpPerGem = gemCount > 0 ? Math.round((totalGemXp / gemCount) * xpBonus) : 0;
+      for (let i = 0; i < gemCount; i++) {
+        const en = remaining[i];
         gems.push({
           x: en.x,
           y: en.y,
-          val: Math.round(en.xpVal * xpBonus),
-          color: '#00e676',
-          radius: 6
+          val: xpPerGem || 10,
+          color: '#ffd54f',
+          radius: 7
         });
-        for (let i = 0; i < 4; i++) {
-          particles.push({
-            x: en.x,
-            y: en.y,
-            vx: (Math.random() - 0.5) * 5,
-            vy: (Math.random() - 0.5) * 5,
-            life: 15,
-            color: '#22c55e',
-            size: 3
-          });
-        }
-      });
-      enemies = [];
+      }
 
       // Unlock next stage
       if (state.currentStageId >= unlockedStage && unlockedStage < 4) {
@@ -1705,26 +1779,39 @@
         localStorage.setItem('survivor_unlocked_stage', unlockedStage.toString());
       }
 
-      // Show stage clear modal
+      // Show stage clear modal safely
       setTimeout(() => {
         if (modalStageClear) {
+          if (modalLevelup) {
+            modalLevelup.classList.remove('active');
+            modalLevelup.style.display = 'none';
+          }
+          isLevelUpActive = false;
+          pendingLevelUps = 0;
+
           const scDescEl = document.getElementById('sc-desc');
           const scRewardEl = document.querySelector('.sc-reward');
-          if (scDescEl) scDescEl.textContent = `${curStage.boss.name} yerle bir edildi! ${curStage.name} temizlendi.`;
+          const bossName = (curStage && curStage.boss && curStage.boss.name) ? curStage.boss.name : 'Bölüm Lordu';
+          const stageName = curStage ? curStage.name : 'Aşama';
+          if (scDescEl) scDescEl.textContent = `${bossName} yerle bir edildi! ${stageName} temizlendi.`;
           if (scRewardEl) scRewardEl.textContent = `🪙 +${g} Altın ve Ebedi Şan Kazanıldı!`;
           if (btnScNext) {
             if (state.currentStageId < 4) {
-              btnScNext.textContent = `AŞAMA ${state.currentStageId + 1}'E GEÇ ➡️`;
+              btnScNext.textContent = `AŞAMA ${state.currentStageId + 1}'E GEÇ ➡️ [1]`;
               btnScNext.style.display = 'inline-block';
             } else {
-              btnScNext.textContent = '👑 TÜM AŞAMALARI TAMAMLADIN!';
+              btnScNext.textContent = '👑 TÜM AŞAMALARI TAMAMLADIN! [1]';
               btnScNext.style.display = 'inline-block';
             }
           }
+          if (btnScContinue) {
+            btnScContinue.textContent = 'Sonsuz Modda Devam Et ⚔️ [2]';
+          }
           modalStageClear.style.display = 'flex';
+          modalStageClear.classList.add('active');
           state.paused = true;
         }
-      }, 1200);
+      }, 1000);
     } else if (Math.random() < e.goldChance) {
       const g = Math.round((2 + Math.floor(Math.random() * 5)) * greedBonus);
       state.goldEarned += g;
@@ -1749,19 +1836,31 @@
     updateHUD();
   }
 
-  // --- XP & LEVEL UP ---
+  // --- XP & LEVEL UP (ROBUST QUEUE & FALLBACKS) ---
+  let pendingLevelUps = 0;
+  let isLevelUpActive = false;
+
   function addXP(amount) {
     player.xp += amount;
-    if (player.xp >= player.xpNeeded) {
+    while (player.xp >= player.xpNeeded) {
       player.xp -= player.xpNeeded;
       player.level++;
       player.xpNeeded = Math.floor(player.xpNeeded * 1.35) + 5;
-      triggerLevelUp();
+      pendingLevelUps++;
     }
     updateHUD();
+    checkPendingLevelUps();
+  }
+
+  function checkPendingLevelUps() {
+    if (pendingLevelUps > 0 && !isLevelUpActive && !state.stageCleared && modalGameover && !modalGameover.classList.contains('active')) {
+      pendingLevelUps--;
+      triggerLevelUp();
+    }
   }
 
   function triggerLevelUp() {
+    isLevelUpActive = true;
     state.paused = true;
     Sfx.levelup();
 
@@ -1775,31 +1874,97 @@
       chosen.push(poolCopy.splice(randIdx, 1)[0]);
     }
 
+    // Fallback bonus rewards if skills are maxed out (GUARANTEES ALWAYS 3 CARDS FOR KEYS 1, 2, 3!)
+    const FALLBACK_REWARDS = [
+      {
+        id: '_gold_bonus',
+        name: 'Hazine Sandığı',
+        typeName: 'Altın',
+        type: 'utility',
+        icon: '🪙',
+        desc: 'Anında +350 Altın kazandırır.',
+        getPreview: () => '+350 🪙 Altın',
+        customAction: () => {
+          persistentGold += 350;
+          saveGold();
+          addFloatText(player.x, player.y - 30, '+350 🪙', '#ffd700', 22);
+        }
+      },
+      {
+        id: '_full_heal',
+        name: 'Kutsal Şifa',
+        typeName: 'Can',
+        type: 'defense',
+        icon: '❤️',
+        desc: 'Canı ve Kalkanı anında %100 doldurur.',
+        getPreview: () => '100% CAN + KALKAN',
+        customAction: () => {
+          player.hp = player.maxHp;
+          player.shieldCurrentHp = player.shieldMaxHp;
+          addFloatText(player.x, player.y - 30, 'TAM CAN! ❤️', '#00e676', 22);
+        }
+      },
+      {
+        id: '_shockwave',
+        name: 'Kıyamet Dalgası',
+        typeName: 'Saldırı',
+        type: 'magic',
+        icon: '⚡',
+        desc: 'Ekrandaki tüm canavarlara devasa şok hasarı verir.',
+        getPreview: () => 'TÜM DÜŞMANLARA 600 HASAR',
+        customAction: () => {
+          state.screenShake = 16;
+          Sfx.lightning();
+          const snap = enemies.slice();
+          snap.forEach(en => {
+            if (en && en.hp > 0) damageEnemy(en, 600, true);
+          });
+        }
+      }
+    ];
+
+    let fallbackIdx = 0;
+    while (chosen.length < 3 && fallbackIdx < FALLBACK_REWARDS.length) {
+      chosen.push(FALLBACK_REWARDS[fallbackIdx++]);
+    }
+
     levelupCardsGrid.innerHTML = '';
-    chosen.forEach(upgrade => {
+    chosen.forEach((upgrade, cardIdx) => {
       const curLvl = player.skills[upgrade.id] || 0;
       const isEvolution = curLvl + 1 === upgrade.maxLvl;
       const card = document.createElement('div');
       card.className = `upgrade-card ${isEvolution ? 'card-evolution' : ''}`;
       card.innerHTML = `
+        <div style="position: absolute; top: 12px; right: 14px; background: rgba(0, 219, 255, 0.15); border: 1px solid #00dbff; border-radius: 6px; padding: 2px 8px; font-size: 11px; font-weight: 900; color: #00dbff; letter-spacing: 0.5px;">[${cardIdx + 1}]</div>
         <div class="card-icon">${upgrade.icon}</div>
         <div class="card-title">${upgrade.name}</div>
         <div class="card-type ${isEvolution ? 'type-evolution' : 'type-' + upgrade.type}">
           ${isEvolution ? '🔥 EVRİMLEŞME (MAX FORM)' : upgrade.typeName}
         </div>
         <div class="card-desc">${upgrade.desc}</div>
-        <div class="card-level-preview">${upgrade.getPreview(curLvl)}</div>
+        <div class="card-level-preview">${upgrade.getPreview ? upgrade.getPreview(curLvl) : ''}</div>
       `;
 
       card.addEventListener('click', () => {
-        applyUpgrade(upgrade.id);
+        if (upgrade.customAction) {
+          upgrade.customAction();
+        } else {
+          applyUpgrade(upgrade.id);
+        }
         modalLevelup.classList.remove('active');
-        state.paused = false;
+        modalLevelup.style.display = 'none';
+        isLevelUpActive = false;
+        if (pendingLevelUps > 0 && !state.stageCleared) {
+          setTimeout(checkPendingLevelUps, 150);
+        } else {
+          state.paused = false;
+        }
       });
 
       levelupCardsGrid.appendChild(card);
     });
 
+    modalLevelup.style.display = 'flex';
     modalLevelup.classList.add('active');
   }
 
@@ -2032,10 +2197,11 @@
   // --- MAIN GAME LOOP ---
   let lastTime = performance.now();
   function gameLoop(now) {
-    const dt = (now - lastTime) / 1000;
-    lastTime = now;
+    try {
+      const dt = (now - lastTime) / 1000;
+      lastTime = now;
 
-    if (state.running && !state.paused) {
+      if (state.running && !state.paused) {
       state.time += dt;
 
       // 1. Player Movement
@@ -2143,7 +2309,7 @@
           let boom = false;
           for (let j = 0; j < enemies.length; j++) {
             const e = enemies[j];
-            if (Math.hypot(e.x - p.x, e.y - p.y) < e.radius + p.radius) {
+            if (e && Math.hypot(e.x - p.x, e.y - p.y) < e.radius + p.radius) {
               boom = true;
               break;
             }
@@ -2152,8 +2318,9 @@
             p.life = 0;
             state.screenShake = 6;
             Sfx.fire();
-            enemies.forEach(target => {
-              if (Math.hypot(target.x - p.x, target.y - p.y) < (p.splashRadius || 85)) {
+            const bombTargets = enemies.slice();
+            bombTargets.forEach(target => {
+              if (target && target.hp > 0 && Math.hypot(target.x - p.x, target.y - p.y) < (p.splashRadius || 85)) {
                 damageEnemy(target, p.dmg, true);
               }
             });
@@ -2172,7 +2339,9 @@
         } else if (p.type === 'cosmic_vortex') {
           p.x += p.vx * 0.96;
           p.y += p.vy * 0.96;
-          enemies.forEach(e => {
+          const vortexTargets = enemies.slice();
+          vortexTargets.forEach(e => {
+            if (!e || e.hp <= 0) return;
             const d = Math.hypot(e.x - p.x, e.y - p.y);
             if (d < p.pullRadius && d > 10) {
               const pullAngle = Math.atan2(p.y - e.y, p.x - e.x);
@@ -2187,8 +2356,9 @@
           if (p.life === 1) {
             state.screenShake = 10;
             Sfx.bossAlarm();
-            enemies.forEach(e => {
-              if (Math.hypot(e.x - p.x, e.y - p.y) < p.pullRadius) {
+            const blastTargets = enemies.slice();
+            blastTargets.forEach(e => {
+              if (e && e.hp > 0 && Math.hypot(e.x - p.x, e.y - p.y) < p.pullRadius) {
                 damageEnemy(e, p.dmg * 2.2, true);
               }
             });
@@ -2243,12 +2413,16 @@
 
           for (let j = 0; j < enemies.length; j++) {
             const e = enemies[j];
+            if (!e) continue;
             const dist = Math.hypot(e.x - p.x, e.y - p.y);
             if (dist < e.radius + p.radius) {
-              enemies.forEach(target => {
-                const d = Math.hypot(target.x - p.x, target.y - p.y);
-                if (d <= p.splashRadius) {
-                  damageEnemy(target, p.damage, p.type === 'meteor');
+              const splashTargets = enemies.slice();
+              splashTargets.forEach(target => {
+                if (target && target.hp > 0) {
+                  const d = Math.hypot(target.x - p.x, target.y - p.y);
+                  if (d <= p.splashRadius) {
+                    damageEnemy(target, p.damage, p.type === 'meteor');
+                  }
                 }
               });
 
@@ -2291,7 +2465,9 @@
           const sx = player.x + Math.cos(a) * orbitRadius;
           const sy = player.y + Math.sin(a) * orbitRadius;
 
-          enemies.forEach(e => {
+          const bladeTargets = enemies.slice();
+          bladeTargets.forEach(e => {
+            if (!e || e.hp <= 0) return;
             const d = Math.hypot(e.x - sx, e.y - sy);
             if (d < e.radius + 15) {
               damageEnemy(e, dmg, false);
@@ -2355,6 +2531,9 @@
 
     // --- RENDER ---
     render();
+    } catch (err) {
+      console.warn('Survivor frame recovery:', err);
+    }
     requestAnimationFrame(gameLoop);
   }
 
@@ -2984,12 +3163,18 @@
   btnOpenStages?.addEventListener('click', openStagesModal);
   btnCloseStages?.addEventListener('click', closeStagesModal);
   btnScNext?.addEventListener('click', () => {
-    if (modalStageClear) modalStageClear.style.display = 'none';
+    if (modalStageClear) {
+      modalStageClear.classList.remove('active');
+      modalStageClear.style.display = 'none';
+    }
     const nextId = Math.min(4, state.currentStageId + 1);
     startRun(nextId);
   });
   btnScContinue?.addEventListener('click', () => {
-    if (modalStageClear) modalStageClear.style.display = 'none';
+    if (modalStageClear) {
+      modalStageClear.classList.remove('active');
+      modalStageClear.style.display = 'none';
+    }
     state.paused = false;
   });
   btnGoForge?.addEventListener('click', () => {

@@ -887,7 +887,60 @@
 
             // Keyboard Controls
             window.addEventListener('keydown', (e) => {
+                const tag = document.activeElement?.tagName;
+                if (['INPUT', 'TEXTAREA', 'SELECT'].includes(tag)) return;
+
                 const k = e.key.toLowerCase();
+
+                // Unit Recruitment Hotkeys (1-7)
+                const recruitMap = {
+                    '1': 'miner',
+                    '2': 'sword',
+                    '3': 'archer',
+                    '4': 'spear',
+                    '5': 'meric',
+                    '6': 'mage',
+                    '7': 'giant'
+                };
+                if (recruitMap[e.key]) {
+                    const uKey = recruitMap[e.key];
+                    this.purchaseUnit('order', uKey);
+                    const btn = document.getElementById('btn-spawn-' + uKey);
+                    if (btn) {
+                        btn.classList.add('hotkey-active');
+                        setTimeout(() => btn.classList.remove('hotkey-active'), 150);
+                    }
+                    return;
+                }
+
+                // Formation Stance Hotkeys (Z, X, C)
+                if (k === 'z') { this.setOrderMode('defend'); return; }
+                if (k === 'x') { this.setOrderMode('attack'); return; }
+                if (k === 'c') { this.setOrderMode('retreat'); return; }
+
+                // God Powers / Spells (R, T, Y) - only when not controlling a unit that uses R/T/Y
+                if (k === 'r' && !this.controlledUnit) { this.castSpell('rage'); return; }
+                if (k === 't' && !this.controlledUnit) { this.castSpell('heal'); return; }
+                if (k === 'y' && !this.controlledUnit) { this.castSpell('meteor'); return; }
+
+                // Cephanelik / Upgrades Modal Toggle (U)
+                if (k === 'u') {
+                    const upg = document.getElementById('modal-upgrades');
+                    if (upg) {
+                        upg.classList.toggle('hidden');
+                        if (!upg.classList.contains('hidden')) this.updateUpgradeButtons();
+                    }
+                    return;
+                }
+
+                // Minimap Toggle (M)
+                if (k === 'm') {
+                    const mm = document.getElementById('minimap-container');
+                    if (mm) mm.classList.toggle('hidden');
+                    return;
+                }
+
+                // Manual soldier controls (A, D, S, Space, Q, F, Esc)
                 if (k === 'a' || k === 'arrowleft') this.keys.a = true;
                 if (k === 'd' || k === 'arrowright') this.keys.d = true;
                 if (k === 's' || k === 'arrowdown') this.keys.s = true;
@@ -1753,6 +1806,33 @@
                 this.statsKills++;
                 this.gold += Math.round(UNIT_TYPES[target.type].cost * 0.35); // Bounty reward!
                 this.addFloatingText(target.x, target.y - 70, `+${Math.round(UNIT_TYPES[target.type].cost * 0.35)} 🟡`, '#ffd700');
+
+                // Kill Streak & Rapid Combo System
+                const nowTime = performance.now();
+                if (!this.comboStreak || nowTime - (this.lastKillTime || 0) > 4000) {
+                    this.comboStreak = 1;
+                } else {
+                    this.comboStreak++;
+                }
+                this.lastKillTime = nowTime;
+
+                if (this.comboStreak === 3) {
+                    this.screenShake = 6;
+                    SoundManager.playSfx('magicBoom');
+                    this.addFloatingText(target.x, GROUND_Y - 180, '⚡ X3 ÇİFTE DARBE!', '#00e5ff');
+                } else if (this.comboStreak === 5) {
+                    this.screenShake = 10;
+                    SoundManager.playSfx('giantSmash');
+                    this.addFloatingText(target.x, GROUND_Y - 200, '🔥 X5 SERİ KATLİAM!', '#ff3d00');
+                } else if (this.comboStreak === 8) {
+                    this.screenShake = 15;
+                    SoundManager.playSfx('giantSmash');
+                    this.addFloatingText(target.x, GROUND_Y - 220, '💀 X8 DURDURULAMAZ!', '#ffd700');
+                } else if (this.comboStreak >= 12 && this.comboStreak % 4 === 0) {
+                    this.screenShake = 20;
+                    SoundManager.playSfx('giantSmash');
+                    this.addFloatingText(target.x, GROUND_Y - 240, `👑 X${this.comboStreak} İNAMORTA TANRISI!`, '#e040fb');
+                }
             }
 
             if (this.controlledUnit && this.controlledUnit.id === target.id) {
@@ -3395,8 +3475,23 @@
                     ctx.restore();
 
                 } else if (u.type === 'sword') {
-                    // Swordwrath: Leather Baldric Chest Sash
-                    ctx.strokeStyle = '#4e342e';
+                    // ========================================================
+                    // SWORDWRATH: AUTHENTIC STICK WAR HEADBAND & BROADSWORD
+                    // ========================================================
+                    // Red Warrior Headband with fluttering ribbon tails
+                    ctx.fillStyle = isOrder ? '#d50000' : '#b71c1c';
+                    ctx.fillRect(-7, -59, 14, 3.2);
+                    const flap = Math.sin(Date.now() * 0.012 + u.id) * 4;
+                    ctx.beginPath();
+                    ctx.moveTo(-6, -58);
+                    ctx.lineTo(-15 + flap, -56);
+                    ctx.lineTo(-14 + flap, -52);
+                    ctx.lineTo(-6, -56);
+                    ctx.closePath();
+                    ctx.fill();
+
+                    // Leather Baldric Sash
+                    ctx.strokeStyle = '#3e2723';
                     ctx.lineWidth = 2.5;
                     ctx.beginPath();
                     ctx.moveTo(-6, -46); ctx.lineTo(6, -26);
@@ -3417,36 +3512,58 @@
                     ctx.rotate(swordSwing);
 
                     // Crossguard & Hilt
-                    ctx.strokeStyle = '#d4af37';
-                    ctx.lineWidth = 3;
+                    ctx.strokeStyle = '#ffd700';
+                    ctx.lineWidth = 3.2;
                     ctx.beginPath();
-                    ctx.moveTo(-4, -2); ctx.lineTo(4, 2);
+                    ctx.moveTo(-5, -2); ctx.lineTo(5, 2);
                     ctx.stroke();
 
-                    // Steel Blade
-                    ctx.fillStyle = '#eceff1';
-                    ctx.strokeStyle = mainColor;
-                    ctx.lineWidth = 1.5;
+                    // Polished Steel Blade with Fuller Groove
+                    ctx.fillStyle = '#f1f5f9';
+                    ctx.strokeStyle = isOrder ? '#00e5ff' : '#ff3d00';
+                    ctx.lineWidth = 1.6;
                     ctx.beginPath();
                     ctx.moveTo(0, 0);
-                    ctx.lineTo(26, -24);
-                    ctx.lineTo(28, -22);
-                    ctx.lineTo(4, 3);
+                    ctx.lineTo(28, -26);
+                    ctx.lineTo(31, -24);
+                    ctx.lineTo(5, 4);
                     ctx.closePath();
                     ctx.fill();
                     ctx.stroke();
 
                     // Attack Slash Motion Swoosh Arc
                     if (u.animAction === 'attack') {
-                        ctx.strokeStyle = mainColor;
-                        ctx.lineWidth = 2.5;
+                        ctx.strokeStyle = isOrder ? 'rgba(0, 229, 255, 0.7)' : 'rgba(255, 61, 0, 0.7)';
+                        ctx.lineWidth = 3;
                         ctx.beginPath();
-                        ctx.arc(0, 0, 32, -0.8, 0.8);
+                        ctx.arc(0, 0, 36, -0.9, 0.9);
                         ctx.stroke();
                     }
                     ctx.restore();
 
                 } else if (u.type === 'archer') {
+                    // ========================================================
+                    // ARCHIDON: POINTED ARCHER CAP, FEATHER & RECURVE LONGBOW
+                    // ========================================================
+                    // Pointed Leather Archer Cap
+                    ctx.fillStyle = isOrder ? '#2e7d32' : '#3e2723';
+                    ctx.beginPath();
+                    ctx.moveTo(-7, -59);
+                    ctx.lineTo(7, -59);
+                    ctx.lineTo(1, -68);
+                    ctx.closePath();
+                    ctx.fill();
+                    ctx.strokeStyle = '#1b5e20';
+                    ctx.lineWidth = 1.2;
+                    ctx.stroke();
+
+                    // Golden Archer Feather atop Cap
+                    ctx.strokeStyle = '#ffd700';
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.moveTo(0, -67); ctx.lineTo(-7, -76);
+                    ctx.stroke();
+
                     // Archidon: Leather Quiver on Back with Arrows
                     ctx.fillStyle = '#5d4037';
                     ctx.fillRect(-12, -45, 6, 18);
@@ -3470,7 +3587,7 @@
                     ctx.strokeStyle = '#8d6e63';
                     ctx.lineWidth = 3;
                     ctx.beginPath();
-                    ctx.arc(14, -40, 16, -Math.PI * 0.38, Math.PI * 0.38);
+                    ctx.arc(14, -40, 17, -Math.PI * 0.4, Math.PI * 0.4);
                     ctx.stroke();
 
                     // Bowstring & Nocked Arrow
@@ -3480,26 +3597,31 @@
                     if (u.animAction === 'attack') {
                         // Drawn string and arrow ready to fire!
                         ctx.moveTo(2, -40);
-                        ctx.lineTo(26, -52);
+                        ctx.lineTo(26, -53);
                         ctx.moveTo(2, -40);
-                        ctx.lineTo(26, -28);
+                        ctx.lineTo(26, -27);
                         ctx.stroke();
-                        // Nocked Arrow
+                        // Nocked Arrow with steel arrowhead
                         ctx.strokeStyle = '#ffd700';
                         ctx.lineWidth = 2;
                         ctx.beginPath();
-                        ctx.moveTo(2, -40); ctx.lineTo(22, -40);
+                        ctx.moveTo(2, -40); ctx.lineTo(24, -40);
                         ctx.stroke();
+                        ctx.fillStyle = '#cfd8dc';
+                        ctx.beginPath();
+                        ctx.moveTo(24, -42); ctx.lineTo(28, -40); ctx.lineTo(24, -38);
+                        ctx.closePath();
+                        ctx.fill();
                     } else {
-                        ctx.moveTo(26, -52); ctx.lineTo(26, -28);
+                        ctx.moveTo(26, -53); ctx.lineTo(26, -27);
                         ctx.stroke();
                     }
 
                 } else if (u.type === 'spear') {
                     // ========================================================
-                    // SPEARTON: ICONIC BRONZE CORINTHIAN HELMET & CREST
+                    // SPEARTON: CORINTHIAN HELMET, HOPLON SHIELD & ASHWOOD SPEAR
                     // ========================================================
-                    // Bronze Helmet Cap
+                    // Bronze Helmet Cap with Cheek Guards
                     ctx.fillStyle = '#c99738';
                     ctx.beginPath();
                     ctx.arc(0, -57, 8.5, Math.PI, Math.PI * 2);
@@ -3510,91 +3632,119 @@
                     ctx.closePath();
                     ctx.fill();
                     ctx.strokeStyle = '#8c6218';
-                    ctx.lineWidth = 1.2;
+                    ctx.lineWidth = 1.4;
                     ctx.stroke();
 
                     // Spartan Tall Horsehair Crest / Plumage
                     ctx.fillStyle = isOrder ? '#d50000' : '#212121';
                     ctx.beginPath();
-                    ctx.moveTo(-7, -64);
-                    ctx.quadraticCurveTo(0, -74, 9, -64);
-                    ctx.lineTo(7, -61);
-                    ctx.quadraticCurveTo(0, -68, -5, -61);
+                    ctx.moveTo(-8, -64);
+                    ctx.quadraticCurveTo(0, -75, 10, -64);
+                    ctx.lineTo(8, -61);
+                    ctx.quadraticCurveTo(0, -69, -6, -61);
                     ctx.closePath();
                     ctx.fill();
 
                     // Eye slit showing through Spartan helmet
                     ctx.fillStyle = eyeColor;
-                    ctx.fillRect(2.5, -57, 3, 2);
+                    ctx.fillRect(2.5, -57, 3.2, 2.2);
 
-                    // ========================================================
-                    // SPARTAN HOPLON ROUND SHIELD
-                    // ========================================================
-                    // Large Bronze Shield
+                    // Bronze Greaves on Shins
+                    ctx.fillStyle = '#b8860b';
+                    ctx.fillRect(-3, -11, 4, 8);
+                    ctx.fillRect(5, -11, 4, 8);
+
+                    // Shield Wall Guard Stance
+                    const isGuarding = u.isShieldGuarding || false;
+                    const shieldX = isGuarding ? 10 : 14;
+                    const shieldY = isGuarding ? -36 : -34;
+                    const shieldR = isGuarding ? 17 : 15;
+
+                    // Large Bronze Hoplon Shield
                     ctx.fillStyle = '#b8860b';
                     ctx.beginPath();
-                    ctx.arc(14, -34, 15, 0, Math.PI * 2);
+                    ctx.arc(shieldX, shieldY, shieldR, 0, Math.PI * 2);
                     ctx.fill();
 
                     // Golden Shield Rim
                     ctx.strokeStyle = '#ffd700';
-                    ctx.lineWidth = 2.5;
+                    ctx.lineWidth = 2.8;
                     ctx.stroke();
 
                     // Spartan Emblem / Chevron (Lambda Λ)
                     ctx.strokeStyle = '#3e2723';
-                    ctx.lineWidth = 2.5;
+                    ctx.lineWidth = 2.8;
                     ctx.beginPath();
-                    ctx.moveTo(9, -28); ctx.lineTo(14, -39); ctx.lineTo(19, -28);
+                    ctx.moveTo(shieldX - 5, shieldY + 6);
+                    ctx.lineTo(shieldX, shieldY - 7);
+                    ctx.lineTo(shieldX + 5, shieldY + 6);
                     ctx.stroke();
 
-                    // ========================================================
-                    // SPARTAN ASHWOOD SPEAR
-                    // ========================================================
+                    // Spartan Ashwood Spear with Thrust Animation
                     ctx.save();
-                    const spearThrust = (u.animAction === 'attack') ? Math.sin(u.animTimer * 16) * 14 : 0;
+                    const spearThrust = (u.animAction === 'attack') ? Math.sin(u.animTimer * 16) * 16 : 0;
                     ctx.translate(spearThrust, 0);
 
-                    // Wooden Shaft
+                    // Wooden Spear Shaft
                     ctx.strokeStyle = '#8d6e63';
-                    ctx.lineWidth = 3;
+                    ctx.lineWidth = 3.2;
                     ctx.beginPath();
-                    ctx.moveTo(-18, -24); ctx.lineTo(38, -44);
+                    if (isGuarding) {
+                        ctx.moveTo(-16, -36); ctx.lineTo(44, -36);
+                    } else {
+                        ctx.moveTo(-18, -24); ctx.lineTo(40, -45);
+                    }
                     ctx.stroke();
 
                     // Leaf-shaped Iron Spearhead
+                    const tipX = isGuarding ? 44 : 40;
+                    const tipY = isGuarding ? -36 : -45;
                     ctx.fillStyle = '#eceff1';
                     ctx.strokeStyle = '#90a4ae';
                     ctx.lineWidth = 1.5;
                     ctx.beginPath();
-                    ctx.moveTo(38, -44);
-                    ctx.lineTo(46, -48);
-                    ctx.lineTo(50, -48);
-                    ctx.lineTo(40, -42);
+                    ctx.moveTo(tipX, tipY);
+                    ctx.lineTo(tipX + 8, tipY - 3);
+                    ctx.lineTo(tipX + 13, tipY);
+                    ctx.lineTo(tipX + 8, tipY + 3);
                     ctx.closePath();
                     ctx.fill();
                     ctx.stroke();
                     ctx.restore();
 
                 } else if (u.type === 'mage') {
-                    // Magikill: Pointed Wizard Hat
-                    ctx.fillStyle = '#311b92';
+                    // ========================================================
+                    // MAGIKILL: WIZARD HAT, BEARD, ROBE & LEVITATING ORB
+                    // ========================================================
+                    // Grand Crooked Wizard Hat
+                    ctx.fillStyle = isOrder ? '#311b92' : '#4a148c';
                     ctx.beginPath();
-                    ctx.moveTo(-10, -61);
-                    ctx.lineTo(12, -61);
-                    ctx.lineTo(2, -78);
+                    ctx.moveTo(-11, -61);
+                    ctx.lineTo(13, -61);
+                    ctx.lineTo(3, -79);
+                    ctx.lineTo(-2, -84);
                     ctx.closePath();
                     ctx.fill();
-                    ctx.strokeStyle = '#7c4dff';
+                    ctx.strokeStyle = '#ffd700';
                     ctx.lineWidth = 1.5;
                     ctx.stroke();
 
+                    // White Flowing Wizard Beard
+                    ctx.fillStyle = '#f1f5f9';
+                    ctx.beginPath();
+                    ctx.moveTo(-3, -51);
+                    ctx.lineTo(3, -51);
+                    ctx.lineTo(1, -38);
+                    ctx.lineTo(-1, -38);
+                    ctx.closePath();
+                    ctx.fill();
+
                     // Wizard Robe Cape
-                    ctx.fillStyle = 'rgba(49, 27, 146, 0.85)';
+                    ctx.fillStyle = isOrder ? 'rgba(49, 27, 146, 0.9)' : 'rgba(74, 20, 140, 0.9)';
                     ctx.beginPath();
                     ctx.moveTo(0, -48);
-                    ctx.lineTo(-12, -22);
-                    ctx.lineTo(-4, -20);
+                    ctx.lineTo(-13, -20);
+                    ctx.lineTo(-3, -19);
                     ctx.lineTo(4, -48);
                     ctx.closePath();
                     ctx.fill();
@@ -3607,38 +3757,49 @@
                     ctx.moveTo(16, -10); ctx.lineTo(16, -68);
                     ctx.stroke();
 
-                    // Levitating Glowing Arcane Orb
+                    // Levitating Glowing Arcane Orb with Pulsing Aura
                     ctx.save();
-                    ctx.shadowColor = '#00e5ff';
-                    ctx.shadowBlur = 12;
-                    ctx.fillStyle = '#00e5ff';
+                    const orbPulse = Math.sin(Date.now() * 0.008) * 1.5;
+                    ctx.shadowColor = isOrder ? '#00e5ff' : '#ff0055';
+                    ctx.shadowBlur = 14;
+                    ctx.fillStyle = isOrder ? '#00e5ff' : '#ff1744';
                     ctx.beginPath();
-                    ctx.arc(16, -72, 7, 0, Math.PI * 2);
+                    ctx.arc(16, -73, 7.5 + orbPulse, 0, Math.PI * 2);
                     ctx.fill();
                     ctx.restore();
 
                 } else if (u.type === 'giant') {
-                    // Towering Giant with Spiked Tree Trunk Club
+                    // ========================================================
+                    // GIANT: TOWERING MONOLITH WITH SPIKED CLUB & LOINCLOTH
+                    // ========================================================
+                    // Leather Loincloth
+                    ctx.fillStyle = '#4e342e';
+                    ctx.fillRect(-10, -28, 20, 9);
+                    ctx.strokeStyle = '#271815';
+                    ctx.lineWidth = 1.5;
+                    ctx.strokeRect(-10, -28, 20, 9);
+
                     ctx.strokeStyle = bodyColor;
-                    ctx.lineWidth = 7;
+                    ctx.lineWidth = 7.5;
                     ctx.beginPath();
                     ctx.moveTo(0, -40); ctx.lineTo(24, -35); ctx.lineTo(36, -58);
                     ctx.stroke();
 
-                    // Spiked Club Head
+                    // Spiked Club Head (Gnarled Wooden Trunk)
                     ctx.strokeStyle = '#5d4037';
-                    ctx.lineWidth = 8;
+                    ctx.lineWidth = 9.5;
                     ctx.beginPath();
-                    ctx.moveTo(28, -50); ctx.lineTo(44, -72);
+                    ctx.moveTo(28, -50); ctx.lineTo(45, -74);
                     ctx.stroke();
 
-                    // Iron Spikes
+                    // Jagged Steel Spikes
                     ctx.strokeStyle = '#cfd8dc';
-                    ctx.lineWidth = 2.5;
+                    ctx.lineWidth = 3;
                     ctx.beginPath();
-                    ctx.moveTo(34, -58); ctx.lineTo(30, -64);
-                    ctx.moveTo(38, -62); ctx.lineTo(44, -66);
-                    ctx.moveTo(42, -68); ctx.lineTo(38, -74);
+                    ctx.moveTo(33, -56); ctx.lineTo(28, -63);
+                    ctx.moveTo(37, -61); ctx.lineTo(44, -66);
+                    ctx.moveTo(42, -67); ctx.lineTo(37, -74);
+                    ctx.moveTo(45, -73); ctx.lineTo(52, -78);
                     ctx.stroke();
 
                 } else if (u.type === 'meric') {

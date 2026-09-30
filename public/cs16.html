@@ -2,346 +2,324 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>🔫 Counter-Strike 1.6 Online Web - Bilişim Arenası</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔫 Counter-Strike 1.6 & CS2 Web 3D - Bilişim Sınıfı Portalı</title>
+    <link rel="stylesheet" href="cs16.css">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🔫</text></svg>">
-    <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        html, body {
-            width: 100%; height: 100%;
-            overflow: hidden;
-            background: #0b0e14;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Courier New', monospace;
-            color: #fff;
-            user-select: none;
-        }
-
-        /* TOP NAVIGATION BAR */
-        .cs-top-bar {
-            position: fixed;
-            top: 0; left: 0; right: 0;
-            height: 48px;
-            background: rgba(13, 17, 23, 0.96);
-            border-bottom: 2px solid #ff9800;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0 14px;
-            z-index: 2000;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.8);
-            gap: 12px;
-        }
-
-        .cs-brand {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            flex-shrink: 0;
-        }
-
-        .btn-cs-nav {
-            background: rgba(255, 152, 0, 0.15);
-            color: #ff9800;
-            border: 1px solid #ff9800;
-            padding: 6px 12px;
-            border-radius: 6px;
-            font-size: 12px;
-            font-weight: 800;
-            cursor: pointer;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-            transition: all 0.2s ease;
-        }
-        .btn-cs-nav:hover {
-            background: #ff9800;
-            color: #000;
-            transform: translateY(-1px);
-        }
-
-        .cs-servers-group {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            background: rgba(0, 0, 0, 0.6);
-            padding: 3px 6px;
-            border-radius: 8px;
-            border: 1px solid rgba(255, 255, 255, 0.15);
-        }
-
-        .cs-server-btn {
-            background: transparent;
-            color: #aaa;
-            border: none;
-            padding: 6px 12px;
-            border-radius: 6px;
-            font-size: 12px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-        .cs-server-btn.active {
-            background: #ff9800;
-            color: #000;
-            font-weight: 900;
-            box-shadow: 0 0 10px rgba(255, 152, 0, 0.5);
-        }
-
-        .cs-badge-live {
-            background: rgba(0, 230, 118, 0.15);
-            color: #00e676;
-            border: 1px solid #00e676;
-            padding: 4px 8px;
-            border-radius: 6px;
-            font-size: 11px;
-            font-weight: 800;
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-        }
-
-        .cs-actions {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            flex-shrink: 0;
-        }
-
-        /* CS ENGINE IFRAME */
-        #cs-game-frame {
-            position: fixed;
-            top: 48px;
-            left: 0;
-            width: 100vw;
-            height: calc(100vh - 48px - 30px);
-            border: none;
-            display: block;
-            z-index: 10;
-            background: #000;
-        }
-
-        /* BOTTOM CONTROLS RIBBON */
-        .cs-bottom-bar {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            height: 30px;
-            background: rgba(13, 17, 23, 0.98);
-            border-top: 1px solid rgba(255, 152, 0, 0.4);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0 16px;
-            font-size: 11px;
-            color: #aaa;
-            z-index: 2000;
-            user-select: none;
-        }
-        .cs-key-tip {
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-        }
-        .cs-key-tip kbd {
-            background: #21262d;
-            border: 1px solid #ff9800;
-            color: #ff9800;
-            padding: 1px 5px;
-            border-radius: 4px;
-            font-weight: 800;
-            font-family: inherit;
-        }
-
-        /* CLICK TO PLAY POINTER LOCK OVERLAY */
-        #cs-click-overlay {
-            position: fixed;
-            top: 48px;
-            left: 0;
-            width: 100vw;
-            height: calc(100vh - 48px - 30px);
-            background: rgba(0, 0, 0, 0.6);
-            backdrop-filter: blur(2px);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            z-index: 100;
-            cursor: pointer;
-            transition: opacity 0.3s;
-        }
-        #cs-click-overlay.hidden {
-            display: none;
-        }
-        .cs-play-card {
-            background: rgba(15, 20, 30, 0.95);
-            border: 2px solid #ff9800;
-            border-radius: 14px;
-            padding: 24px 36px;
-            text-align: center;
-            box-shadow: 0 0 40px rgba(255, 152, 0, 0.4);
-            animation: pulsePlay 1.5s infinite alternate;
-        }
-        @keyframes pulsePlay {
-            from { transform: scale(1); }
-            to { transform: scale(1.03); box-shadow: 0 0 60px rgba(255, 152, 0, 0.7); }
-        }
-
-        /* LOADING SPINNER */
-        #cs-loader {
-            position: fixed;
-            top: 48px;
-            left: 0;
-            width: 100vw;
-            height: calc(100vh - 48px);
-            background: #0b0e14;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            z-index: 5;
-            color: #ff9800;
-            gap: 16px;
-        }
-        .cs-spinner {
-            width: 50px;
-            height: 50px;
-            border: 4px solid rgba(255, 152, 0, 0.2);
-            border-top-color: #ff9800;
-            border-radius: 50%;
-            animation: csSpin 1s linear infinite;
-        }
-        @keyframes csSpin {
-            to { transform: rotate(360deg); }
-        }
-    </style>
+    <link rel="stylesheet" href="bgm.css">
 </head>
 <body>
 
-    <!-- TOP NAVIGATION & SERVER CONTROL BAR -->
-    <header class="cs-top-bar">
-        <div class="cs-brand">
-            <a href="/" class="btn-cs-nav">🏠 Portale Dön</a>
-            <span style="font-weight:900; font-size:14px; color:#ff9800; letter-spacing:0.5px;">🔫 COUNTER-STRIKE 1.6</span>
-            <div class="cs-servers-group">
-                <button class="cs-server-btn active" id="btn-engine-kirka" onclick="switchEngine('kirka')">🟢 Motor 1 (Kirka Dust 2 - Doğrulamasız)</button>
-                <button class="cs-server-btn" id="btn-engine-playcs" onclick="switchEngine('playcs')">Motor 2 (Play-CS 1.6)</button>
+<!-- 3D VIEWPORT CANVAS & REAL 1:1 CS 1.6 ENGINE -->
+<div id="game-viewport">
+    <!-- 1. YEREL 3D DE_DUST2 CANLI SUNUCU & BOT ARENASI (THREE.JS) -->
+    <canvas id="cs-canvas" style="display:block; width:100%; height:100%;"></canvas>
+</div>
+
+<!-- TOP NAV / MATCH BAR -->
+<div class="cs-top-bar">
+    <div style="display:flex; align-items:center; gap:8px;">
+        <button id="btn-cs-menu-open" class="btn-cs-back">☰ MENÜ / ÇIKIŞ</button>
+        <span style="color:#ff9800; font-weight:900; font-size:13px; letter-spacing:1px; margin-left:6px;">🔫 CS 1.6 &bull; de_dust2 (Canlı Arenası)</span>
+        <a href="https://play-cs.com" target="_blank" rel="noopener" style="background:rgba(255,255,255,0.1); color:#fff; border:1px solid rgba(255,255,255,0.25); border-radius:6px; padding:5px 12px; font-size:11px; font-weight:bold; text-decoration:none; display:flex; align-items:center; gap:6px;">
+            🚀 Orijinal Play-CS (Yeni Sekmede) ↗️
+        </a>
+    </div>
+
+    <!-- AUTHENTIC CS MATCH SCOREBOARD (Shown in 3D local mode) -->
+    <div class="cs-match-header" id="cs-local-header" style="display:none;">
+        <div class="team-score-badge badge-t">🔴 T: <span id="cs-score-t">0</span></div>
+        <div class="cs-round-timer-box">
+            <span class="cs-round-timer" id="cs-timer">01:55</span>
+            <span class="cs-round-label" id="cs-round-num">Round 1</span>
+        </div>
+        <div class="team-score-badge badge-ct"><span id="cs-score-ct">0</span> :CT 🔵</div>
+    </div>
+
+    <div style="display:flex; align-items:center; gap:10px;">
+        <button id="btn-cs-fullscreen" class="btn-cs-back" style="padding:5px 10px; font-size:11px;">⛶ Tam Ekran</button>
+        <button id="btn-cs-reload" class="btn-cs-back" style="padding:5px 10px; font-size:11px;">🔄 Yenile</button>
+        <div class="cs-money-pill" id="cs-local-money" style="display:none;">💰 <span id="cs-money-val">$1,600</span></div>
+        <div id="cs-admin-badge" class="cs-admin-badge hidden">👑 ADMİN</div>
+    </div>
+</div>
+
+<!-- CLICK TO PLAY HINT BANNER -->
+<div id="cs-click-hint" style="position:fixed; top:45%; left:50%; transform:translate(-50%,-50%); background:rgba(0,0,0,0.88); border:2px solid #00e5ff; border-radius:12px; padding:20px 36px; text-align:center; pointer-events:none; z-index:4000; box-shadow:0 0 30px rgba(0,229,255,0.4);">
+    <div style="font-size:32px; margin-bottom:8px;">🎯</div>
+    <h2 style="color:#00e5ff; font-size:20px; font-weight:900; margin-bottom:6px;">OTOMATİK SUNUCUYA BAĞLANDI!</h2>
+    <p style="color:#fff; font-size:14px; font-weight:bold;">Savaşa Başlamak İçin Ekrana Tıkla</p>
+    <span style="color:#aaa; font-size:11px; display:block; margin-top:4px;">Mouse kilitlenir • Ateş: Sol Tık • Dürbün: Sağ Tık • Silah: 1-5 • Menü: ESC</span>
+</div>
+
+<!-- KILL FEED (Top Right) -->
+<div id="cs-kill-feed" class="cs-kill-feed"></div>
+
+<!-- CS 1.6 AUTHENTIC CROSSHAIR (Dynamic gap via CSS var) -->
+<div id="cs-crosshair" class="cs-crosshair">
+    <div class="ch-top"></div>
+    <div class="ch-bottom"></div>
+    <div class="ch-left"></div>
+    <div class="ch-right"></div>
+</div>
+
+<!-- SCOPE OVERLAY (AWP) -->
+<div id="cs-scope-overlay" class="cs-scope-overlay" style="display:none">
+    <div class="scope-circle"></div>
+    <div class="scope-line scope-h"></div>
+    <div class="scope-line scope-v"></div>
+    <div class="scope-vignette"></div>
+</div>
+
+<!-- ROUND END VICTORY BANNER -->
+<div id="round-end-banner" class="round-end-banner" style="display:none">
+    <div class="reb-content">
+        <h1 id="reb-title">🏆 COUNTER-TERRÖRİSTLER KAZANDI</h1>
+        <p id="reb-desc">Tüm Teröristler Etkisiz Hale Getirildi!</p>
+        <div class="reb-timer">Yeni round başlıyor...</div>
+    </div>
+</div>
+
+<!-- CS 1.6 HUD (Bottom) -->
+<div class="cs-hud">
+    <!-- HP & Armor (Bottom Left) -->
+    <div class="hud-left">
+        <div class="hud-item">
+            <span class="hud-icon hud-hp-icon">+</span>
+            <span id="hud-hp-val" class="hud-hp-val">100</span>
+        </div>
+        <div class="hud-item hud-armor">
+            <span class="hud-icon">🛡</span>
+            <span id="hud-ap-val" class="hud-ap-val">100</span>
+        </div>
+    </div>
+
+    <!-- Center: Weapon Name + Reload Bar -->
+    <div class="hud-center">
+        <div id="hud-weapon-name" class="hud-weapon-name">CV-47 (AK-47)</div>
+        <div id="reload-bar-wrap" class="reload-bar-wrap" style="display:none">
+            <div id="reload-bar" class="reload-bar"></div>
+        </div>
+    </div>
+
+    <!-- Ammo (Bottom Right) -->
+    <div class="hud-right">
+        <div class="hud-ammo-display">
+            <span id="hud-ammo-clip" class="hud-ammo-clip">30</span>
+            <span class="hud-slash"> / </span>
+            <span id="hud-ammo-res" class="hud-ammo-res">90</span>
+        </div>
+        <div class="hud-weapon-slots">
+            <span class="slot active" id="slot-ak47">AK</span>
+            <span class="slot" id="slot-m4a1">M4</span>
+            <span class="slot" id="slot-awp">AWP</span>
+            <span class="slot" id="slot-deagle">DEG</span>
+            <span class="slot" id="slot-knife">🔪</span>
+        </div>
+    </div>
+</div>
+
+<!-- DAMAGE FLASH OVERLAY -->
+<div id="damage-flash" class="damage-flash"></div>
+
+<!-- DEATH OVERLAY -->
+<div id="death-overlay" class="death-overlay" style="display:none">
+    <div class="death-inner">
+        <div class="death-skull">💀</div>
+        <h2>ÖLDÜNÜZ</h2>
+        <p>Round sonu bekleniyor veya yeniden doğulacak...</p>
+        <div class="death-timer-bar"></div>
+    </div>
+</div>
+
+<!-- TEAM SELECTION MODAL (Takım Seçme - İsteğe bağlı) -->
+<div id="modal-team-select" class="cs-modal-backdrop" style="display:none">
+    <div class="team-select-card">
+        <div class="ts-header">
+            <h2>👥 BİR TAKIM SEÇİN</h2>
+            <p>de_dust2 Haritasında Savaşa Katıl</p>
+        </div>
+        <div class="team-cards-grid">
+            <!-- TERRORIST -->
+            <div class="team-box team-box-t" id="btn-select-t">
+                <div class="tb-badge">TERRÖRİST</div>
+                <div class="tb-icon">💣</div>
+                <h3>TERRÖRİSTLER (T)</h3>
+                <p>Phoenix Connexion & Elite Crew</p>
+                <div class="tb-weapon">Varsayılan: AK-47, Glock</div>
+                <button class="btn-join-team btn-t">TERRÖRİST OL [1]</button>
+            </div>
+
+            <!-- COUNTER-TERRORIST -->
+            <div class="team-box team-box-ct" id="btn-select-ct">
+                <div class="tb-badge">COUNTER-TERRÖRİST</div>
+                <div class="tb-icon">🛡️</div>
+                <h3>KARŞI-TERRÖRİSTLER (CT)</h3>
+                <p>SEAL Team 6 & SAS Özel Birlik</p>
+                <div class="tb-weapon">Varsayılan: M4A1, USP</div>
+                <button class="btn-join-team btn-ct">CT OL [2]</button>
             </div>
         </div>
-
-        <!-- ACTIONS -->
-        <div class="cs-actions">
-            <button class="btn-cs-nav" style="background:linear-gradient(135deg, #00e5ff, #0088ff); color:#000; font-weight:900;" onclick="openDirectPlayCS()" title="Cloudflare Doğrulamasını Anında Geçer">🚀 Play-CS'i Ayrı Pencerede Aç</button>
-            <button class="btn-cs-nav" id="btn-lock-pointer" onclick="lockGamePointer()">🎯 Fareyi Kilitle</button>
-            <button class="btn-cs-nav" id="btn-fullscreen" onclick="toggleFullscreen()">⛶ Tam Ekran</button>
-            <button class="btn-cs-nav" id="btn-reload" onclick="reloadGame()">🔄 Yenile</button>
+        <div class="ts-footer">
+            <button id="btn-select-auto" class="btn-team-auto">🎲 OTOMATİK DENGELİ SEÇİM [3]</button>
         </div>
-    </header>
-
-    <!-- CLOUDFLARE BYPASS PROMPT BANNER -->
-    <div id="cs-direct-hint" style="position:fixed; top:54px; left:50%; transform:translateX(-50%); background:rgba(15, 23, 42, 0.95); border:2px solid #00e5ff; border-radius:10px; padding:10px 20px; font-size:13px; color:#fff; z-index:1500; display:none; align-items:center; gap:14px; box-shadow:0 0 30px rgba(0,229,255,0.4);">
-        <span>⚠️ Play-CS Cloudflare <strong>"Verify your browser"</strong> döngüsünde kalıyorsa:</span>
-        <button onclick="openDirectPlayCS()" style="background:linear-gradient(135deg, #ff9800, #ff5722); color:#000; font-weight:900; font-size:12px; border:none; padding:7px 16px; border-radius:6px; cursor:pointer; box-shadow:0 0 15px rgba(255,152,0,0.5);">🚀 PENCEREDE AÇ (DOĞRULAMAYI ATLA)</button>
-        <button onclick="switchEngine('kirka')" style="background:linear-gradient(135deg, #00e676, #00a843); color:#000; font-weight:900; font-size:12px; border:none; padding:7px 16px; border-radius:6px; cursor:pointer;">🎮 MOTOR 1'E DÖN (KIRKA DUST 2)</button>
     </div>
+</div>
 
-    <!-- LOADING SCREEN -->
-    <div id="cs-loader">
-        <div class="cs-spinner"></div>
-        <h2 style="font-size:18px; letter-spacing:1px;" id="cs-loader-title">Kirka Dust 2 (Doğrulamasız CS) Yükleniyor...</h2>
-        <p style="font-size:12px; color:#888;">Lütfen bekleyin...</p>
+<!-- BUY MENU MODAL (B Tuşu ile açılan Silah Alma Mağazası) -->
+<div id="modal-buy-menu" class="cs-modal-backdrop" style="display:none">
+    <div class="buy-menu-card">
+        <div class="bm-header">
+            <div style="display:flex; align-items:center; gap:10px;">
+                <span style="font-size:24px">🛒</span>
+                <h2>SİLAH VE EKİPMAN SATIN AL</h2>
+            </div>
+            <div class="bm-money-display">Bakiye: <strong id="bm-money-text">$1,600</strong></div>
+            <button id="btn-close-buy" class="bm-close">✕ [ESC]</button>
+        </div>
+
+        <div class="bm-grid">
+            <!-- 1. TÜFEKLER -->
+            <div class="bm-category">
+                <h3>🔫 SALDIRI TÜFEKLERİ</h3>
+                <div class="bm-item" data-weapon="ak47" data-price="2700">
+                    <div class="bm-item-info">
+                        <strong>AK-47 (CV-47)</strong>
+                        <span>Yüksek Hasar • Tek vuruş Kafa</span>
+                    </div>
+                    <button class="btn-buy-action" data-weapon="ak47">$2,700</button>
+                </div>
+                <div class="bm-item" data-weapon="m4a1" data-price="3100">
+                    <div class="bm-item-info">
+                        <strong>M4A1 Susturuculu</strong>
+                        <span>Yüksek İsabet • Sessiz Atış</span>
+                    </div>
+                    <button class="btn-buy-action" data-weapon="m4a1">$3,100</button>
+                </div>
+                <div class="bm-item" data-weapon="awp" data-price="4750">
+                    <div class="bm-item-info">
+                        <strong>AWP Sniper Rifle</strong>
+                        <span>Sağ Tık Dürbün • Tek Vuruş 115 Hasar</span>
+                    </div>
+                    <button class="btn-buy-action" data-weapon="awp">$4,750</button>
+                </div>
+            </div>
+
+            <!-- 2. TABANCALAR & DİĞER -->
+            <div class="bm-category">
+                <h3>🎯 TABANCALAR & BIÇAK</h3>
+                <div class="bm-item" data-weapon="deagle" data-price="650">
+                    <div class="bm-item-info">
+                        <strong>Desert Eagle .50 AE</strong>
+                        <span>Ağır Tabanca • 52 Hasar</span>
+                    </div>
+                    <button class="btn-buy-action" data-weapon="deagle">$650</button>
+                </div>
+                <div class="bm-item" data-weapon="knife" data-price="0">
+                    <div class="bm-item-info">
+                        <strong>Taktik Bıçak</strong>
+                        <span>Sessiz • Hızlı Koşma</span>
+                    </div>
+                    <button class="btn-buy-action" data-weapon="knife">ÜCRETSİZ</button>
+                </div>
+
+                <div style="margin-top:16px; padding:12px; background:rgba(255,204,68,0.08); border:1px solid rgba(255,204,68,0.25); border-radius:6px;">
+                    <div style="color:#ffcc44; font-size:12px; font-weight:bold; margin-bottom:4px">💡 İPUCU</div>
+                    <div style="color:#aaa; font-size:11px">Her öldürmede <strong>+$300</strong>, kazandığın her round için <strong>+$3250</strong> bakiye kazanırsın! [B] tuşuna basarak istediğin zaman mağazayı açabilirsin.</div>
+                </div>
+            </div>
+        </div>
     </div>
+</div>
 
-    <!-- AUTHENTIC CS WEB ENGINE IFRAME -->
-    <iframe id="cs-game-frame" 
-            src="https://kirka.io/" 
-            allow="autoplay; fullscreen; pointer-lock; camera; microphone; clipboard-write; web-share"
-            tabindex="0">
-    </iframe>
+<!-- ESC / PAUSE MENU (Mouse serbest!) -->
+<div id="cs-pause-menu" class="cs-modal-backdrop" style="display:none">
+    <div class="pause-menu-card">
+        <div class="pm-logo">COUNTER-STRIKE 1.6</div>
+        <h2>OYUN DURAKLATILDI</h2>
+        <div class="pm-buttons">
+            <button id="pm-btn-resume" class="btn-pm-primary">▶ MAÇA DEVAM ET [ESC]</button>
+            <button id="pm-btn-team" class="btn-pm-secondary">👥 TAKIM SEÇİMİ (M)</button>
+            <button id="pm-btn-buy" class="btn-pm-secondary">🛒 SİLAH SATIN AL (B)</button>
+            <button id="pm-btn-admin" class="btn-pm-secondary" style="display:none">👑 ADMİN PANELİ</button>
+            <a href="/" class="btn-pm-exit">🏠 ANA PORTALE DÖN</a>
+        </div>
+        <p style="color:#666; font-size:11px; margin-top:14px">Mouse serbesttir. İstediğin butona tıklayabilirsin.</p>
+    </div>
+</div>
 
-    <!-- BOTTOM CONTROLS RIBBON -->
-    <footer class="cs-bottom-bar">
-        <div class="cs-key-tip"><kbd>WASD</kbd> Hareket</div>
-        <div class="cs-key-tip"><kbd>SOL TIK</kbd> Ateş</div>
-        <div class="cs-key-tip"><kbd>SAĞ TIK</kbd> Dürbün / Susturucu</div>
-        <div class="cs-key-tip"><kbd>R</kbd> Şarjör</div>
-        <div class="cs-key-tip"><kbd>B</kbd> Silah Menüsü</div>
-        <div class="cs-key-tip"><kbd>SPACE</kbd> Zıpla</div>
-        <div class="cs-key-tip"><kbd>CTRL</kbd> Çömel</div>
-        <div class="cs-key-tip"><kbd>TAB</kbd> Skor</div>
-        <div class="cs-key-tip"><kbd>ESC</kbd> Menü / Fare Kilidi Aç</div>
-    </footer>
+<!-- SCOREBOARD (TAB) -->
+<div id="cs-scoreboard" class="cs-scoreboard hidden">
+    <div class="sb-header">
+        <h2>de_dust2 &bull; SKOR TABLOSU</h2>
+        <div class="sb-team-labels">
+            <span class="sb-ct-label">◆ Karşı-Terörist (CT)</span>
+            <span class="sb-t-label">◆ Terörist (T)</span>
+        </div>
+    </div>
+    <table class="sb-table">
+        <thead>
+            <tr>
+                <th>TAKIM</th>
+                <th>OYUNCU</th>
+                <th>ÖLDÜRME</th>
+                <th>ÖLÜM</th>
+                <th>PING</th>
+            </tr>
+        </thead>
+        <tbody id="sb-tbody"></tbody>
+    </table>
+    <p class="sb-hint">TAB tuşunu bırak kapatmak için</p>
+</div>
 
-    <script>
-        const frame = document.getElementById('cs-game-frame');
-        const loader = document.getElementById('cs-loader');
-        const hint = document.getElementById('cs-direct-hint');
+<!-- ADMIN PANEL -->
+<div id="cs-admin-panel" class="cs-admin-panel" style="display:none">
+    <div class="cs-ap-header">
+        <span>👑 CS 1.6 ADMİN PANELİ</span>
+        <button id="cs-btn-close-panel" class="cs-ap-close">✕</button>
+    </div>
+    <div class="cs-ap-section">
+        <div class="cs-ap-section-title">🎮 OYUNCU</div>
+        <button id="cs-btn-godmode">🛡️ Godmode: ❌ KAPALI</button>
+        <button id="cs-btn-inf-ammo">⚡ Sınırsız Mermi: ❌ KAPALI</button>
+        <button id="cs-btn-speed">🚀 Süper Hız: ❌ KAPALI</button>
+        <button id="cs-btn-noclip">🪂 Uç (Noclip)</button>
+    </div>
+    <div class="cs-ap-section">
+        <div class="cs-ap-section-title">⚡ SUNUCU</div>
+        <button id="cs-btn-kill-bots">💀 Tüm Botları Öldür</button>
+        <button id="cs-btn-kill-all">🔥 Tüm Oyuncuları Öldür</button>
+        <button id="cs-btn-respawn-all">♻️ Herkesi Yeniden Doğur</button>
+        <button id="cs-btn-announce">📢 Duyuru Gönder</button>
+    </div>
+    <p class="cs-ap-hint">ESC Menüsü ile her zaman erişebilirsin</p>
+</div>
 
-        frame.onload = function() {
-            setTimeout(() => {
-                if (loader) loader.style.display = 'none';
-                frame.focus();
-                try {
-                    if (frame.contentWindow) frame.contentWindow.focus();
-                } catch(_) {}
-            }, 600);
-        };
+<!-- RESMI WEB CS 1.6 MODAL (Xash3D & Play-CS WASM) -->
+<div id="modal-xash-cs" class="cs-modal-backdrop" style="display:none">
+    <div class="pause-menu-card" style="max-width:650px; width:90vw;">
+        <div class="pm-logo" style="color:#00e5ff">COUNTER-STRIKE 1.6 & CS2</div>
+        <h2>RESMİ WEB CS 1.6 (XASH3D & PLAY-CS)</h2>
+        <p style="color:#bbb; font-size:13px; line-height:1.6; margin:14px 0;">
+            Orijinal Valve 1999 GoldSrc motorunun WebAssembly & WebGL sürümüdür! Gerçek dünya sunucularında diğer insanlarla orijinal CS 1.6 fizik ve modelleriyle oynayabilirsiniz.
+        </p>
+        <div style="display:flex; flex-direction:column; gap:10px; margin:20px 0;">
+            <a href="https://play-cs.com" target="_blank" class="btn-pm-primary" style="text-decoration:none; text-align:center; padding:14px; font-size:15px; background:linear-gradient(135deg,#00e5ff,#0077ff); color:#000;">
+                🌐 PLAY-CS İLE RESMİ SUNUCULARA KATIL
+            </a>
+            <button id="btn-close-xash" class="btn-pm-secondary" style="padding:12px;">
+                ✕ BİLİŞİM 3D ARENASINA DEVAM ET
+            </button>
+        </div>
+        <p style="color:#888; font-size:11px;">
+            ⚡ Bilişim 3D Arenası okullardaki zayıf bilgisayarlarda 0ms gecikme ve 120 FPS ile akıcı çalışır.
+        </p>
+    </div>
+</div>
 
-        function lockGamePointer() {
-            try {
-                frame.focus();
-                if (frame.contentWindow) {
-                    frame.contentWindow.focus();
-                }
-            } catch (_) {}
-        }
-
-        function reloadGame() {
-            if (loader) loader.style.display = 'flex';
-            frame.src = frame.src;
-        }
-
-        function toggleFullscreen() {
-            if (!document.fullscreenElement) {
-                document.documentElement.requestFullscreen().catch(() => {});
-            } else {
-                document.exitFullscreen().catch(() => {});
-            }
-        }
-
-        function openDirectPlayCS() {
-            window.open('https://play-cs.com/en/servers', '_blank', 'width=1280,height=720');
-        }
-
-        function switchEngine(engine) {
-            const btnPlayCS = document.getElementById('btn-engine-playcs');
-            const btnKirka = document.getElementById('btn-engine-kirka');
-            const title = document.getElementById('cs-loader-title');
-
-            if (loader) loader.style.display = 'flex';
-
-            if (engine === 'kirka') {
-                if (btnKirka) btnKirka.classList.add('active');
-                if (btnPlayCS) btnPlayCS.classList.remove('active');
-                if (title) title.textContent = 'Kirka Dust 2 (Doğrulamasız CS) Yükleniyor...';
-                frame.src = 'https://kirka.io/';
-                if (hint) hint.style.display = 'none';
-            } else {
-                if (btnPlayCS) btnPlayCS.classList.add('active');
-                if (btnKirka) btnKirka.classList.remove('active');
-                if (title) title.textContent = 'Counter-Strike 1.6 Sunucuları Yükleniyor...';
-                frame.src = 'https://play-cs.com/en/servers';
-                if (hint) hint.style.display = 'flex';
-            }
-        }
-
-        // Direct auto-focus on load
-        window.addEventListener('load', () => {
-            setTimeout(() => {
-                lockGamePointer();
-            }, 800);
-        });
-    </script>
+<script src="three.min.js?v=31"></script>
+<script src="cs16.js?v=31"></script>
+<script src="bgm.js?v=31"></script>
+<script src="overlay-back.js?v=31"></script>
 </body>
 </html>

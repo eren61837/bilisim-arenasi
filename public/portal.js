@@ -475,7 +475,34 @@
   }
 
   fetchStats();
-  setInterval(fetchStats, 3000);
+  // Optimized stats interval: every 15s when active, skipped if WS connected
+  setInterval(() => {
+    if (document.hidden) return;
+    if (state && state.ws && state.ws.readyState === WebSocket.OPEN) return;
+    fetchStats();
+  }, 15000);
+
+  // Live Server Ping & Status Indicator
+  async function checkServerPing() {
+    if (document.hidden) return;
+    const pingEl = document.getElementById('ping-text');
+    const indicatorEl = document.querySelector('.status-indicator-ping');
+    if (!pingEl) return;
+    const t0 = performance.now();
+    try {
+      const res = await fetch('/api/latest-announcement', { method: 'GET', cache: 'no-store' });
+      const pingMs = Math.round(performance.now() - t0);
+      if (res.ok) {
+        pingEl.textContent = `⚡ ${pingMs}ms • Render Aktif`;
+        if (indicatorEl) indicatorEl.style.background = '#00e676';
+      }
+    } catch (_) {
+      pingEl.textContent = `⚠️ Çevrimdışı / Yeniden Bağlanıyor`;
+      if (indicatorEl) indicatorEl.style.background = '#ff5252';
+    }
+  }
+  checkServerPing();
+  setInterval(checkServerPing, 15000);
 
   // 2. Copy Link Handlers
   if (btnCopyLan) {
@@ -608,7 +635,7 @@
   });
 
   if (btnSendAnnounce) {
-    btnSendAnnounce.addEventListener('click', () => {
+    btnSendAnnounce.addEventListener('click', async () => {
       if (!state.isAdmin) {
         alert('❌ Yalnızca yetkili yönetici (admin) duyuru gönderebilir!');
         if (modalAnnounce) modalAnnounce.classList.add('hidden');
@@ -616,35 +643,61 @@
       }
       const text = inAnnounceText ? inAnnounceText.value.trim() : '';
       if (text) {
+        const author = state.username || '👑 Admin';
+        // 1. WebSocket send
         if (state.ws && state.ws.readyState === WebSocket.OPEN) {
-          state.ws.send(JSON.stringify({
-            type: 'admin_announcement',
-            text,
-            author: state.username
-          }));
+          try {
+            state.ws.send(JSON.stringify({
+              type: 'admin_announcement',
+              text,
+              author
+            }));
+          } catch (_) {}
+        }
+        // 2. HTTP POST fallback to guarantee server reception & broadcast
+        try {
+          fetch('/api/admin-announce', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ text, author })
+          }).catch(() => {});
+        } catch (_) {}
+        // 3. Instant local display & cross-tab sync
+        if (window._showPortalAnnouncement) {
+          window._showPortalAnnouncement(text, author);
         }
         if (modalAnnounce) modalAnnounce.classList.add('hidden');
+        if (inAnnounceText) inAnnounceText.value = '';
       }
     });
   }
 
-  // 5. Random Game Button Roulette (Sadece 11 seçkin oyun arasından seçer)
+  // 5. Random Game Button Roulette (Tüm 21 arena oyunu arasından adil rastgele seçim)
   if (btnRandom) {
     btnRandom.addEventListener('click', () => {
       AudioEngine.playDing();
       const games = [
-        { path: '/cs16', name: 'CS 1.6' },
-        { path: '/stickwar', name: 'STICK WAR: LEGACY' },
-        { path: '/minecraft', name: 'MINECRAFT 3D' },
-        { path: '/kafatopu', name: 'KAFA TOPU' },
-        { path: '/sos', name: 'SOS ARENASI' },
-        { path: '/geometrydash', name: 'GEOMETRY DASH' },
-        { path: '/survivor', name: 'VAMPIRE SURVIVORS' },
-        { path: '/diep', name: 'DIEP.IO' },
-        { path: '/zombs', name: 'ZOMBS.IO' },
-        { path: '/redmatch', name: 'REDMATCH 3D' },
-        { path: '/dino', name: 'CHROME DINO HD' },
-        { path: '/sumo', name: 'AHMET HAKAN SUMO' }
+        { path: '/cs16', name: 'CS 1.6 Web 3D 🔫' },
+        { path: '/minecraft', name: 'Minecraft Eaglercraft ⛏️' },
+        { path: '/slope', name: 'Slope 3D Neon 🌐' },
+        { path: '/hook', name: 'Stickman Hook 🪝' },
+        { path: '/diep', name: 'Diep.io Tank MMO 🛡️' },
+        { path: '/zombs', name: 'Zombs.io Kule Savunması 🧟' },
+        { path: '/survivor', name: 'Zindan Avcısı RPG ⚔️' },
+        { path: '/kafatopu', name: 'Kafa Topu Beyaz Saray ⚽' },
+        { path: '/sos', name: 'SOS Arenası 🅂🅾🅂' },
+        { path: '/geometrydash', name: 'Geometry Neon Dash ⚡' },
+        { path: '/dino', name: 'Chrome Cyber Dino HD 🦖' },
+        { path: '/sumo', name: 'Ahmet Hakan Kutu Sumo 🥊' },
+        { path: '/stickwar', name: 'Stick War: Legacy & SW2 ⚔️' },
+        { path: '/racing', name: 'Bilişim GP Çok Oyunculu 🏎️' },
+        { path: '/subway', name: 'Subway Surfers Web 🏃' },
+        { path: '/gartic', name: 'Gartic & Skribbl Çizim 🎨' },
+        { path: '/python', name: 'Python & Pygame Arenası 🐍' },
+        { path: '/tetris', name: 'Cyber Tetris Neon HD 🧱' },
+        { path: '/flappy', name: 'Flappy Cyber Bird 🐦' },
+        { path: '/papermap', name: 'PaperMap.io Fetih 🗺️' },
+        { path: '/tank', name: 'Tank Savaşı 2D 🎯' }
       ];
       btnRandom.textContent = '🎲 SEÇİLİYOR...';
       let count = 0;
@@ -652,39 +705,155 @@
         count++;
         const g = games[Math.floor(Math.random() * games.length)];
         btnRandom.textContent = '🎲 ' + g.name;
-        if (count > 6) {
+        if (count > 8) {
           clearInterval(iv);
           const chosen = games[Math.floor(Math.random() * games.length)];
           btnRandom.textContent = '🚀 ' + chosen.name + ' BAŞLATILIYOR!';
           setTimeout(() => { window.location.href = chosen.path; }, 400);
         }
-      }, 100);
+      }, 90);
     });
   }
 
-  // 6. Category Filter Tabs
+  // 6. Instant Search & Category Filter System
+  const searchInput = document.getElementById('game-search-input');
+  const btnClearSearch = document.getElementById('btn-clear-search');
   const catButtons = document.querySelectorAll('.btn-cat-tab');
   const gameCards = document.querySelectorAll('.game-card');
+
+  let activeCategory = 'all';
+  let searchQuery = '';
+
+  function applyFilters() {
+    let visibleCount = 0;
+    const query = searchQuery.toLowerCase().trim();
+
+    gameCards.forEach(card => {
+      const cat = (card.dataset.category || '').toLowerCase();
+      const cats = cat.split(/\s+/);
+      const matchesCat = (activeCategory === 'all' || cats.includes(activeCategory) || cat === activeCategory);
+
+      let matchesSearch = true;
+      if (query) {
+        const title = (card.querySelector('.game-title')?.textContent || '').toLowerCase();
+        const desc = (card.querySelector('.game-desc')?.textContent || '').toLowerCase();
+        const tags = (card.querySelector('.game-tags')?.textContent || '').toLowerCase();
+        const badge = (card.querySelector('.genre-tag-floating')?.textContent || '').toLowerCase();
+        matchesSearch = title.includes(query) || desc.includes(query) || tags.includes(query) || badge.includes(query);
+      }
+
+      if (matchesCat && matchesSearch) {
+        card.style.display = 'flex';
+        card.style.animation = 'cardPopIn 0.25s ease';
+        visibleCount++;
+      } else {
+        card.style.display = 'none';
+      }
+    });
+
+    let noResultsEl = document.getElementById('_no_search_results');
+    if (visibleCount === 0) {
+      if (!noResultsEl) {
+        noResultsEl = document.createElement('div');
+        noResultsEl.id = '_no_search_results';
+        noResultsEl.style.cssText = 'grid-column: 1 / -1; text-align: center; padding: 40px 20px; background: rgba(16,22,36,0.6); border: 1px dashed rgba(0,219,255,0.3); border-radius: 16px; margin: 20px 0; color: #fff;';
+        noResultsEl.innerHTML = `
+          <div style="font-size: 42px; margin-bottom: 10px;">🔍</div>
+          <h3 style="font-size: 18px; margin-bottom: 6px; color: #00dbff;">Aradığınız Kriterde Oyun Bulunamadı</h3>
+          <p style="font-size: 13px; color: #888; margin-bottom: 16px;">Farklı bir arama terimi deneyebilir veya filtreleri temizleyebilirsiniz.</p>
+          <button id="_btn_reset_filters" style="background: linear-gradient(135deg, #00dbff, #0077ff); color: #000; border: none; padding: 8px 20px; border-radius: 8px; font-weight: 800; font-size: 13px; cursor: pointer;">Tüm Oyunları Göster 🔥</button>
+        `;
+        if (gamesGrid) gamesGrid.appendChild(noResultsEl);
+        document.getElementById('_btn_reset_filters')?.addEventListener('click', () => {
+          if (searchInput) searchInput.value = '';
+          searchQuery = '';
+          if (btnClearSearch) btnClearSearch.style.display = 'none';
+          activeCategory = 'all';
+          catButtons.forEach(b => {
+            if (b.dataset.filter === 'all') b.classList.add('active');
+            else b.classList.remove('active');
+          });
+          applyFilters();
+        });
+      }
+      noResultsEl.style.display = 'block';
+    } else if (noResultsEl) {
+      noResultsEl.style.display = 'none';
+    }
+  }
+
+  // Debounced instant search (60ms debounce for 60FPS smoothness)
+  let searchTimer = null;
+  if (searchInput) {
+    searchInput.addEventListener('input', () => {
+      searchQuery = searchInput.value;
+      if (btnClearSearch) btnClearSearch.style.display = searchQuery ? 'block' : 'none';
+      clearTimeout(searchTimer);
+      searchTimer = setTimeout(applyFilters, 60);
+    });
+  }
+
+  if (btnClearSearch) {
+    btnClearSearch.addEventListener('click', () => {
+      if (searchInput) searchInput.value = '';
+      searchQuery = '';
+      btnClearSearch.style.display = 'none';
+      applyFilters();
+    });
+  }
+
+  // Global '/' and 'Ctrl+K' search shortcut & Escape to clear
+  window.addEventListener('keydown', (e) => {
+    const tag = document.activeElement ? document.activeElement.tagName.toLowerCase() : '';
+    const isTyping = (tag === 'input' || tag === 'textarea');
+
+    if (e.key === 'Escape') {
+      if (document.activeElement === searchInput) {
+        if (searchInput.value) {
+          searchInput.value = '';
+          searchQuery = '';
+          if (btnClearSearch) btnClearSearch.style.display = 'none';
+          applyFilters();
+        }
+        searchInput.blur();
+      }
+      return;
+    }
+
+    if (!isTyping && (e.key === '/' || ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k'))) {
+      e.preventDefault();
+      if (searchInput) {
+        searchInput.focus();
+        searchInput.select();
+        searchInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }
+  });
 
   catButtons.forEach(btn => {
     btn.addEventListener('click', () => {
       AudioEngine.playClick();
       catButtons.forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
-      const filter = btn.dataset.filter;
-
-      gameCards.forEach(card => {
-        const cat = card.dataset.category || '';
-        const cats = cat.split(/\s+/);
-        if (filter === 'all' || cats.includes(filter) || cat === filter) {
-          card.style.display = 'flex';
-          card.style.animation = 'cardPopIn 0.3s ease';
-        } else {
-          card.style.display = 'none';
-        }
-      });
+      activeCategory = btn.dataset.filter || 'all';
+      applyFilters();
     });
   });
+
+  // Dynamic Category Count Badges
+  function updateCategoryCounts() {
+    catButtons.forEach(btn => {
+      const f = btn.dataset.filter;
+      let count = 0;
+      gameCards.forEach(c => {
+        const cat = (c.dataset.category || '').toLowerCase();
+        if (f === 'all' || cat.split(/\s+/).includes(f) || cat === f) count++;
+      });
+      const badge = btn.querySelector('.cat-count');
+      if (badge) badge.textContent = count;
+    });
+  }
+  updateCategoryCounts();
 
   // 7. 3D Card Hover Perspective Tracking
   gameCards.forEach(card => {
@@ -762,7 +931,15 @@
       }
       else if (data.type === 'portal_announcement' || data.type === 'admin_announcement') {
         if (window._showPortalAnnouncement) {
-          window._showPortalAnnouncement(data.text || data.message || '', data.author || 'erencix');
+          window._showPortalAnnouncement(data.text || data.message || '', data.author || '👑 Admin', data.id);
+        }
+      }
+      else if (data.type === 'online' && data.counts) {
+        if (elOnlineTotal) elOnlineTotal.textContent = data.counts.total || 0;
+        if (data.counts.rooms) {
+          for (const [roomId, count] of Object.entries(data.counts.rooms)) {
+            updateCount(`count-${roomId}`, count);
+          }
         }
       }
       else if (data.type === 'portal_error') {

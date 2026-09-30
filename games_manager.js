@@ -86,18 +86,27 @@ function initGamesManager(wss, db) {
     });
   }
 
+  let latestAnnouncement = null;
+
   function broadcastAnnouncement(text, author = 'erencix') {
+    const trimmed = String(text || '').trim();
+    if (!trimmed) return;
+    const authorStr = String(author || '👑 Admin');
+    const annObj = {
+      id: Date.now(),
+      text: trimmed,
+      message: trimmed,
+      author: authorStr,
+      timestamp: Date.now()
+    };
+    latestAnnouncement = annObj;
     const payload = JSON.stringify({
       type: 'portal_announcement',
-      text: String(text).trim(),
-      message: String(text).trim(),
-      author: String(author)
+      ...annObj
     });
     const payloadAdmin = JSON.stringify({
       type: 'admin_announcement',
-      text: String(text).trim(),
-      message: String(text).trim(),
-      author: String(author)
+      ...annObj
     });
     wss.clients.forEach(client => {
       if (client.readyState === WebSocket.OPEN) {
@@ -105,6 +114,10 @@ function initGamesManager(wss, db) {
         try { client.send(payloadAdmin); } catch (_) {}
       }
     });
+  }
+
+  function getLatestAnnouncement() {
+    return latestAnnouncement;
   }
 
   // ============================================================
@@ -1905,11 +1918,13 @@ function initGamesManager(wss, db) {
     getLanIp,
     broadcastPortalChat,
     broadcastAnnouncement,
+    getLatestAnnouncement,
     getStats() {
       const roomCounts = {
         cs16: 0, diep: 0, minecraft: 0, survivor: 0, geometrydash: 0, sos: 0,
         kafatopu: 0, zombs: 0, redmatch: 0, dino: 0, sumo: 0, stickwar: 0,
-        racing: 0, subway: 0, gartic: 0, python: 0, slope: 0, hook: 0, tank: 0
+        racing: 0, subway: 0, gartic: 0, python: 0, slope: 0, hook: 0, tank: 0,
+        tetris: 0, flappy: 0, slither: 0, papermap: 0, agario: 0
       };
       let realHumanTotal = 0;
       wss.clients.forEach(c => {
