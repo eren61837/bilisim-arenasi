@@ -37,14 +37,23 @@
   -webkit-font-smoothing: antialiased;
 }
 
+html {
+  overflow-x: hidden;
+  overflow-y: auto !important;
+  height: auto !important;
+  min-height: 100%;
+  scroll-behavior: smooth;
+}
+
 body {
   background-color: var(--bg-darkest);
   color: var(--text-main);
   min-height: 100vh;
+  height: auto !important;
   display: flex;
   flex-direction: column;
   overflow-x: hidden;
-  overflow-y: auto;
+  overflow-y: auto !important;
   position: relative;
   selection-background-color: var(--cyan);
   selection-color: #000;

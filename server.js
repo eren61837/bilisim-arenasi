@@ -80,14 +80,58 @@ db.exec(`
     created_at INTEGER NOT NULL
   );
 
+  CREATE TABLE IF NOT EXISTS ip_logs (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    ip TEXT NOT NULL,
+    username TEXT,
+    action TEXT,
+    user_agent TEXT,
+    created_at INTEGER NOT NULL
+  );
+
   CREATE INDEX IF NOT EXISTS idx_sessions_token ON sessions(token);
   CREATE INDEX IF NOT EXISTS idx_users_username ON users(username);
   CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
   CREATE INDEX IF NOT EXISTS idx_chat_room ON chat_history(room, id DESC);
   CREATE INDEX IF NOT EXISTS idx_protected_zones_room ON protected_zones(room);
+  CREATE INDEX IF NOT EXISTS idx_ip_logs_ip ON ip_logs(ip);
 `);
 
 console.log('✅ SQLite Database initialized at:', DB_FILE);
+
+const IP_LOG_FILE = path.join(DATA_DIR, 'ip_logs.json');
+let cachedIpLogs = [];
+try {
+  if (fs.existsSync(IP_LOG_FILE)) {
+    cachedIpLogs = JSON.parse(fs.readFileSync(IP_LOG_FILE, 'utf8'));
+  }
+} catch (_) { cachedIpLogs = []; }
+
+function getClientIp(req) {
+  if (!req) return '127.0.0.1';
+  const headers = req.headers || {};
+  const cf = headers['cf-connecting-ip'];
+  if (cf) return String(cf).trim();
+  const xf = headers['x-forwarded-for'];
+  if (xf) return String(xf).split(',')[0].trim();
+  const xr = headers['x-real-ip'];
+  if (xr) return String(xr).trim();
+  return req.socket ? req.socket.remoteAddress || '127.0.0.1' : '127.0.0.1';
+}
+
+function logClientIp(req, username = 'Misafir', action = 'visit') {
+  try {
+    const ip = getClientIp(req);
+    const ua = (req && req.headers && req.headers['user-agent']) || 'Unknown';
+    const now = Date.now();
+    db.prepare('INSERT INTO ip_logs (ip, username, action, user_agent, created_at) VALUES (?, ?, ?, ?, ?)').run(
+      ip, username, action, ua, now
+    );
+    cachedIpLogs.push({ ip, username, action, ua, time: new Date(now).toISOString() });
+    if (cachedIpLogs.length > 500) cachedIpLogs.shift();
+    fs.writeFileSync(IP_LOG_FILE, JSON.stringify(cachedIpLogs, null, 2));
+  } catch (_) {}
+}
 
 let activeProtectedZones = [];
 try {
@@ -344,6 +388,11 @@ const server = http.createServer(async (req, res) => {
 
   const parsedUrl = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
   const pathname = parsedUrl.pathname;
+
+  // Log incoming client IP & route
+  if (!pathname.startsWith('/api/canvas') && !pathname.endsWith('.png') && !pathname.endsWith('.jpg')) {
+    logClientIp(req, 'Visitor', pathname);
+  }
 
   // CORS Preflight
   if (req.method === 'OPTIONS') {
@@ -660,7 +709,7 @@ exit
         const token = generateToken();
         const expiresAt = now + 30 * 24 * 60 * 60 * 1000;
         db.prepare('INSERT INTO sessions (token, user_id, created_at, expires_at) VALUES (?, ?, ?, ?)').run(token, user.id, now, expiresAt);
-
+        logClientIp(req, user.username, 'login');
         res.setHeader('Set-Cookie', `session_token=${token}; Path=/; HttpOnly; Max-Age=2592000; SameSite=Lax`);
         return sendJson(res, 200, {
           success: true,
@@ -744,7 +793,7 @@ exit
         const token = generateToken();
         const expiresAt = now + 30 * 24 * 60 * 60 * 1000; // 30 days
         db.prepare('INSERT INTO sessions (token, user_id, created_at, expires_at) VALUES (?, ?, ?, ?)').run(token, userId, now, expiresAt);
-
+        logClientIp(req, cleanUsername, 'register');
         res.setHeader('Set-Cookie', `session_token=${token}; Path=/; HttpOnly; Max-Age=2592000; SameSite=Lax`);
         return sendJson(res, 201, {
           success: true,
@@ -877,6 +926,16 @@ exit
           gamesManager.broadcastPortalChat(username, msg);
         }
         return sendJson(res, 200, { success: true });
+      }
+
+      // 8c2. GET /api/ip-logs (Recorded Visitor & Player IPs)
+      if (pathname === '/api/ip-logs' && req.method === 'GET') {
+        try {
+          const logs = db.prepare('SELECT ip, username, action, user_agent, created_at FROM ip_logs ORDER BY id DESC LIMIT 100').all();
+          return sendJson(res, 200, { success: true, logs });
+        } catch (_) {
+          return sendJson(res, 200, { success: true, logs: cachedIpLogs });
+        }
       }
 
       // 8d. POST /api/admin-announce (Broadcasts to all games & sockets)

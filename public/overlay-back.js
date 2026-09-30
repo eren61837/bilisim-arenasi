@@ -28,29 +28,6 @@
         e.preventDefault(); return false;
       }
     });
-
-    // DevTools detection (boyut farkı yöntemi)
-    let devToolsOpen = false;
-    const threshold = 160;
-    setInterval(function() {
-      const widthDiff = window.outerWidth - window.innerWidth;
-      const heightDiff = window.outerHeight - window.innerHeight;
-      if (widthDiff > threshold || heightDiff > threshold) {
-        if (!devToolsOpen) {
-          devToolsOpen = true;
-          // Geliştirici araçları açık uyarısı göster
-          const w = document.createElement('div');
-          w.id = 'devtools-warning';
-          w.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.97);z-index:999999;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#ff1744;font-family:monospace;font-size:24px;font-weight:900;text-align:center;';
-          w.innerHTML = '<div style="font-size:64px">⛔</div><div>GELİŞTİRİCİ ARAÇLARI TESPİT EDİLDİ</div><div style="font-size:14px;color:#aaa;margin-top:12px">Bu site kaynak kod görüntülemeye karşı korumalıdır.</div><div style="font-size:14px;color:#aaa">Geliştirici araçlarını kapatıp sayfayı yenileyin.</div>';
-          document.body.appendChild(w);
-        }
-      } else {
-        devToolsOpen = false;
-        const w = document.getElementById('devtools-warning');
-        if (w) w.remove();
-      }
-    }, 1000);
   })();
 
   /* ── Universal Real-Time Announcement System with Cross-Tab Sync ── */

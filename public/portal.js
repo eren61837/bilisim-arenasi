@@ -81,6 +81,7 @@
       localStorage.setItem('portal_game_username', username);
       if (token) localStorage.setItem('session_token', token);
       localStorage.setItem('portal_is_registered', isRegistered ? 'true' : 'false');
+      sessionStorage.setItem('portal_session_authenticated', 'true');
 
       modal.classList.add('hidden');
       modal.style.display = 'none';
@@ -96,10 +97,9 @@
       }
     }
 
-    const isBanned = existing && isNameProfane(existing);
-    const hasValidAuth = (localStorage.getItem('portal_is_registered') === 'true' || localStorage.getItem('session_token')) && existing && existing.length >= 2 && !isBanned;
-
-    if (hasValidAuth) {
+    // Force authentication on each new page visit/refresh as requested by admin
+    const isSessionDone = sessionStorage.getItem('portal_session_authenticated') === 'true';
+    if (isSessionDone && existing && existing.length >= 2 && !isNameProfane(existing)) {
       modal.classList.add('hidden');
       modal.style.display = 'none';
       modal.setAttribute('style', 'display: none !important;');
@@ -108,6 +108,7 @@
       modal.style.display = 'flex';
       modal.setAttribute('style', 'display: flex !important;');
       switchAuthTab('login');
+      if (existing && inputLoginId) inputLoginId.value = existing;
     }
 
     // 1. Guest Start
@@ -154,11 +155,18 @@
       btnLogin.disabled = true;
       btnLogin.textContent = 'GİRİŞ YAPILIYOR...';
 
+      let hcaptchaToken = '';
+      try {
+        if (typeof hcaptcha !== 'undefined') {
+          hcaptchaToken = hcaptcha.getResponse();
+        }
+      } catch (_) {}
+
       try {
         const res = await fetch('/api/login', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ identifier: id, password: pw })
+          body: JSON.stringify({ identifier: id, password: pw, 'h-captcha-response': hcaptchaToken })
         });
         const data = await res.json();
         if (!res.ok) {
@@ -204,11 +212,18 @@
       btnReg.disabled = true;
       btnReg.textContent = 'HESAP OLUŞTURULUYOR...';
 
+      let hcaptchaToken = '';
+      try {
+        if (typeof hcaptcha !== 'undefined') {
+          hcaptchaToken = hcaptcha.getResponse();
+        }
+      } catch (_) {}
+
       try {
         const res = await fetch('/api/register', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username: user, password: pw })
+          body: JSON.stringify({ username: user, password: pw, 'h-captcha-response': hcaptchaToken })
         });
         const data = await res.json();
         if (!res.ok) {
